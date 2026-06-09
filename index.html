@@ -1,96 +1,427 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html lang="en">
 <head>
-<title>ProgramMetrics</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ProgramMetrics | Python Dashboards & Statistical Analytics</title>  <style>
+    :root {
+      --navy: #102033;
+      --blue: #2563eb;
+      --teal: #0f766e;
+      --orange: #c05621;
+      --light: #f8fafc;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #64748b;
+      --border: #e2e8f0;
+    }
 
-<style>
-body {
-    font-family: Arial, sans-serif;
-    max-width: 1000px;
-    margin: auto;
-    padding: 40px;
-    background-color: #f8fafc;
-}
+    * {
+      box-sizing: border-box;
+    }
 
-h1 {
-    color: #123456;
-    font-size: 48px;
-}
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--light);
+      color: var(--text);
+      line-height: 1.6;
+    }
 
-h2 {
-    color: #2b5876;
-}
+    header {
+      background: linear-gradient(135deg, #102033, #1e3a5f);
+      color: white;
+      padding: 70px 8%;
+      position: relative;
+      overflow: hidden;
+    }
 
-.card {
-    background: white;
-    padding: 20px;
-    margin-top: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,.1);
-}
+    header::after {
+      content: "";
+      position: absolute;
+      right: -80px;
+      top: -80px;
+      width: 260px;
+      height: 260px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 50%;
+    }
 
-ul {
-    line-height: 2;
-}
-</style>
+    .hero {
+      max-width: 1050px;
+      position: relative;
+      z-index: 2;
+    }
 
-</head>
+    .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.14);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
 
-<body>
+    h1 {
+      font-size: 52px;
+      margin: 0 0 10px;
+      letter-spacing: -1px;
+    }
 
-<h1>ProgramMetrics</h1>
+    .subtitle {
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 18px;
+    }
 
-<h2>Transform Data Into Decisions</h2>
+    .hero p {
+      font-size: 18px;
+      max-width: 780px;
+      color: #dbeafe;
+    }
 
-<p>
-Custom Python dashboards, statistical analysis, ETL automation,
-forecasting, and program evaluation solutions.
-</p>
+    .buttons {
+      margin-top: 28px;
+    }
 
-<div class="card">
-<h3>Predictive Analytics Dashboard</h3>
-<p>
-Forecasting, KPI monitoring, risk segmentation, and model interpretation.
-</p>
+    .button {
+      display: inline-block;
+      margin-right: 12px;
+      margin-bottom: 12px;
+      padding: 13px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .primary {
+      background: #ffffff;
+      color: var(--navy);
+    }
+
+    .secondary {
+      border: 1px solid #ffffff;
+      color: #ffffff;
+    }
+
+    section {
+      padding: 55px 8%;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    h2 {
+      color: var(--navy);
+      font-size: 32px;
+      margin-bottom: 15px;
+    }
+
+    .section-intro {
+      color: var(--muted);
+      max-width: 760px;
+      margin-bottom: 30px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 22px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+    }
+
+    .icon {
+      font-size: 34px;
+      margin-bottom: 12px;
+    }
+
+    .card h3 {
+      color: var(--navy);
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      color: var(--muted);
+      margin-bottom: 0;
+    }
+
+    .highlight {
+      background: #eef6ff;
+      border-left: 5px solid var(--blue);
+    }
+
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-top: -35px;
+      position: relative;
+      z-index: 5;
+    }
+
+    .stat {
+      background: white;
+      padding: 22px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.10);
+      border: 1px solid var(--border);
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 30px;
+      color: var(--blue);
+    }
+
+    .project-card {
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .project-visual {
+      height: 170px;
+      background: linear-gradient(135deg, #dbeafe, #f0fdfa);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .mini-chart {
+      width: 75%;
+      height: 95px;
+      border-left: 3px solid #334155;
+      border-bottom: 3px solid #334155;
+      position: relative;
+    }
+
+    .mini-chart::before {
+      content: "";
+      position: absolute;
+      left: 12%;
+      bottom: 20%;
+      width: 70%;
+      height: 45%;
+      border-bottom: 4px solid var(--teal);
+      border-right: 4px solid var(--teal);
+      transform: skew(-20deg);
+    }
+
+    .project-content {
+      padding: 24px;
+    }
+
+    .pill {
+      display: inline-block;
+      font-size: 13px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #075985;
+      margin: 4px 4px 0 0;
+    }
+
+    .about {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .callout {
+      background: linear-gradient(135deg, #0f766e, #115e59);
+      color: white;
+      border-radius: 18px;
+      padding: 34px;
+    }
+
+    .callout h2 {
+      color: white;
+    }
+
+    .contact {
+      text-align: center;
+      background: white;
+      border-top: 1px solid var(--border);
+    }
+
+    .email {
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--blue);
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 700px) {
+      h1 {
+        font-size: 40px;
+      }
+
+      .subtitle {
+        font-size: 21px;
+      }
+
+      .about {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style></head><body>  <header>
+    <div class="hero">
+      <div class="badge">Python Dashboards • Statistical Analytics • ETL Automation</div>
+      <h1>ProgramMetrics</h1>
+      <div class="subtitle">Turn complex data into clear, actionable decisions.</div>
+      <p>
+        ProgramMetrics builds interactive Python dashboards, automated reporting tools,
+        statistical models, and data pipelines for organizations that need more than charts —
+        they need insight, interpretation, and decision support.
+      </p>  <div class="buttons">
+    <a class="button primary" href="#services">View Services</a>
+    <a class="button secondary" href="#contact">Contact</a>
+  </div>
 </div>
 
-<div class="card">
-<h3>Behavioral Health Outcomes Dashboard</h3>
-<p>
-Referral tracking, service connections, outcomes measurement,
-and performance monitoring.
-</p>
+  </header>  <section class="stats-strip">
+    <div class="stat">
+      <strong>PhD</strong>
+      Applied Statistics & Research Methods
+    </div>
+    <div class="stat">
+      <strong>8+</strong>
+      Years of analytics and evaluation experience
+    </div>
+    <div class="stat">
+      <strong>Python</strong>
+      Dashboards, ETL pipelines, and analytics automation
+    </div>
+  </section>  <section id="services">
+    <h2>Services</h2>
+    <p class="section-intro">
+      I help healthcare, government, nonprofit, research, and program teams transform messy data
+      into reliable analytics products, dashboards, reports, and statistical insights.
+    </p><div class="grid">
+  <div class="card">
+    <div class="icon">📊</div>
+    <h3>Python Dashboard Development</h3>
+    <p>Interactive dashboards using Python, Streamlit, Plotly, pandas, and custom analytics workflows.</p>
+  </div>
+
+  <div class="card">
+    <div class="icon">🔁</div>
+    <h3>ETL & Data Pipelines</h3>
+    <p>Automated data cleaning, transformation, validation, and reporting pipelines.</p>
+  </div>
+
+  <div class="card">
+    <div class="icon">📈</div>
+    <h3>Statistical Analysis</h3>
+    <p>Regression, hypothesis testing, group comparisons, forecasting, and model interpretation.</p>
+  </div>
+
+  <div class="card">
+    <div class="icon">🧪</div>
+    <h3>Survey & Program Evaluation</h3>
+    <p>Survey analysis, KPI frameworks, outcome measurement, and evaluation reporting.</p>
+  </div>
+
+  <div class="card">
+    <div class="icon">🧰</div>
+    <h3>Legacy Code Conversion</h3>
+    <p>SAS, SPSS, and R workflows translated into Python for modern analytics and automation.</p>
+  </div>
+
+  <div class="card">
+    <div class="icon">🤖</div>
+    <h3>Predictive Analytics</h3>
+    <p>Forecasting, risk scoring, segmentation, and decision-support models built into dashboards.</p>
+  </div>
 </div>
 
-<div class="card">
-<h3>Survey Analytics Platform</h3>
-<p>
-Automated statistical testing, subgroup comparisons,
-and executive reporting.
-</p>
+  </section>  <section id="projects">
+    <h2>Dashboard Examples</h2>
+    <p class="section-intro">
+      Example dashboard concepts using synthetic or de-identified demo data.
+    </p><div class="grid">
+  <div class="card project-card">
+    <div class="project-visual">
+      <div class="mini-chart"></div>
+    </div>
+    <div class="project-content">
+      <h3>Predictive Analytics Dashboard</h3>
+      <p>Forecasting, KPI tracking, risk segmentation, model fit, and driver analysis.</p>
+      <span class="pill">Python</span>
+      <span class="pill">Forecasting</span>
+      <span class="pill">Statistics</span>
+    </div>
+  </div>
+
+  <div class="card project-card">
+    <div class="project-visual">
+      <div class="mini-chart"></div>
+    </div>
+    <div class="project-content">
+      <h3>Behavioral Health Outcomes Dashboard</h3>
+      <p>Referral tracking, service connections, outcomes monitoring, and performance indicators.</p>
+      <span class="pill">Healthcare Analytics</span>
+      <span class="pill">Program Evaluation</span>
+      <span class="pill">KPI Tracking</span>
+    </div>
+  </div>
+
+  <div class="card project-card">
+    <div class="project-visual">
+      <div class="mini-chart"></div>
+    </div>
+    <div class="project-content">
+      <h3>Survey Analytics Platform</h3>
+      <p>Automated statistical testing, subgroup comparison, survey summaries, and executive reporting.</p>
+      <span class="pill">Survey Analysis</span>
+      <span class="pill">Statistical Testing</span>
+      <span class="pill">Reporting</span>
+    </div>
+  </div>
 </div>
 
-<h2>Services</h2>
+  </section>  <section>
+    <div class="about">
+      <div>
+        <h2>About ProgramMetrics</h2>
+        <p>
+          ProgramMetrics is led by Suzanne Landram, PhD, an applied statistician,
+          program evaluator, and data analytics consultant specializing in Python-based
+          dashboards, statistical modeling, program evaluation, and automated reporting.
+        </p>
+        <p>
+          The goal is simple: help organizations move from raw data and manual reports
+          to reliable analytics systems that support better decisions.
+        </p>
+      </div>  <div class="callout">
+    <h2>What Makes This Different</h2>
+    <p>
+      Most dashboards show what happened. ProgramMetrics helps explain why it happened,
+      what changed, what matters statistically, and what decision-makers should do next.
+    </p>
+  </div>
+</div>
 
-<ul>
-<li>Python Dashboard Development</li>
-<li>Statistical Analysis</li>
-<li>Predictive Modeling</li>
-<li>Survey Analytics</li>
-<li>ETL Pipelines</li>
-<li>SAS to Python Conversion</li>
-<li>SPSS to Python Conversion</li>
-<li>R to Python Conversion</li>
-<li>Program Evaluation</li>
-</ul>
-
-<h2>Contact</h2>
-
-<p>
-Email: slandram@gmail.com
-</p>
-
-</body>
+  </section>  <section id="contact" class="contact">
+    <h2>Contact</h2>
+    <p>
+      Need a Python dashboard, statistical analysis, ETL pipeline, or analytics automation project?
+    </p>
+    <p class="email">slandram@gmail.com</p>
+  </section>  <footer>
+    © 2026 ProgramMetrics.io | Python Dashboards • Statistical Analytics • ETL Automation
+  </footer></body>
 </html>
-
-##Create ProgramMetrics homepage##
