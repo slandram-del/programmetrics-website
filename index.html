@@ -2,16 +2,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ProgramMetrics | Python Dashboards & Statistical Analytics</title>  <style>
+  <title>ProgramMetrics.io | Python Dashboards & Statistical Analytics</title>  <style>
     :root {
-      --navy: #102033;
+      --navy: #071827;
+      --navy2: #0f2740;
       --blue: #2563eb;
-      --teal: #0f766e;
-      --orange: #c05621;
+      --teal: #14b8a6;
+      --orange: #f97316;
+      --white: #ffffff;
       --light: #f8fafc;
-      --card: #ffffff;
-      --text: #1f2937;
-      --muted: #64748b;
+      --muted: #94a3b8;
+      --text: #1e293b;
       --border: #e2e8f0;
     }
 
@@ -22,117 +23,249 @@
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
-      background: var(--light);
       color: var(--text);
+      background: var(--light);
       line-height: 1.6;
     }
 
-    header {
-      background: linear-gradient(135deg, #102033, #1e3a5f);
+    nav {
+      background: rgba(7, 24, 39, 0.96);
       color: white;
-      padding: 70px 8%;
-      position: relative;
-      overflow: hidden;
+      padding: 18px 8%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    header::after {
-      content: "";
-      position: absolute;
-      right: -80px;
-      top: -80px;
-      width: 260px;
-      height: 260px;
-      background: rgba(255,255,255,0.08);
-      border-radius: 50%;
+    nav .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-left: 22px;
+      font-weight: 600;
+      font-size: 14px;
     }
 
     .hero {
-      max-width: 1050px;
-      position: relative;
-      z-index: 2;
+      background:
+        radial-gradient(circle at top right, rgba(20,184,166,0.28), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(37,99,235,0.22), transparent 35%),
+        linear-gradient(135deg, #071827, #0f2740);
+      color: white;
+      padding: 90px 8% 80px;
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      max-width: 1200px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 48px;
+      align-items: center;
     }
 
     .badge {
       display: inline-block;
-      background: rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.12);
+      color: #dbeafe;
+      border: 1px solid rgba(255,255,255,0.16);
       padding: 8px 14px;
       border-radius: 999px;
       font-size: 14px;
-      margin-bottom: 18px;
+      margin-bottom: 22px;
     }
 
     h1 {
-      font-size: 52px;
-      margin: 0 0 10px;
-      letter-spacing: -1px;
+      font-size: 60px;
+      line-height: 1.05;
+      margin: 0 0 18px;
+      letter-spacing: -2px;
     }
 
-    .subtitle {
+    .hero h2 {
       font-size: 26px;
-      font-weight: bold;
-      margin-bottom: 18px;
+      color: #c7d2fe;
+      margin: 0 0 22px;
+      font-weight: 700;
     }
 
     .hero p {
       font-size: 18px;
-      max-width: 780px;
       color: #dbeafe;
+      max-width: 720px;
     }
 
     .buttons {
-      margin-top: 28px;
+      margin-top: 32px;
     }
 
     .button {
       display: inline-block;
+      padding: 14px 22px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 800;
       margin-right: 12px;
       margin-bottom: 12px;
-      padding: 13px 20px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: bold;
     }
 
     .primary {
-      background: #ffffff;
-      color: var(--navy);
+      background: var(--teal);
+      color: #06201c;
     }
 
     .secondary {
-      border: 1px solid #ffffff;
-      color: #ffffff;
+      border: 1px solid rgba(255,255,255,0.5);
+      color: white;
+    }
+
+    .hero-card {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 24px;
+      padding: 26px;
+      box-shadow: 0 24px 70px rgba(0,0,0,.35);
+    }
+
+    .dashboard-mock {
+      background: #f8fafc;
+      border-radius: 18px;
+      padding: 18px;
+      color: var(--text);
+    }
+
+    .mock-top {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .metric {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 12px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 24px;
+      color: var(--blue);
+    }
+
+    .mock-chart {
+      height: 170px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mock-chart::before {
+      content: "";
+      position: absolute;
+      left: 30px;
+      right: 30px;
+      bottom: 45px;
+      height: 70px;
+      border-bottom: 5px solid var(--teal);
+      border-right: 5px solid var(--teal);
+      transform: skew(-25deg);
+    }
+
+    .mock-chart::after {
+      content: "";
+      position: absolute;
+      left: 30px;
+      bottom: 40px;
+      width: 85%;
+      height: 1px;
+      background: #cbd5e1;
+      box-shadow: 0 -35px 0 #e2e8f0, 0 -70px 0 #e2e8f0;
     }
 
     section {
-      padding: 55px 8%;
-      max-width: 1200px;
+      padding: 70px 8%;
+      max-width: 1250px;
       margin: auto;
     }
 
-    h2 {
-      color: var(--navy);
-      font-size: 32px;
-      margin-bottom: 15px;
+    .section-title {
+      text-align: center;
+      margin-bottom: 42px;
     }
 
-    .section-intro {
-      color: var(--muted);
-      max-width: 760px;
-      margin-bottom: 30px;
+    .section-title h2 {
+      font-size: 38px;
+      color: var(--navy);
+      margin-bottom: 10px;
+    }
+
+    .section-title p {
+      color: #64748b;
+      font-size: 18px;
+      max-width: 780px;
+      margin: auto;
+    }
+
+    .stats {
+      margin-top: -48px;
+      position: relative;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .stat {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 36px;
+      color: var(--blue);
+      margin-bottom: 6px;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 22px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
     }
 
     .card {
-      background: var(--card);
+      background: white;
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 24px;
-      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      color: var(--navy);
+      font-size: 22px;
+    }
+
+    .card p {
+      color: #64748b;
     }
 
     .icon {
@@ -140,43 +273,48 @@
       margin-bottom: 12px;
     }
 
-    .card h3 {
-      color: var(--navy);
-      margin-top: 0;
-      margin-bottom: 10px;
-    }
-
-    .card p {
-      color: var(--muted);
-      margin-bottom: 0;
-    }
-
-    .highlight {
-      background: #eef6ff;
-      border-left: 5px solid var(--blue);
-    }
-
-    .stats-strip {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-      margin-top: -35px;
-      position: relative;
-      z-index: 5;
-    }
-
-    .stat {
+    .problems {
       background: white;
-      padding: 22px;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.10);
-      border: 1px solid var(--border);
+      max-width: none;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
     }
 
-    .stat strong {
-      display: block;
-      font-size: 30px;
-      color: var(--blue);
+    .problem-grid {
+      max-width: 1150px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .checklist {
+      list-style: none;
+      padding: 0;
+    }
+
+    .checklist li {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 17px;
+    }
+
+    .checklist li::before {
+      content: "✓";
+      color: var(--teal);
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    .projects {
+      background: #eef6ff;
+      max-width: none;
+    }
+
+    .project-wrap {
+      max-width: 1250px;
+      margin: auto;
     }
 
     .project-card {
@@ -184,133 +322,191 @@
       padding: 0;
     }
 
-    .project-visual {
-      height: 170px;
-      background: linear-gradient(135deg, #dbeafe, #f0fdfa);
+    .project-image {
+      height: 230px;
+      background: linear-gradient(135deg, #dbeafe, #ccfbf1);
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
+      border-bottom: 1px solid var(--border);
     }
 
-    .mini-chart {
-      width: 75%;
-      height: 95px;
-      border-left: 3px solid #334155;
-      border-bottom: 3px solid #334155;
-      position: relative;
+    .project-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
-    .mini-chart::before {
-      content: "";
-      position: absolute;
-      left: 12%;
-      bottom: 20%;
-      width: 70%;
-      height: 45%;
-      border-bottom: 4px solid var(--teal);
-      border-right: 4px solid var(--teal);
-      transform: skew(-20deg);
+    .placeholder {
+      text-align: center;
+      color: #334155;
+      padding: 20px;
+    }
+
+    .placeholder span {
+      display: block;
+      font-size: 48px;
+      margin-bottom: 8px;
     }
 
     .project-content {
-      padding: 24px;
+      padding: 26px;
     }
 
     .pill {
       display: inline-block;
-      font-size: 13px;
-      padding: 5px 10px;
-      border-radius: 999px;
       background: #e0f2fe;
       color: #075985;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
       margin: 4px 4px 0 0;
+      font-weight: 700;
     }
 
     .about {
       display: grid;
       grid-template-columns: 1.2fr .8fr;
-      gap: 30px;
+      gap: 38px;
       align-items: center;
     }
 
-    .callout {
-      background: linear-gradient(135deg, #0f766e, #115e59);
+    .about-box {
+      background: linear-gradient(135deg, var(--navy), var(--navy2));
       color: white;
-      border-radius: 18px;
+      border-radius: 24px;
       padding: 34px;
     }
 
-    .callout h2 {
+    .about-box h3 {
       color: white;
+      margin-top: 0;
+      font-size: 26px;
     }
 
-    .contact {
+    .about-box p {
+      color: #dbeafe;
+    }
+
+    .cta {
+      background: linear-gradient(135deg, #0f766e, #115e59);
+      color: white;
       text-align: center;
-      background: white;
-      border-top: 1px solid var(--border);
+      max-width: none;
+      padding: 75px 8%;
+    }
+
+    .cta h2 {
+      font-size: 38px;
+      margin-top: 0;
+    }
+
+    .cta p {
+      font-size: 18px;
+      max-width: 720px;
+      margin: 0 auto 24px;
+      color: #ccfbf1;
     }
 
     .email {
-      font-size: 20px;
-      font-weight: bold;
-      color: var(--blue);
+      display: inline-block;
+      background: white;
+      color: var(--navy);
+      padding: 14px 22px;
+      border-radius: 10px;
+      font-weight: 800;
+      text-decoration: none;
     }
 
     footer {
+      background: var(--navy);
+      color: #94a3b8;
       text-align: center;
-      padding: 24px;
-      color: var(--muted);
+      padding: 26px;
       font-size: 14px;
     }
 
-    @media (max-width: 700px) {
-      h1 {
-        font-size: 40px;
+    @media (max-width: 850px) {
+      nav {
+        display: block;
       }
 
-      .subtitle {
-        font-size: 21px;
+      nav a {
+        display: inline-block;
+        margin: 10px 12px 0 0;
       }
 
+      .hero-grid,
+      .problem-grid,
       .about {
         grid-template-columns: 1fr;
       }
+
+      h1 {
+        font-size: 44px;
+      }
+
+      .hero {
+        padding-top: 60px;
+      }
     }
-  </style></head><body>  <header>
-    <div class="hero">
-      <div class="badge">Python Dashboards • Statistical Analytics • ETL Automation</div>
-      <h1>ProgramMetrics</h1>
-      <div class="subtitle">Turn complex data into clear, actionable decisions.</div>
-      <p>
-        ProgramMetrics builds interactive Python dashboards, automated reporting tools,
-        statistical models, and data pipelines for organizations that need more than charts —
-        they need insight, interpretation, and decision support.
-      </p>  <div class="buttons">
-    <a class="button primary" href="#services">View Services</a>
-    <a class="button secondary" href="#contact">Contact</a>
+  </style></head><body>  <nav>
+    <div class="logo">ProgramMetrics.io</div>
+    <div>
+      <a href="#services">Services</a>
+      <a href="#projects">Examples</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </nav>  <header class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="badge">Python Dashboards • Statistical Analysis • ETL Automation</div>
+        <h1>Analytics tools that turn messy data into decisions.</h1>
+        <h2>Custom dashboards, statistical models, and reporting systems built by a PhD statistician.</h2>
+        <p>
+          ProgramMetrics helps healthcare, government, nonprofit, research, and program teams
+          move from manual reporting to interactive Python dashboards, automated analytics,
+          and decision-support tools.
+        </p>
+        <div class="buttons">
+          <a class="button primary" href="#projects">View Dashboard Examples</a>
+          <a class="button secondary" href="#contact">Request Consultation</a>
+        </div>
+      </div>  <div class="hero-card">
+    <div class="dashboard-mock">
+      <div class="mock-top">
+        <div class="metric">Outcome Rate<strong>84%</strong></div>
+        <div class="metric">Model Fit<strong>R² .72</strong></div>
+        <div class="metric">Risk Flag<strong>18%</strong></div>
+      </div>
+      <div class="mock-chart"></div>
+    </div>
   </div>
 </div>
 
-  </header>  <section class="stats-strip">
+  </header>  <section class="stats">
     <div class="stat">
       <strong>PhD</strong>
       Applied Statistics & Research Methods
     </div>
     <div class="stat">
       <strong>8+</strong>
-      Years of analytics and evaluation experience
+      Years of analytics, research, and evaluation experience
     </div>
     <div class="stat">
       <strong>Python</strong>
-      Dashboards, ETL pipelines, and analytics automation
+      Dashboards, pipelines, reporting, and statistical automation
     </div>
   </section>  <section id="services">
-    <h2>Services</h2>
-    <p class="section-intro">
-      I help healthcare, government, nonprofit, research, and program teams transform messy data
-      into reliable analytics products, dashboards, reports, and statistical insights.
-    </p><div class="grid">
+    <div class="section-title">
+      <h2>What ProgramMetrics Builds</h2>
+      <p>
+        Practical analytics systems that combine dashboard development, ETL automation,
+        statistical analysis, and executive-ready reporting.
+      </p>
+    </div><div class="grid">
   <div class="card">
     <div class="icon">📊</div>
     <h3>Python Dashboard Development</h3>
@@ -318,109 +514,132 @@
   </div>
 
   <div class="card">
-    <div class="icon">🔁</div>
+    <div class="icon">🔄</div>
     <h3>ETL & Data Pipelines</h3>
-    <p>Automated data cleaning, transformation, validation, and reporting pipelines.</p>
+    <p>Automated data cleaning, validation, transformation, and scheduled reporting pipelines.</p>
   </div>
 
   <div class="card">
     <div class="icon">📈</div>
     <h3>Statistical Analysis</h3>
-    <p>Regression, hypothesis testing, group comparisons, forecasting, and model interpretation.</p>
+    <p>Regression, hypothesis testing, chi-square, ANOVA, forecasting, and model interpretation.</p>
   </div>
 
   <div class="card">
     <div class="icon">🧪</div>
     <h3>Survey & Program Evaluation</h3>
-    <p>Survey analysis, KPI frameworks, outcome measurement, and evaluation reporting.</p>
+    <p>Survey analysis, KPI frameworks, outcome measurement, and evidence-based evaluation reporting.</p>
   </div>
 
   <div class="card">
     <div class="icon">🧰</div>
-    <h3>Legacy Code Conversion</h3>
-    <p>SAS, SPSS, and R workflows translated into Python for modern analytics and automation.</p>
+    <h3>SAS/SPSS/R to Python</h3>
+    <p>Legacy statistical workflows translated into modern Python analytics and automation systems.</p>
   </div>
 
   <div class="card">
     <div class="icon">🤖</div>
     <h3>Predictive Analytics</h3>
-    <p>Forecasting, risk scoring, segmentation, and decision-support models built into dashboards.</p>
+    <p>Forecasting, risk scoring, segmentation, model diagnostics, and decision-support analytics.</p>
   </div>
 </div>
 
-  </section>  <section id="projects">
-    <h2>Dashboard Examples</h2>
-    <p class="section-intro">
-      Example dashboard concepts using synthetic or de-identified demo data.
-    </p><div class="grid">
-  <div class="card project-card">
-    <div class="project-visual">
-      <div class="mini-chart"></div>
-    </div>
-    <div class="project-content">
-      <h3>Predictive Analytics Dashboard</h3>
-      <p>Forecasting, KPI tracking, risk segmentation, model fit, and driver analysis.</p>
-      <span class="pill">Python</span>
-      <span class="pill">Forecasting</span>
-      <span class="pill">Statistics</span>
-    </div>
-  </div>
+  </section>  <section class="problems">
+    <div class="problem-grid">
+      <div>
+        <h2>Built for real organizational data problems.</h2>
+        <p>
+          Many organizations have data, but not a usable analytics system. ProgramMetrics focuses on
+          turning scattered, messy, or manual reporting processes into reliable tools people can use.
+        </p>
+      </div>  <ul class="checklist">
+    <li>Manual Excel reporting takes too much time</li>
+    <li>Data lives across disconnected files and systems</li>
+    <li>Dashboards show charts but not interpretation</li>
+    <li>Legacy SAS, SPSS, or R workflows need modernization</li>
+    <li>Leadership needs clear KPIs, trends, and recommendations</li>
+  </ul>
+</div>
 
-  <div class="card project-card">
-    <div class="project-visual">
-      <div class="mini-chart"></div>
+  </section>  <section id="projects" class="projects">
+    <div class="project-wrap">
+      <div class="section-title">
+        <h2>Dashboard Examples</h2>
+        <p>
+          Sample dashboard concepts using synthetic or de-identified demo data.
+          Replace the placeholders below with screenshots from your GitHub images folder.
+        </p>
+      </div>  <div class="grid">
+    <div class="card project-card">
+      <div class="project-image">
+        <img src="images/predictive-dashboard.png" alt="Predictive Analytics Dashboard" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=&quot;placeholder&quot;><span>📈</span>Predictive Analytics Dashboard</div>';">
+      </div>
+      <div class="project-content">
+        <h3>Predictive Analytics Dashboard</h3>
+        <p>Forecasting, KPI tracking, risk segmentation, model fit, and driver analysis.</p>
+        <span class="pill">Python</span>
+        <span class="pill">Forecasting</span>
+        <span class="pill">Statistics</span>
+      </div>
     </div>
-    <div class="project-content">
-      <h3>Behavioral Health Outcomes Dashboard</h3>
-      <p>Referral tracking, service connections, outcomes monitoring, and performance indicators.</p>
-      <span class="pill">Healthcare Analytics</span>
-      <span class="pill">Program Evaluation</span>
-      <span class="pill">KPI Tracking</span>
-    </div>
-  </div>
 
-  <div class="card project-card">
-    <div class="project-visual">
-      <div class="mini-chart"></div>
+    <div class="card project-card">
+      <div class="project-image">
+        <img src="images/referral-dashboard.png" alt="Referral and Outcome Tracking Dashboard" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=&quot;placeholder&quot;><span>📊</span>Referral & Outcome Dashboard</div>';">
+      </div>
+      <div class="project-content">
+        <h3>Behavioral Health Outcomes Dashboard</h3>
+        <p>Referral tracking, service connections, outcomes monitoring, and performance indicators.</p>
+        <span class="pill">Healthcare Analytics</span>
+        <span class="pill">Program Evaluation</span>
+        <span class="pill">KPI Tracking</span>
+      </div>
     </div>
-    <div class="project-content">
-      <h3>Survey Analytics Platform</h3>
-      <p>Automated statistical testing, subgroup comparison, survey summaries, and executive reporting.</p>
-      <span class="pill">Survey Analysis</span>
-      <span class="pill">Statistical Testing</span>
-      <span class="pill">Reporting</span>
+
+    <div class="card project-card">
+      <div class="project-image">
+        <img src="images/survey-dashboard.png" alt="Survey Analytics Dashboard" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=&quot;placeholder&quot;><span>🧪</span>Survey Analytics Platform</div>';">
+      </div>
+      <div class="project-content">
+        <h3>Survey Analytics Platform</h3>
+        <p>Automated statistical testing, subgroup comparison, survey summaries, and executive reporting.</p>
+        <span class="pill">Survey Analysis</span>
+        <span class="pill">Statistical Testing</span>
+        <span class="pill">Reporting</span>
+      </div>
     </div>
   </div>
 </div>
 
-  </section>  <section>
+  </section>  <section id="about">
     <div class="about">
       <div>
         <h2>About ProgramMetrics</h2>
         <p>
-          ProgramMetrics is led by Suzanne Landram, PhD, an applied statistician,
-          program evaluator, and data analytics consultant specializing in Python-based
-          dashboards, statistical modeling, program evaluation, and automated reporting.
+          ProgramMetrics is led by <strong>Suzanne Landram, PhD</strong>, an applied statistician,
+          program evaluator, and analytics consultant specializing in Python dashboards,
+          statistical modeling, program evaluation, and automated reporting.
         </p>
         <p>
-          The goal is simple: help organizations move from raw data and manual reports
-          to reliable analytics systems that support better decisions.
+          The focus is practical: build tools that help teams understand what changed,
+          why it matters, and what to do next.
         </p>
-      </div>  <div class="callout">
-    <h2>What Makes This Different</h2>
+      </div>  <div class="about-box">
+    <h3>More than dashboards.</h3>
     <p>
-      Most dashboards show what happened. ProgramMetrics helps explain why it happened,
-      what changed, what matters statistically, and what decision-makers should do next.
+      Most dashboards show what happened. ProgramMetrics helps explain what changed,
+      what matters statistically, and how decision-makers can act on the results.
     </p>
   </div>
 </div>
 
-  </section>  <section id="contact" class="contact">
-    <h2>Contact</h2>
+  </section>  <section id="contact" class="cta">
+    <h2>Need a dashboard, analysis, or automated reporting system?</h2>
     <p>
-      Need a Python dashboard, statistical analysis, ETL pipeline, or analytics automation project?
+      Reach out to discuss Python dashboards, statistical analysis, ETL automation,
+      survey analytics, or SAS/SPSS/R to Python conversion.
     </p>
-    <p class="email">slandram@gmail.com</p>
+    <a class="email" href="mailto:slandram@gmail.com">slandram@gmail.com</a>
   </section>  <footer>
     © 2026 ProgramMetrics.io | Python Dashboards • Statistical Analytics • ETL Automation
   </footer></body>
