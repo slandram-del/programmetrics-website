@@ -1,748 +1,371 @@
-<!DOCTYPE html>
-
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ProgramMetrics.io | Python Dashboards, Statistics & ETL Automation</title>
-
-  <style>
-    :root {
-      --navy: #071827;
-      --navy2: #0f2740;
-      --blue: #2563eb;
-      --teal: #14b8a6;
-      --orange: #f97316;
-      --white: #ffffff;
-      --light: #f8fafc;
-      --soft-blue: #eef6ff;
-      --muted: #64748b;
-      --text: #1e293b;
-      --border: #e2e8f0;
-      --shadow: 0 18px 45px rgba(15, 23, 42, 0.10);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: var(--light);
-      color: var(--text);
-      line-height: 1.6;
-    }
-
-    a {
-      color: inherit;
-    }
-
-    nav {
-      background: rgba(7, 24, 39, 0.97);
-      color: white;
-      padding: 18px 8%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 999;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.10);
-    }
-
-    .logo {
-      font-size: 22px;
-      font-weight: 900;
-      letter-spacing: -0.5px;
-    }
-
-    nav a {
-      text-decoration: none;
-      margin-left: 22px;
-      font-weight: 700;
-      font-size: 14px;
-      color: #e2e8f0;
-    }
-
-    nav a:hover {
-      color: var(--teal);
-    }
-
-    .hero {
-      background:
-        radial-gradient(circle at top right, rgba(20,184,166,0.30), transparent 32%),
-        radial-gradient(circle at bottom left, rgba(37,99,235,0.25), transparent 38%),
-        linear-gradient(135deg, var(--navy), var(--navy2));
-      color: white;
-      padding: 95px 8% 95px;
-      overflow: hidden;
-    }
-
-    .hero-grid {
-      max-width: 1250px;
-      margin: auto;
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 48px;
-      align-items: center;
-    }
-
-    .badge {
-      display: inline-block;
-      background: rgba(255,255,255,0.12);
-      color: #dbeafe;
-      border: 1px solid rgba(255,255,255,0.18);
-      padding: 8px 14px;
-      border-radius: 999px;
-      font-size: 14px;
-      margin-bottom: 22px;
-    }
-
-    h1 {
-      font-size: 62px;
-      line-height: 1.04;
-      margin: 0 0 18px;
-      letter-spacing: -2px;
-    }
-
-    .hero h2 {
-      font-size: 26px;
-      color: #c7d2fe;
-      margin: 0 0 22px;
-      font-weight: 800;
-    }
-
-    .hero p {
-      font-size: 18px;
-      color: #dbeafe;
-      max-width: 760px;
-    }
-
-    .buttons {
-      margin-top: 32px;
-    }
-
-    .button {
-      display: inline-block;
-      padding: 14px 22px;
-      border-radius: 10px;
-      text-decoration: none;
-      font-weight: 900;
-      margin-right: 12px;
-      margin-bottom: 12px;
-    }
-
-    .primary {
-      background: var(--teal);
-      color: #06201c;
-    }
-
-    .secondary {
-      border: 1px solid rgba(255,255,255,0.55);
-      color: white;
-    }
-
-    .hero-card {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 24px;
-      padding: 18px;
-      box-shadow: 0 24px 70px rgba(0,0,0,.35);
-      transform: rotate(1deg);
-    }
-
-    .hero-card img {
-      width: 100%;
-      display: block;
-      border-radius: 16px;
-    }
-
-    .stats {
-      max-width: 1200px;
-      margin: -48px auto 0;
-      padding: 0 8%;
-      position: relative;
-      z-index: 5;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 18px;
-    }
-
-    .stat {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 28px;
-      box-shadow: var(--shadow);
-    }
-
-    .stat strong {
-      display: block;
-      font-size: 36px;
-      color: var(--blue);
-      margin-bottom: 6px;
-    }
-
-    section {
-      padding: 75px 8%;
-      max-width: 1250px;
-      margin: auto;
-    }
-
-    .section-title {
-      text-align: center;
-      margin-bottom: 42px;
-    }
-
-    .section-title h2 {
-      font-size: 38px;
-      color: var(--navy);
-      margin-bottom: 10px;
-    }
-
-    .section-title p {
-      color: var(--muted);
-      font-size: 18px;
-      max-width: 780px;
-      margin: auto;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 24px;
-    }
-
-    .card {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 28px;
-      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
-    }
-
-    .card h3 {
-      margin-top: 0;
-      color: var(--navy);
-      font-size: 22px;
-    }
-
-    .card p {
-      color: var(--muted);
-      margin-bottom: 0;
-    }
-
-    .icon {
-      font-size: 34px;
-      margin-bottom: 12px;
-    }
-
-    .problems {
-      background: white;
-      max-width: none;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .problem-grid {
-      max-width: 1150px;
-      margin: auto;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 45px;
-      align-items: center;
-    }
-
-    .problem-grid h2 {
-      font-size: 36px;
-      color: var(--navy);
-      margin-top: 0;
-    }
-
-    .checklist {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      background: var(--light);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 22px;
-    }
-
-    .checklist li {
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 17px;
-    }
-
-    .checklist li:last-child {
-      border-bottom: none;
-    }
-
-    .checklist li::before {
-      content: "✓";
-      color: var(--teal);
-      font-weight: bold;
-      margin-right: 10px;
-    }
-
-    .projects {
-      background: var(--soft-blue);
-      max-width: none;
-    }
-
-    .project-wrap {
-      max-width: 1250px;
-      margin: auto;
-    }
-
-    .project-card {
-      overflow: hidden;
-      padding: 0;
-      transition: 0.25s ease;
-    }
-
-    .project-card:hover {
-      transform: translateY(-6px);
-      box-shadow: var(--shadow);
-    }
-
-    .project-image {
-      height: 230px;
-      background: linear-gradient(135deg, #dbeafe, #ccfbf1);
-      border-bottom: 1px solid var(--border);
-      overflow: hidden;
-    }
-
-    .project-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .project-content {
-      padding: 26px;
-    }
-
-    .pill {
-      display: inline-block;
-      background: #e0f2fe;
-      color: #075985;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 13px;
-      margin: 12px 4px 0 0;
-      font-weight: 800;
-    }
-
-    .pricing {
-      background: white;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      max-width: none;
-    }
-
-    .pricing-wrap {
-      max-width: 1150px;
-      margin: auto;
-    }
-
-    .price-card {
-      background: var(--light);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 26px;
-    }
-
-    .price-card h3 {
-      margin-top: 0;
-      color: var(--navy);
-    }
-
-    .price {
-      color: var(--blue);
-      font-size: 28px;
-      font-weight: 900;
-      margin: 10px 0;
-    }
-
-    .about {
-      display: grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap: 38px;
-      align-items: center;
-    }
-
-    .about h2 {
-      font-size: 36px;
-      color: var(--navy);
-      margin-top: 0;
-    }
-
-    .about-box {
-      background: linear-gradient(135deg, var(--navy), var(--navy2));
-      color: white;
-      border-radius: 24px;
-      padding: 34px;
-      box-shadow: var(--shadow);
-    }
-
-    .about-box h3 {
-      color: white;
-      margin-top: 0;
-      font-size: 26px;
-    }
-
-    .about-box p {
-      color: #dbeafe;
-    }
-
-    .cta {
-      background: linear-gradient(135deg, #0f766e, #115e59);
-      color: white;
-      text-align: center;
-      max-width: none;
-      padding: 75px 8%;
-    }
-
-    .cta h2 {
-      font-size: 38px;
-      margin-top: 0;
-    }
-
-    .cta p {
-      font-size: 18px;
-      max-width: 760px;
-      margin: 0 auto 24px;
-      color: #ccfbf1;
-    }
-
-    .email {
-      display: inline-block;
-      background: white;
-      color: var(--navy);
-      padding: 14px 22px;
-      border-radius: 10px;
-      font-weight: 900;
-      text-decoration: none;
-    }
-
-    footer {
-      background: var(--navy);
-      color: #94a3b8;
-      text-align: center;
-      padding: 26px;
-      font-size: 14px;
-    }
-
-    @media (max-width: 850px) {
-      nav {
-        display: block;
-      }
-
-      nav a {
-        display: inline-block;
-        margin: 10px 12px 0 0;
-      }
-
-      .hero-grid,
-      .problem-grid,
-      .about {
-        grid-template-columns: 1fr;
-      }
-
-      h1 {
-        font-size: 44px;
-      }
-
-      .hero {
-        padding-top: 60px;
-      }
-
-      .hero-card {
-        transform: none;
-      }
-    }
-  </style>
-
-</head>
-
-<body>
-
-  <nav>
-    <div class="logo">ProgramMetrics.io</div>
-    <div>
-      <a href="#services">Services</a>
-      <a href="#projects">Examples</a>
-      <a href="#pricing">Starting Rates</a>
-      <a href="#about">About</a>
-      <a href="#contact">Contact</a>
-    </div>
-  </nav>
-
-  <header class="hero">
-    <div class="hero-grid">
-      <div>
-        <div class="badge">Python Dashboards • Statistical Analysis • ETL Automation</div>
-        <h1>Analytics tools that turn messy data into decisions.</h1>
-        <h2>Custom dashboards, statistical models, and reporting systems built by a PhD statistician.</h2>
-        <p>
-          ProgramMetrics helps healthcare, government, nonprofit, research, and program teams
-          move from manual reporting to interactive Python dashboards, automated analytics,
-          and decision-support tools.
-        </p>
-        <div class="buttons">
-          <a class="button primary" href="#projects">View Dashboard Examples</a>
-          <a class="button secondary" href="#contact">Request Consultation</a>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ProgramMetrics.io | Downloadable Analytics & Evaluation Dashboard Templates</title>
+    <meta
+      name="description"
+      content="Downloadable dashboard templates, program evaluation tools, survey reporting templates, and custom analytics support from Suzanne Landram, PhD."
+    />
+    <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <link rel="stylesheet" href="styles-20260610.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top">ProgramMetrics.io</a>
+      <nav aria-label="Primary navigation">
+        <a href="#templates">Templates</a>
+        <a href="#starter-kit">Free Starter Kit</a>
+        <a href="#services">Services</a>
+        <a href="#projects">Examples</a>
+        <a href="#pricing">Starting Rates</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-grid">
+          <div class="hero-copy reveal">
+            <p class="badge">Downloadable Templates | Evaluation Dashboards | Survey Reporting</p>
+            <h1>Ready-to-use analytics templates for teams that need better reporting now.</h1>
+            <p class="hero-subtitle">
+              Practical dashboard and reporting templates built by Suzanne Landram, PhD, an applied statistician and evaluator with 12+ years of consulting experience.
+            </p>
+            <div class="hero-actions">
+              <a class="button primary" href="#templates">Browse Downloadable Templates</a>
+              <a class="button secondary" href="#contact">Request a Custom Build</a>
+            </div>
+          </div>
+
+          <figure class="hero-dashboard reveal">
+            <img src="images/predictive-dashboard.png?v=20260610" alt="Predictive Analytics Dashboard example" />
+          </figure>
         </div>
-      </div>
+      </section>
 
-```
-  <div class="hero-card">
-    <img src="images/predictive-dashboard.png" alt="Predictive Analytics Dashboard">
-  </div>
-</div>
-```
+      <section class="stats reveal" aria-label="Experience highlights">
+        <article class="stat">
+          <strong>Template Library</strong>
+          Evaluation, survey, KPI, referral, and reporting templates for practical teams.
+        </article>
+        <article class="stat">
+          <strong>12+ Years</strong>
+          Statistical consulting, research, reporting, and program evaluation experience.
+        </article>
+        <article class="stat">
+          <strong>Customizable</strong>
+          Start with a template, then add custom dashboards, automation, or statistical support.
+        </article>
+      </section>
 
-  </header>
+      <section id="templates" class="section template-gallery">
+        <div class="section-title reveal">
+          <h2>Downloadable Analytics Templates</h2>
+          <p>Ready-to-use dashboard templates for evaluators, analysts, nonprofits, clinics, and program teams who need polished reporting without building from scratch.</p>
+        </div>
 
-  <section class="stats">
-    <div class="stat">
-      <strong>PhD</strong>
-      Applied Statistics & Research Methods
-    </div>
-    <div class="stat">
-      <strong>8+</strong>
-      Years of analytics, research, and evaluation experience
-    </div>
-    <div class="stat">
-      <strong>Python</strong>
-      Dashboards, pipelines, reporting, and statistical automation
-    </div>
-  </section>
+        <div class="template-grid">
+          <article class="template-card reveal featured-template">
+            <p class="template-label">Best first launch</p>
+            <h3>Program Evaluation Dashboard Template</h3>
+            <p>Turn referral, service, and outcome data into a leadership-ready evaluation dashboard.</p>
+            <ul class="template-list">
+              <li>For nonprofits, public health, behavioral health, education, and grant-funded programs</li>
+              <li>Includes KPI layout, referral metrics, outcome tracking, and sample data structure</li>
+              <li>Useful for monthly reporting, grant updates, and leadership review</li>
+            </ul>
+            <strong>$149</strong>
+            <div class="product-actions">
+              <a class="button mini" href="program-evaluation-dashboard-template.html">View Product Page</a>
+              <a class="button mini secondary-mini" href="mailto:svlandram.consulting@gmail.com?subject=Program%20Evaluation%20Dashboard%20Template">Buy / Request Template</a>
+            </div>
+          </article>
+          <article class="template-card reveal">
+            <p class="template-label">High-demand reporting</p>
+            <h3>Survey Reporting Template</h3>
+            <p>Summarize survey results, subgroup comparisons, completion metrics, and findings in one clean reporting system.</p>
+            <ul class="template-list">
+              <li>For evaluators, research teams, HR, education programs, and service organizations</li>
+              <li>Includes response tracking, group comparison views, executive summary layout, and findings table</li>
+              <li>Designed for recurring survey reporting and board-ready summaries</li>
+            </ul>
+            <strong>$129</strong>
+            <div class="product-actions">
+              <a class="button mini" href="survey-reporting-template.html">View Product Page</a>
+              <a class="button mini secondary-mini" href="mailto:svlandram.consulting@gmail.com?subject=Survey%20Reporting%20Template">Buy / Request Template</a>
+            </div>
+          </article>
+          <article class="template-card reveal">
+            <p class="template-label">Service tracking</p>
+            <h3>Referral & Service Connection Tracker</h3>
+            <p>Track referrals, service connections, needs, gaps, trends, and follow-up outcomes.</p>
+            <ul class="template-list">
+              <li>For clinics, social service agencies, care coordination teams, and community programs</li>
+              <li>Includes referral volume, connection rates, service categories, and site comparison views</li>
+              <li>Built for operational meetings and funder-facing updates</li>
+            </ul>
+            <strong>$149</strong>
+            <div class="product-actions">
+              <a class="button mini" href="referral-service-tracker-template.html">View Product Page</a>
+              <a class="button mini secondary-mini" href="mailto:svlandram.consulting@gmail.com?subject=Referral%20Service%20Tracker%20Template">Buy / Request Template</a>
+            </div>
+          </article>
+          <article class="template-card reveal">
+            <p class="template-label">Automation starter</p>
+            <h3>Monthly Reporting Automation Template</h3>
+            <p>Organize recurring reporting around clean data checks, refresh status, quality flags, and dashboard-ready outputs.</p>
+            <ul class="template-list">
+              <li>For analysts who update recurring Excel, CSV, or dashboard reports by hand</li>
+              <li>Includes pipeline status, validation checks, processing trend, and quality score layout</li>
+              <li>Good bridge between manual reporting and custom automation</li>
+            </ul>
+            <strong>$179</strong>
+            <div class="product-actions">
+              <a class="button mini" href="monthly-reporting-automation-template.html">View Product Page</a>
+              <a class="button mini secondary-mini" href="mailto:svlandram.consulting@gmail.com?subject=Monthly%20Reporting%20Automation%20Template">Buy / Request Template</a>
+            </div>
+          </article>
+        </div>
+      </section>
 
-  <section id="services">
-    <div class="section-title">
-      <h2>What ProgramMetrics Builds</h2>
-      <p>
-        Practical analytics systems that combine dashboard development, ETL automation,
-        statistical analysis, and executive-ready reporting.
-      </p>
-    </div>
+      <section id="starter-kit" class="section lead-magnet">
+        <div class="lead-box reveal">
+          <div>
+            <p class="badge light-badge">Free starter kit</p>
+            <h2>Build your first evaluation dashboard faster.</h2>
+            <p>
+              Get a free dashboard planning checklist, KPI map, and sample data dictionary for program evaluation reporting.
+            </p>
+          </div>
+          <form class="signup-form" action="mailto:svlandram.consulting@gmail.com" method="post" enctype="text/plain">
+            <label for="lead-email">Email address</label>
+            <input id="lead-email" name="email" type="email" placeholder="you@example.com" required />
+            <button class="button primary" type="submit">Request Starter Kit</button>
+            <small>No spam. Just practical template updates, launch notices, and reporting resources.</small>
+          </form>
+        </div>
+      </section>
 
-```
-<div class="grid">
-  <div class="card">
-    <div class="icon">📊</div>
-    <h3>Python Dashboard Development</h3>
-    <p>Interactive dashboards using Python, Streamlit, Plotly, pandas, and custom analytics workflows.</p>
-  </div>
+      <section id="services" class="section">
+        <div class="section-title reveal">
+          <h2>What ProgramMetrics Builds</h2>
+          <p>Practical analytics systems that combine custom dashboard development, ETL automation, statistical analysis, and executive-ready reporting.</p>
+        </div>
 
-  <div class="card">
-    <div class="icon">🔄</div>
-    <h3>ETL & Data Pipelines</h3>
-    <p>Automated data cleaning, validation, transformation, and scheduled reporting pipelines.</p>
-  </div>
+        <div class="card-grid interactive-grid">
+          <button class="service-card reveal" type="button" data-detail="dashboards">
+            <span class="icon">DB</span>
+            <h3>Custom Built Dashboards</h3>
+            <p>Interactive Python dashboards built around your KPIs, data structure, and decisions.</p>
+          </button>
+          <button class="service-card reveal" type="button" data-detail="pipelines">
+            <span class="icon">ETL</span>
+            <h3>ETL & Data Pipelines</h3>
+            <p>Automated cleaning, validation, transformation, and scheduled reporting workflows.</p>
+          </button>
+          <button class="service-card reveal" type="button" data-detail="statistics">
+            <span class="icon">SIG</span>
+            <h3>Statistical Analysis</h3>
+            <p>Regression, hypothesis testing, subgroup comparisons, forecasting, and model interpretation.</p>
+          </button>
+          <button class="service-card reveal" type="button" data-detail="evaluation">
+            <span class="icon">KPI</span>
+            <h3>Survey & Program Evaluation</h3>
+            <p>Survey analytics, outcome measurement, performance indicators, and evaluation reporting.</p>
+          </button>
+          <button class="service-card reveal" type="button" data-detail="legacy">
+            <span class="icon">SAS</span>
+            <h3>Legacy Script Transcription</h3>
+            <p>SAS, SPSS, and R scripts translated into readable Python workflows and automation systems.</p>
+          </button>
+          <button class="service-card reveal" type="button" data-detail="predictive">
+            <span class="icon">ML</span>
+            <h3>Predictive Analytics</h3>
+            <p>Forecasting, risk scoring, segmentation, diagnostics, and decision-support analytics.</p>
+          </button>
+        </div>
 
-  <div class="card">
-    <div class="icon">📈</div>
-    <h3>Statistical Analysis</h3>
-    <p>Regression, hypothesis testing, chi-square, ANOVA, forecasting, and model interpretation.</p>
-  </div>
+        <aside class="detail-panel reveal" id="service-detail" aria-live="polite">
+          <h3>Click a service card for details.</h3>
+          <p>Select any card above to see what can be included in that type of project.</p>
+        </aside>
+      </section>
 
-  <div class="card">
-    <div class="icon">🧪</div>
-    <h3>Survey & Program Evaluation</h3>
-    <p>Survey analysis, KPI frameworks, outcome measurement, and evidence-based evaluation reporting.</p>
-  </div>
+      <section class="section problems">
+        <div class="split">
+          <div class="reveal">
+            <h2>Built for real organizational data problems.</h2>
+            <p>
+              Many teams have data, but not a reliable analytics system. ProgramMetrics turns scattered files,
+              legacy scripts, manual reporting, and unclear KPIs into tools people can actually use.
+            </p>
+          </div>
+          <ul class="checklist reveal">
+            <li>Manual Excel reporting takes too much time</li>
+            <li>Data lives across disconnected files and systems</li>
+            <li>Dashboards need interpretation, not just charts</li>
+            <li>Legacy SAS, SPSS, or R workflows need modernization</li>
+            <li>Leadership needs KPIs, trends, and plain-language recommendations</li>
+          </ul>
+        </div>
+      </section>
 
-  <div class="card">
-    <div class="icon">🧰</div>
-    <h3>SAS/SPSS/R to Python</h3>
-    <p>Legacy statistical workflows translated into modern Python analytics and automation systems.</p>
-  </div>
+      <section id="projects" class="section projects">
+        <div class="section-title reveal">
+          <h2>Featured Dashboard Examples</h2>
+          <p>Wide dashboard concepts using synthetic or de-identified demo data.</p>
+        </div>
 
-  <div class="card">
-    <div class="icon">🤖</div>
-    <h3>Predictive Analytics</h3>
-    <p>Forecasting, risk scoring, segmentation, model diagnostics, and decision-support analytics.</p>
-  </div>
-</div>
-```
+        <div class="project-grid">
+          <article class="project-card reveal">
+            <figure class="project-image">
+            <img src="images/predictive-dashboard.png?v=20260610" alt="Predictive Analytics Dashboard" />
+            </figure>
+            <div class="project-content">
+              <h3>Predictive Analytics Dashboard</h3>
+              <p>Forecasting, KPI tracking, risk segmentation, model monitoring, and driver analysis.</p>
+              <span class="pill">Python</span><span class="pill">Forecasting</span><span class="pill">Statistics</span>
+            </div>
+          </article>
 
-  </section>
+          <article class="project-card reveal">
+            <figure class="project-image">
+              <img src="images/referral-dashboard.png?v=20260610" alt="Program Evaluation Dashboard" />
+            </figure>
+            <div class="project-content">
+              <h3>Program Evaluation Dashboard</h3>
+              <p>Referral tracking, service connections, outcomes monitoring, and performance indicators.</p>
+              <span class="pill">Healthcare Analytics</span><span class="pill">Evaluation</span><span class="pill">KPI Tracking</span>
+            </div>
+          </article>
 
-  <section class="problems">
-    <div class="problem-grid">
-      <div>
-        <h2>Built for real organizational data problems.</h2>
-        <p>
-          Many organizations have data, but not a usable analytics system. ProgramMetrics focuses on
-          turning scattered, messy, or manual reporting processes into reliable tools people can use.
-        </p>
-      </div>
+          <article class="project-card reveal">
+            <figure class="project-image">
+              <img src="images/survey-dashboard.png?v=20260610" alt="Survey Analytics and Statistical Reporting Dashboard" />
+            </figure>
+            <div class="project-content">
+              <h3>Survey Analytics Platform</h3>
+              <p>Automated statistical testing, subgroup comparison, survey summaries, and executive reporting.</p>
+              <span class="pill">Survey Analysis</span><span class="pill">Testing</span><span class="pill">Reporting</span>
+            </div>
+          </article>
 
-```
-  <ul class="checklist">
-    <li>Manual Excel reporting takes too much time</li>
-    <li>Data lives across disconnected files and systems</li>
-    <li>Dashboards show charts but not interpretation</li>
-    <li>Legacy SAS, SPSS, or R workflows need modernization</li>
-    <li>Leadership needs clear KPIs, trends, and recommendations</li>
-  </ul>
-</div>
-```
+          <article class="project-card reveal">
+            <figure class="project-image">
+              <img src="images/etl-dashboard.png?v=20260610" alt="Automated ETL and Reporting Pipeline Dashboard" />
+            </figure>
+            <div class="project-content">
+              <h3>ETL Monitoring Dashboard</h3>
+              <p>Automated extraction, validation, loading, data quality scoring, and pipeline health monitoring.</p>
+              <span class="pill">ETL</span><span class="pill">Automation</span><span class="pill">Quality Checks</span>
+            </div>
+          </article>
+        </div>
+      </section>
 
-  </section>
+      <section id="pricing" class="section pricing">
+        <div class="section-title reveal">
+          <h2>Template Support & Customization</h2>
+          <p>Start with a downloadable template, then add expert support when your data, reporting workflow, or audience needs something more tailored.</p>
+        </div>
 
-  <section id="projects" class="projects">
-    <div class="project-wrap">
-      <div class="section-title">
-        <h2>Featured Dashboard Examples</h2>
-        <p>
-          Example dashboard concepts using synthetic or de-identified demo data.
-        </p>
-      </div>
+        <div class="price-grid">
+          <article class="price-card reveal">
+            <h3>Template Customization</h3>
+            <div class="price">Starting at $300</div>
+            <p>Adjust template fields, KPI definitions, charts, labels, and reporting views around your program or organization.</p>
+          </article>
+          <article class="price-card reveal">
+            <h3>Custom Built Dashboard</h3>
+            <div class="price">Starting at $500</div>
+            <p>Interactive Python dashboard using provided data files, defined KPIs, and a polished reporting layout.</p>
+          </article>
+          <article class="price-card reveal">
+            <h3>Advanced Analytics</h3>
+            <div class="price">Starting at $1,000</div>
+            <p>Statistical analysis, forecasting, subgroup comparisons, evaluation design, or predictive modeling added to a dashboard workflow.</p>
+          </article>
+          <article class="price-card reveal">
+            <h3>ETL & Automation</h3>
+            <div class="price">Starting at $1,500</div>
+            <p>Automated pipelines, validation workflows, recurring reports, and dashboard-ready datasets.</p>
+          </article>
+        </div>
+      </section>
 
-```
-  <div class="grid">
-    <div class="card project-card">
-      <div class="project-image">
-        <img src="images/predictive-dashboard.png" alt="Predictive Analytics Dashboard">
-      </div>
-      <div class="project-content">
-        <h3>Predictive Analytics Dashboard</h3>
-        <p>Forecasting, KPI tracking, risk segmentation, model fit, and driver analysis.</p>
-        <span class="pill">Python</span>
-        <span class="pill">Forecasting</span>
-        <span class="pill">Statistics</span>
-      </div>
-    </div>
+      <section class="section faq-section">
+        <div class="section-title reveal">
+          <h2>Template Questions</h2>
+          <p>Details buyers usually want before downloading a reporting template or requesting customization.</p>
+        </div>
 
-    <div class="card project-card">
-      <div class="project-image">
-        <img src="images/referral-dashboard.png" alt="Behavioral Health Outcomes Dashboard">
-      </div>
-      <div class="project-content">
-        <h3>Behavioral Health Outcomes Dashboard</h3>
-        <p>Referral tracking, service connections, outcomes monitoring, and performance indicators.</p>
-        <span class="pill">Healthcare Analytics</span>
-        <span class="pill">Program Evaluation</span>
-        <span class="pill">KPI Tracking</span>
-      </div>
-    </div>
+        <div class="faq-grid">
+          <article class="faq-card reveal">
+            <h3>What will each template include?</h3>
+            <p>Each launch template will include a dashboard layout, sample data structure, KPI guidance, plain-language interpretation prompts, and setup notes.</p>
+          </article>
+          <article class="faq-card reveal">
+            <h3>Can templates be customized?</h3>
+            <p>Yes. You can use a template as-is, request light customization, or turn it into a fully custom dashboard and reporting system.</p>
+          </article>
+          <article class="faq-card reveal">
+            <h3>Who are these built for?</h3>
+            <p>They are built for evaluators, analysts, nonprofit leaders, clinic teams, grant managers, and program staff who need clean reporting without starting from zero.</p>
+          </article>
+          <article class="faq-card reveal">
+            <h3>Can I use one for client work?</h3>
+            <p>Standard templates are intended for one organization or project team. Reach out for multi-client, agency, or redistribution licensing.</p>
+          </article>
+        </div>
+      </section>
 
-    <div class="card project-card">
-      <div class="project-image">
-        <img src="images/survey-dashboard.png" alt="Survey Analytics Platform">
-      </div>
-      <div class="project-content">
-        <h3>Survey Analytics Platform</h3>
-        <p>Automated statistical testing, subgroup comparison, survey summaries, and executive reporting.</p>
-        <span class="pill">Survey Analysis</span>
-        <span class="pill">Statistical Testing</span>
-        <span class="pill">Reporting</span>
-      </div>
-    </div>
+      <section id="about" class="section about-section">
+        <div class="about">
+          <figure class="about-photo reveal">
+            <img src="images/suzanne-landram-headshot.jpg?v=20260610" alt="Suzanne Landram, PhD, founder of ProgramMetrics" />
+          </figure>
 
-    <div class="card project-card">
-      <div class="project-image">
-        <img src="images/etl-dashboard.png" alt="ETL Automation Dashboard">
-      </div>
-      <div class="project-content">
-        <h3>ETL Automation & Reporting Pipelines</h3>
-        <p>Automated extraction, transformation, validation, and reporting workflows built in Python.</p>
-        <span class="pill">ETL</span>
-        <span class="pill">Automation</span>
-        <span class="pill">Python</span>
-      </div>
-    </div>
-  </div>
-</div>
-```
+          <div class="reveal">
+            <h2>About ProgramMetrics</h2>
+            <p>
+              ProgramMetrics is led by Suzanne Landram, PhD, an applied statistician and research methods expert with over
+              12 years of experience in statistical consulting, program evaluation, analytics, and automated reporting.
+            </p>
+            <p>
+              The focus is practical: build tools that help teams understand what changed, why it matters, and what to do next.
+            </p>
+          </div>
 
-  </section>
+          <aside class="about-box reveal">
+            <h3>More than dashboards.</h3>
+            <p>
+              Most dashboards show what happened. ProgramMetrics helps explain what changed, what matters statistically,
+              and how decision-makers can act on the results.
+            </p>
+          </aside>
+        </div>
+      </section>
 
-  <section id="pricing" class="pricing">
-    <div class="pricing-wrap">
-      <div class="section-title">
-        <h2>Typical Starting Points</h2>
-        <p>
-          Pricing depends on data complexity, number of sources, modeling needs, and reporting requirements.
-        </p>
-      </div>
+      <section id="contact" class="cta">
+        <div class="reveal">
+          <h2>Want a template, custom version, or launch notification?</h2>
+          <p>
+            Reach out to request a downloadable template, ask about customization, join the launch list, or discuss a dashboard built around your data.
+          </p>
+          <a class="email" href="mailto:svlandram.consulting@gmail.com">svlandram.consulting@gmail.com</a>
+        </div>
+      </section>
+    </main>
 
-```
-  <div class="grid">
-    <div class="price-card">
-      <h3>Dashboard Build</h3>
-      <div class="price">Starting at $500</div>
-      <p>Interactive Python dashboard using provided data files and defined KPIs.</p>
-    </div>
+    <footer>
+      <p>Copyright 2026 ProgramMetrics.io | Custom Dashboards | Statistical Analytics | ETL Automation</p>
+    </footer>
 
-    <div class="price-card">
-      <h3>Advanced Analytics</h3>
-      <div class="price">Starting at $1,000</div>
-      <p>Dashboard with statistical analysis, forecasting, subgroup comparisons, or predictive modeling.</p>
-    </div>
-
-    <div class="price-card">
-      <h3>ETL & Automation</h3>
-      <div class="price">Starting at $1,500</div>
-      <p>Automated pipelines, data validation workflows, recurring reports, and dashboard-ready datasets.</p>
-    </div>
-  </div>
-</div>
-```
-
-  </section>
-
-  <section id="about">
-    <div class="about">
-      <div>
-        <h2>About ProgramMetrics</h2>
-        <p>
-          ProgramMetrics is led by <strong>Suzanne Landram, PhD</strong>, an applied statistician,
-          program evaluator, and analytics consultant specializing in Python dashboards,
-          statistical modeling, program evaluation, and automated reporting.
-        </p>
-        <p>
-          The focus is practical: build tools that help teams understand what changed,
-          why it matters, and what to do next.
-        </p>
-      </div>
-
-```
-  <div class="about-box">
-    <h3>More than dashboards.</h3>
-    <p>
-      Most dashboards show what happened. ProgramMetrics helps explain what changed,
-      what matters statistically, and how decision-makers can act on the results.
-    </p>
-  </div>
-</div>
-```
-
-  </section>
-
-  <section id="contact" class="cta">
-    <h2>Need a dashboard, analysis, or automated reporting system?</h2>
-    <p>
-      Reach out to discuss Python dashboards, statistical analysis, ETL automation,
-      survey analytics, or SAS/SPSS/R to Python conversion.
-    </p>
-    <a class="email" href="mailto:slandram@gmail.com">slandram@gmail.com</a>
-  </section>
-
-  <footer>
-    © 2026 ProgramMetrics.io | Python Dashboards • Statistical Analytics • ETL Automation
-  </footer>
-
-</body>
+    <script src="script-20260610.js"></script>
+  </body>
 </html>
