@@ -1,78 +1,216 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Program Evaluation Dashboard Template | ProgramMetrics.io</title>
-    <meta
-      name="description"
-      content="A downloadable program evaluation dashboard template for referral tracking, outcomes, grant reporting, and leadership-ready program metrics."
-    />
-    <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="pragma" content="no-cache" />
-    <meta http-equiv="expires" content="0" />
-    <link rel="stylesheet" href="styles-20260610.css" />
-  </head>
-  <body>
-    <header class="site-header">
-      <a class="brand" href="index.html#top">ProgramMetrics.io</a>
-      <nav aria-label="Primary navigation">
-        <a href="index.html#templates">Templates</a>
-        <a href="index.html#starter-kit">Free Starter Kit</a>
-        <a href="index.html#services">Services</a>
-        <a href="index.html#contact">Contact</a>
-      </nav>
-    </header>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <main>
-      <section class="product-hero">
-        <div class="product-hero-grid">
-          <div>
-            <p class="badge">Program Evaluation Template</p>
-            <h1>Turn program data into a leadership-ready evaluation dashboard.</h1>
-            <p class="hero-subtitle">
-              Built for nonprofits, clinics, public health teams, education programs, and grant-funded services that need clearer referral, service, and outcome reporting.
-            </p>
-            <div class="hero-actions">
-              <a class="button primary" href="mailto:Hello@programmetrics.io?subject=Program%20Evaluation%20Dashboard%20Template">Buy / Request Template</a>
-              <a class="button secondary" href="index.html#starter-kit">Get Free Starter Kit</a>
-            </div>
-          </div>
-          <figure class="hero-dashboard">
-            <img src="images/referral-dashboard.png?v=20260610" alt="Program evaluation dashboard preview" />
-          </figure>
-        </div>
-      </section>
+  <title>ProgramMetrics Studio Beta | No-Code Dashboard Generator</title>
 
-      <section class="section product-detail">
-        <div class="product-columns">
-          <article>
-            <h2>What It Helps Answer</h2>
-            <ul class="checklist">
-              <li>How many people were referred, served, connected, or lost to follow-up?</li>
-              <li>Which programs, sites, or service categories are changing over time?</li>
-              <li>Where are there gaps between identified needs and completed services?</li>
-              <li>What should leadership or funders understand at a glance?</li>
-            </ul>
-          </article>
-          <article class="about-box">
-            <h3>Template price</h3>
-            <p class="product-price">$149</p>
-            <p>Includes dashboard layout, KPI structure, sample data map, interpretation prompts, and setup notes. Customization is available separately.</p>
-          </article>
-        </div>
-      </section>
+  <meta
+    name="description"
+    content="ProgramMetrics Studio Beta is a no-code dashboard generator that helps users upload Excel or CSV files and generate dashboards, KPIs, and reports in the browser."
+  />
 
-      <section class="section faq-section">
-        <div class="section-title">
-          <h2>Best Fit</h2>
-          <p>Use this template when you need program evaluation reporting that is cleaner than a spreadsheet but lighter than a full custom build.</p>
-        </div>
-      </section>
-    </main>
+  <link rel="stylesheet" href="styles-20260610.css" />
 
-    <footer>
-      <p>Copyright 2026 ProgramMetrics.io | Downloadable Analytics Templates</p>
-    </footer>
-  </body>
+  <style>
+    body {
+      max-width: 950px;
+      margin: auto;
+      padding: 40px 24px;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    .studio-header {
+      margin-bottom: 32px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: #dffaf5;
+      color: #0f766e;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 7vw, 4rem);
+      line-height: 1.05;
+      margin: 0 0 20px;
+      color: #0b1220;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      line-height: 1.7;
+      color: #475569;
+      max-width: 780px;
+    }
+
+    .upload {
+      margin: 36px 0;
+      padding: 32px;
+      border: 2px dashed #14b8a6;
+      border-radius: 18px;
+      text-align: center;
+      background: white;
+    }
+
+    select,
+    input[type="file"] {
+      width: 100%;
+      max-width: 480px;
+      padding: 14px;
+      margin: 10px 0 18px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+
+    button,
+    .button-link {
+      display: inline-block;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 10px;
+      background: #2563eb;
+      color: white;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    button:hover,
+    .button-link:hover {
+      background: #1d4ed8;
+    }
+
+    .card-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      margin-top: 30px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      color: #0b1220;
+    }
+
+    .card p {
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    .note {
+      margin-top: 28px;
+      padding: 20px;
+      background: #ecfeff;
+      border-left: 5px solid #06b6d4;
+      border-radius: 12px;
+      color: #164e63;
+      line-height: 1.6;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 30px;
+      color: #2563eb;
+      font-weight: 700;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <section class="studio-header">
+      <p class="badge">ProgramMetrics Studio Beta</p>
+
+      <h1>No-code dashboard generation starts here.</h1>
+
+      <p class="subtitle">
+        Upload an Excel or CSV file, choose a dashboard type, and generate KPIs, charts,
+        and reports in your browser. This beta page is the first working version of the
+        ProgramMetrics no-code app and dashboard system.
+      </p>
+    </section>
+
+    <section class="upload">
+      <h2>Try the Dashboard Generator</h2>
+
+      <p>Select the type of dashboard you want to create.</p>
+
+      <select>
+        <option>Program Evaluation Dashboard</option>
+        <option>Survey Analytics Dashboard</option>
+        <option>Grant Reporting Dashboard</option>
+        <option>Referral & Service Dashboard</option>
+        <option>Inventory & Operations Dashboard</option>
+      </select>
+
+      <p>Upload your Excel or CSV file.</p>
+
+      <input type="file" accept=".csv,.xlsx,.xls" />
+
+      <br />
+
+      <button type="button">Generate Dashboard</button>
+    </section>
+
+    <section>
+      <h2>What this will do</h2>
+
+      <div class="card-grid">
+        <article class="card">
+          <h3>1. Validate Data</h3>
+          <p>
+            Check whether the uploaded file has the required columns for the selected dashboard type.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>2. Generate KPIs</h3>
+          <p>
+            Automatically calculate counts, rates, trends, outcomes, and summary metrics.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>3. Build Charts</h3>
+          <p>
+            Display dashboard visuals in the browser using filters, categories, and reporting views.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>4. Export Reports</h3>
+          <p>
+            Create summaries that can be used for leadership, funders, teams, and decision-making.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="note">
+      <strong>Beta note:</strong>
+      This page is currently a prototype. The next build will read uploaded CSV files,
+      validate required columns, calculate KPIs, and display the first dashboard results.
+    </section>
+
+    <a class="back-link" href="index.html">← Back to ProgramMetrics.io</a>
+  </main>
+</body>
 </html>
