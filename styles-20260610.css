@@ -822,3 +822,12 @@ footer {
     height: 210px;
   }
 }
+/* Fix anchor links for sticky header */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 210px;
+}
+
+section {
+  scroll-margin-top: 210px;
+}
