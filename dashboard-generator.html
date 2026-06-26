@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Generator | ProgramMetrics.io</title>
+  <meta
+    name="description"
+    content="Turn Excel, CSV, SPSS, SAS, R, Qualtrics, and other data files into interactive dashboards, reports, and custom analytics tools."
+  />
+
+  <style>
+    :root {
+      --bg: #f7f9fc;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #5f6b7a;
+      --accent: #2563eb;
+      --accent-dark: #1e40af;
+      --border: #e5e9f0;
+      --soft: #eef4ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      padding: 18px 8%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    nav a {
+      margin-left: 18px;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    nav a:hover {
+      color: var(--accent);
+    }
+
+    .hero {
+      padding: 80px 8%;
+      background: linear-gradient(135deg, #eef4ff, #ffffff);
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.3rem, 5vw, 4.2rem);
+      margin-bottom: 18px;
+      line-height: 1.1;
+    }
+
+    .hero p {
+      max-width: 780px;
+      margin: 0 auto 30px;
+      color: var(--muted);
+      font-size: 1.15rem;
+    }
+
+    .button {
+      display: inline-block;
+      background: var(--accent);
+      color: white;
+      padding: 14px 24px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 700;
+      margin: 8px;
+    }
+
+    .button:hover {
+      background: var(--accent-dark);
+    }
+
+    .button.secondary {
+      background: white;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
+    section {
+      padding: 70px 8%;
+    }
+
+    .section-title {
+      text-align: center;
+      max-width: 760px;
+      margin: 0 auto 44px;
+    }
+
+    .section-title h2 {
+      font-size: 2.2rem;
+      margin-bottom: 12px;
+    }
+
+    .section-title p {
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 22px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 26px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .card p,
+    .card li {
+      color: var(--muted);
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--soft);
+      color: var(--accent-dark);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .steps {
+      counter-reset: step;
+    }
+
+    .step {
+      position: relative;
+    }
+
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      background: var(--accent);
+      color: white;
+      border-radius: 50%;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .highlight {
+      background: #ffffff;
+    }
+
+    .cta {
+      text-align: center;
+      background: #172033;
+      color: white;
+      border-radius: 28px;
+      padding: 60px 8%;
+      margin: 40px 8%;
+    }
+
+    .cta p {
+      color: #d7deea;
+      max-width: 720px;
+      margin: 0 auto 26px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px 8%;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      background: white;
+    }
+
+    @media (max-width: 700px) {
+      nav {
+        margin-top: 12px;
+      }
+
+      nav a {
+        display: inline-block;
+        margin: 6px 10px 6px 0;
+      }
+
+      .hero {
+        padding: 60px 6%;
+      }
+
+      section {
+        padding: 55px 6%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <a class="logo" href="index.html">ProgramMetrics.io</a>
+
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="dashboard-generator.html">Dashboard Generator</a>
+    <a href="next-steps.html">Next Steps</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>Dashboard Generator</h1>
+  <p>
+    Turn raw data files into clear, interactive dashboards, automated reports,
+    and custom analytics tools without needing to build everything from scratch.
+  </p>
+
+  <a class="button" href="contact.html">Start a Dashboard Project</a>
+  <a class="button secondary" href="#how-it-works">See How It Works</a>
+</section>
+
+<section>
+  <div class="section-title">
+    <h2>Upload Your Data. Get a Dashboard.</h2>
+    <p>
+      ProgramMetrics helps organizations transform messy spreadsheets,
+      exports, survey files, and program data into dashboards that are easier
+      to understand, share, and use.
+    </p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <span class="badge">Data Files</span>
+      <h3>Supported Inputs</h3>
+      <p>
+        Excel, CSV, SPSS, SAS, R files, SQL exports, Qualtrics data,
+        Power BI data sources, and other common formats.
+      </p>
+    </div>
+
+    <div class="card">
+      <span class="badge">Dashboards</span>
+      <h3>Interactive Outputs</h3>
+      <p>
+        Receive a dashboard that makes your metrics easier to filter,
+        explore, and present to leadership or stakeholders.
+      </p>
+    </div>
+
+    <div class="card">
+      <span class="badge">Automation</span>
+      <h3>Repeatable Reporting</h3>
+      <p>
+        Build a process that can be updated over time instead of recreating
+        the same reports manually each month or quarter.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="highlight">
+  <div class="section-title">
+    <h2>What You Can Build</h2>
+    <p>
+      The Dashboard Generator can support one-time reporting projects,
+      internal business dashboards, program evaluation tools, and custom apps.
+    </p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Program Dashboards</h3>
+      <p>
+        Track participation, services, outcomes, demographics, referrals,
+        completion rates, and performance measures.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Executive Reports</h3>
+      <p>
+        Create leadership-ready summaries with clean charts, KPIs,
+        trends, and key takeaways.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Survey Dashboards</h3>
+      <p>
+        Transform Qualtrics, Excel, or CSV survey exports into clean
+        visual summaries and response analysis.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Custom Business Apps</h3>
+      <p>
+        Build simple internal apps for ordering, tracking, intake,
+        inventory, workflow management, or reporting.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="how-it-works">
+  <div class="section-title">
+    <h2>How It Works</h2>
+    <p>
+      A simple process designed to move from raw data to a usable dashboard
+      without overwhelming your team.
+    </p>
+  </div>
+
+  <div class="grid steps">
+    <div class="card step">
+      <h3>Share Your Goal</h3>
+      <p>
+        Tell us what you need to track, who will use the dashboard,
+        and what decisions it should support.
+      </p>
+    </div>
+
+    <div class="card step">
+      <h3>Send Your Data</h3>
+      <p>
+        Provide your spreadsheet, export, survey file, database extract,
+        or reporting template.
+      </p>
+    </div>
+
+    <div class="card step">
+      <h3>Clean & Structure</h3>
+      <p>
+        We review your data, identify issues, organize fields, and prepare it
+        for dashboard development.
+      </p>
+    </div>
+
+    <div class="card step">
+      <h3>Build the Dashboard</h3>
+      <p>
+        We create the dashboard, visualizations, filters, calculations,
+        and reporting views.
+      </p>
+    </div>
+
+    <div class="card step">
+      <h3>Review Together</h3>
+      <p>
+        You test the dashboard, verify the numbers, and request updates
+        before final delivery.
+      </p>
+    </div>
+
+    <div class="card step">
+      <h3>Deliver & Support</h3>
+      <p>
+        You receive the finished dashboard, documentation, and optional
+        ongoing support.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="highlight">
+  <div class="section-title">
+    <h2>Common Deliverables</h2>
+    <p>
+      Every project can be customized based on your organization’s needs,
+      budget, and technical environment.
+    </p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Interactive Dashboard</h3>
+      <p>Web-based or file-based dashboard with filters, charts, tables, and KPIs.</p>
+    </div>
+
+    <div class="card">
+      <h3>Power BI Dashboard</h3>
+      <p>Professional Power BI reports for internal teams and leadership review.</p>
+    </div>
+
+    <div class="card">
+      <h3>Streamlit App</h3>
+      <p>Custom Python-powered app for dashboards, forms, workflows, or reporting tools.</p>
+    </div>
+
+    <div class="card">
+      <h3>PDF or PowerPoint Report</h3>
+      <p>Presentation-ready summaries for meetings, funders, boards, or leadership.</p>
+    </div>
+
+    <div class="card">
+      <h3>Cleaned Dataset</h3>
+      <p>Organized, documented data that is easier to reuse and update.</p>
+    </div>
+
+    <div class="card">
+      <h3>Documentation</h3>
+      <p>Simple instructions so your team understands how to use the final product.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">
+    <h2>Best Fit Projects</h2>
+    <p>
+      This service is ideal for organizations that have data but need a clearer,
+      faster, and more useful way to work with it.
+    </p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Government & Public Programs</h3>
+      <p>
+        Reporting dashboards, service tracking, compliance summaries,
+        and performance measures.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Nonprofits</h3>
+      <p>
+        Grant reporting, outcomes tracking, client services dashboards,
+        and board-ready summaries.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Small Businesses</h3>
+      <p>
+        Operations dashboards, order tracking, inventory tools,
+        and internal workflow apps.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Education & Research</h3>
+      <p>
+        Survey analysis, institutional reporting, program outcomes,
+        and student support metrics.
+      </p>
+    </div>
+  </div>
+</section>
+
+<div class="cta">
+  <h2>Ready to Turn Your Data Into a Dashboard?</h2>
+  <p>
+    Send your file, describe what you need, and ProgramMetrics can help you
+    turn raw data into a dashboard, report, or custom app your team can actually use.
+  </p>
+
+  <a class="button" href="contact.html">Start Your Project</a>
+</div>
+
+<footer>
+  <p>© 2026 ProgramMetrics.io | hello@programmetrics.io</p>
+</footer>
+
+</body>
+</html>
