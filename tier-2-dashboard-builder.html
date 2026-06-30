@@ -30,8 +30,8 @@
             <h1>Configure the dashboard you want ProgramMetrics to build.</h1>
             <p class="hero-subtitle">
               Use this guided builder to describe branding, KPIs, charts, filters, reports, and export
-              needs. It creates a downloadable configuration summary that can be sent to ProgramMetrics
-              for Tier 2 pricing and build review.
+              needs. It creates a downloadable Tier 2 build package that summarizes the requested
+              dashboard, included outputs, and customer-provided files needed for delivery.
             </p>
             <div class="hero-actions">
               <a class="button primary" href="#builder">Start Builder</a>
@@ -235,15 +235,15 @@
             <div class="builder-actions">
               <button class="button primary" type="button" id="generate-summary">Generate Configuration Summary</button>
               <button class="button primary secondary-mini" type="button" id="download-config">Download Configuration</button>
-              <a class="button primary secondary-mini" id="email-config" href="mailto:hello@programmetrics.io?subject=Tier%202%20Dashboard%20Builder%20Configuration">Email ProgramMetrics</a>
+              <a class="button primary secondary-mini" id="email-config" href="mailto:hello@programmetrics.io?subject=Tier%202%20Dashboard%20Builder%20Configuration">Send Configuration</a>
             </div>
           </form>
 
           <aside class="builder-summary reveal visible" aria-live="polite">
             <h2>Configuration Summary</h2>
             <p>
-              Generate a summary after completing the form. Download it and email it to ProgramMetrics with
-              sample files, screenshots, or brand assets when ready.
+              Generate the summary to create a Tier 2 build package. The downloaded file includes
+              the requested dashboard setup, selected deliverables, file checklist, and completion outputs.
             </p>
             <pre id="summary-output">No configuration generated yet.</pre>
           </aside>
@@ -299,9 +299,35 @@
       }
 
       function formatConfig(config) {
-        return Object.entries(config)
+        const selectedExports = config["Exports"].length ? config["Exports"].join(", ") : "Standard dashboard outputs";
+        const includedDeliverables = [
+          "Branded dashboard configuration based on the selections above",
+          "Configured KPI cards, charts, filters, groupings, and table views",
+          "Dashboard labels and layout preferences applied from this build package",
+          selectedExports,
+          "Final dashboard/report package prepared from the customer-provided files and selected options"
+        ];
+        const customerItems = [
+          "A supported Excel or CSV data file, or a representative sample file",
+          "Logo or brand assets if branding is requested",
+          "Any screenshots, prior reports, or examples that show the preferred look",
+          "Confirmation that the uploaded or shared data may be used for the requested dashboard work"
+        ];
+
+        const mainSummary = Object.entries(config)
           .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") || "None selected" : value || "Not provided"}`)
           .join("\n");
+
+        return `${mainSummary}
+
+Included Tier 2 Build Outputs:
+- ${includedDeliverables.join("\n- ")}
+
+Customer File Checklist:
+- ${customerItems.join("\n- ")}
+
+Built-In Next Step:
+Download this configuration and send it with the required files or brand assets. ProgramMetrics uses this build package as the dashboard specification for the selected Tier 2 deliverables.`;
       }
 
       function updateSummary() {
@@ -310,7 +336,7 @@
         output.textContent = summary;
 
         const subject = encodeURIComponent(`Tier 2 Dashboard Builder Configuration - ${config["Organization name"] || "ProgramMetrics"}`);
-        const body = encodeURIComponent("Hi ProgramMetrics,\n\nI generated a Tier 2 dashboard configuration and would like next steps. I will attach the downloaded configuration file and any relevant sample files.\n\nThank you.");
+        const body = encodeURIComponent("Hi ProgramMetrics,\n\nI generated a Tier 2 dashboard build package. I will attach the downloaded configuration file and the required data, sample files, screenshots, or brand assets for the selected deliverables.\n\nThank you.");
         emailLink.href = `mailto:hello@programmetrics.io?subject=${subject}&body=${body}`;
         return summary;
       }
