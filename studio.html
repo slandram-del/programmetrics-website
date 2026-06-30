@@ -33,14 +33,14 @@
     </section>
 
     <section id="studio-tool" class="section studio-app">
-      <div class="section-title reveal visible"><h2>ProgramMetrics Studio</h2><p>Upload your own file for your dashboard. Use example data only when you want to test the tool.</p></div>
+      <div class="section-title reveal visible"><h2>ProgramMetrics Studio</h2><p>Upload your own file for your dashboard. Example data is available only before a file is loaded.</p></div>
       <div class="studio-panel reveal visible">
         <div class="studio-controls">
           <div class="studio-control"><label for="data-file">Upload Excel or CSV</label><input id="data-file" type="file" accept=".csv,.xlsx,.xls" /></div>
           <div class="studio-control"><label for="dashboard-type">Dashboard Type</label><select id="dashboard-type"><option value="summary">KPI Summary</option><option value="survey">Survey Results</option><option value="program">Program Evaluation</option><option value="operations">Operations Tracker</option></select></div>
           <div class="studio-toolbar"><button class="button mini secondary-mini" type="button" id="sample-data">Try Example Data</button><button class="button mini secondary-mini" type="button" id="download-csv" disabled>Download CSV</button><button class="button mini secondary-mini" type="button" id="download-report" disabled>Download Report</button></div>
         </div>
-        <p class="studio-status" id="studio-status">Upload your file to generate a dashboard. Example data is only for testing.</p>
+        <p class="studio-status" id="studio-status">Upload your file to generate a dashboard. Example data is only for testing before an upload.</p>
       </div>
       <div class="metric-grid reveal visible" id="metric-grid"><article class="metric-card"><span>Rows</span><strong>0</strong></article><article class="metric-card"><span>Columns</span><strong>0</strong></article><article class="metric-card"><span>Numeric Fields</span><strong>0</strong></article><article class="metric-card"><span>Missing Values</span><strong>0</strong></article></div>
       <div class="studio-panel reveal visible"><h2>Dashboard View</h2><div id="chart" class="chart-wrap"><p class="empty-state">Your chart will appear here after a file is loaded.</p></div></div>
@@ -59,8 +59,10 @@
       const sampleRows=[{Site:'North',Month:'January',Participants:42,Completed:36,Satisfaction:4.4,Status:'Complete'},{Site:'North',Month:'February',Participants:51,Completed:43,Satisfaction:4.6,Status:'Complete'},{Site:'South',Month:'January',Participants:38,Completed:29,Satisfaction:4.1,Status:'In Progress'},{Site:'South',Month:'February',Participants:46,Completed:40,Satisfaction:4.5,Status:'Complete'},{Site:'East',Month:'January',Participants:31,Completed:24,Satisfaction:3.9,Status:'Needs Review'},{Site:'East',Month:'February',Participants:35,Completed:32,Satisfaction:4.3,Status:'Complete'}];
 
       sampleBtn.addEventListener('click',function(){
-        if(state.sourceType==='upload'&&!confirm('This will replace the currently loaded file with example data. Continue?')) return;
-        fileInput.value='';
+        if(state.sourceType==='upload'){
+          setStatus('Your uploaded file is still active. Example data will not replace an uploaded file. Refresh the page if you want to test the example dataset.');
+          return;
+        }
         dashboardType.value='summary';
         loadRows(sampleRows,'example-data','Example dataset','sample');
       });
