@@ -20,6 +20,7 @@
       .metric-card span { color: #53627f; display: block; font-size: .88rem; font-weight: 800; }
       .metric-card strong { color: #07111f; display: block; font-size: 2rem; margin-top: 6px; }
       .chart-wrap { display: grid; gap: 10px; }
+      .chart-note { color: #53627f; font-weight: 700; margin: 0 0 8px; }
       .bar-row { display: grid; grid-template-columns: minmax(120px,220px) 1fr auto; gap: 10px; align-items: center; }
       .bar-label { color: #53627f; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .bar-track { background: #e8eef9; border-radius: 999px; height: 16px; overflow: hidden; }
@@ -130,7 +131,7 @@
 
     <script>
       document.addEventListener('DOMContentLoaded', function () {
-        const state = { rows: [], columns: [], fileName: 'sample-data' };
+        const state = { rows: [], columns: [], fileName: 'sample-data', sourceLabel: 'No file loaded' };
         const fileInput = document.getElementById('data-file');
         const dashboardType = document.getElementById('dashboard-type');
         const statusEl = document.getElementById('studio-status');
@@ -142,17 +143,24 @@
         const sampleBtn = document.getElementById('sample-data');
 
         const sampleRows = [
-          { Site: 'North', Month: 'January', Participants: 42, Completed: 36, Satisfaction: 4.4 },
-          { Site: 'North', Month: 'February', Participants: 51, Completed: 43, Satisfaction: 4.6 },
-          { Site: 'South', Month: 'January', Participants: 38, Completed: 29, Satisfaction: 4.1 },
-          { Site: 'South', Month: 'February', Participants: 46, Completed: 40, Satisfaction: 4.5 },
-          { Site: 'East', Month: 'January', Participants: 31, Completed: 24, Satisfaction: 3.9 },
-          { Site: 'East', Month: 'February', Participants: 35, Completed: 32, Satisfaction: 4.3 }
+          { Site: 'North', Month: 'January', Participants: 42, Completed: 36, Satisfaction: 4.4, Status: 'Complete' },
+          { Site: 'North', Month: 'February', Participants: 51, Completed: 43, Satisfaction: 4.6, Status: 'Complete' },
+          { Site: 'South', Month: 'January', Participants: 38, Completed: 29, Satisfaction: 4.1, Status: 'In Progress' },
+          { Site: 'South', Month: 'February', Participants: 46, Completed: 40, Satisfaction: 4.5, Status: 'Complete' },
+          { Site: 'East', Month: 'January', Participants: 31, Completed: 24, Satisfaction: 3.9, Status: 'Needs Review' },
+          { Site: 'East', Month: 'February', Participants: 35, Completed: 32, Satisfaction: 4.3, Status: 'Complete' }
         ];
 
-        sampleBtn.addEventListener('click', function () { loadRows(sampleRows, 'sample-data'); });
+        sampleBtn.addEventListener('click', function () {
+          fileInput.value = '';
+          dashboardType.value = 'summary';
+          loadRows(sampleRows, 'sample-data', 'Sample dataset');
+        });
         fileInput.addEventListener('change', handleFileUpload);
-        dashboardType.addEventListener('change', renderDashboard);
+        dashboardType.addEventListener('change', function () {
+          renderDashboard();
+          if (state.rows.length) setStatus('Showing ' + selectedDashboardLabel() + ' for ' + state.sourceLabel + '.');
+        });
         downloadCsvBtn.addEventListener('click', downloadCsv);
         downloadReportBtn.addEventListener('click', downloadReport);
 
@@ -163,7 +171,7 @@
           const extension = file.name.split('.').pop().toLowerCase();
           if (extension === 'csv') {
             const reader = new FileReader();
-            reader.onload = function () { loadRows(parseCsv(reader.result), state.fileName); };
+            reader.onload = function () { loadRows(parseCsv(reader.result), state.fileName, file.name); };
             reader.readAsText(file);
             return;
           }
@@ -173,7 +181,7 @@
             reader.onload = function () {
               const workbook = XLSX.read(new Uint8Array(reader.result), { type: 'array' });
               const sheet = workbook.Sheets[workbook.SheetNames[0]];
-              loadRows(XLSX.utils.sheet_to_json(sheet, { defval: '' }), state.fileName);
+              loadRows(XLSX.utils.sheet_to_json(sheet, { defval: '' }), state.fileName, file.name);
             };
             reader.readAsArrayBuffer(file);
             return;
@@ -207,14 +215,15 @@
           return out;
         }
 
-        function loadRows(rows, fileName) {
+        function loadRows(rows, fileName, sourceLabel) {
           state.rows = rows.map(cleanRow);
           state.columns = Array.from(new Set(state.rows.flatMap(function (row) { return Object.keys(row); })));
           state.fileName = fileName;
+          state.sourceLabel = sourceLabel || fileName;
           renderDashboard();
           downloadCsvBtn.disabled = !state.rows.length;
           downloadReportBtn.disabled = !state.rows.length;
-          setStatus(state.rows.length ? 'Generated dashboard from ' + state.rows.length + ' rows.' : 'No usable rows found.');
+          setStatus(state.rows.length ? 'Showing ' + selectedDashboardLabel() + ' for ' + state.sourceLabel + ' (' + state.rows.length + ' rows).' : 'No usable rows found.');
         }
 
         function cleanRow(row) {
@@ -237,21 +246,64 @@
 
         function renderChart(rows, columns, numericColumns) {
           if (!rows.length) { chartEl.innerHTML = '<p class="empty-state">Your chart will appear here after a file is loaded.</p>'; return; }
-          const categoryColumn = columns.find(function (col) { return !numericColumns.includes(col) && uniqueValues(rows, col).length > 1 && uniqueValues(rows, col).length <= 20; }) || columns[0];
-          const numericColumn = numericColumns[0];
+          const config = dashboardConfig(rows, columns, numericColumns);
           const grouped = new Map();
           rows.forEach(function (row) {
-            const label = String(row[categoryColumn] || 'Blank');
-            const value = numericColumn ? toNumber(row[numericColumn]) : 1;
+            const label = String(row[config.categoryColumn] || 'Blank');
+            const value = config.mode === 'count' ? 1 : toNumber(row[config.numericColumn]);
             grouped.set(label, (grouped.get(label) || 0) + value);
           });
           const data = Array.from(grouped, function (entry) { return { label: entry[0], value: entry[1] }; }).sort(function (a, b) { return b.value - a.value; }).slice(0, 8);
           const max = Math.max.apply(null, data.map(function (item) { return item.value; }).concat([1]));
-          const title = numericColumn ? numericColumn + ' by ' + categoryColumn : 'Record count by ' + categoryColumn;
-          chartEl.innerHTML = '<h3>' + escapeHtml(title) + '</h3>' + data.map(function (item) {
+          chartEl.innerHTML = '<h3>' + escapeHtml(config.title) + '</h3><p class="chart-note">' + escapeHtml(config.note) + '</p>' + data.map(function (item) {
             const width = Math.max(3, Math.round((item.value / max) * 100));
             return '<div class="bar-row"><div class="bar-label" title="' + escapeHtml(item.label) + '">' + escapeHtml(item.label) + '</div><div class="bar-track"><div class="bar-fill" style="width:' + width + '%"></div></div><div class="bar-value">' + formatNumber(item.value) + '</div></div>';
           }).join('');
+        }
+
+        function dashboardConfig(rows, columns, numericColumns) {
+          const type = dashboardType.value;
+          const siteCol = findColumn(columns, /site|location|program|team|group|department|category/i) || firstTextColumn(columns, numericColumns) || columns[0];
+          const dateCol = findColumn(columns, /month|date|period|week|quarter|year/i) || siteCol;
+          const statusCol = findColumn(columns, /status|stage|type|category|outcome/i) || siteCol;
+          const participantCol = findColumn(numericColumns, /participant|client|served|count|total|volume|number/i) || numericColumns[0];
+          const completedCol = findColumn(numericColumns, /complete|completed|outcome|success|closed|served/i) || numericColumns[1] || numericColumns[0];
+          const satisfactionCol = findColumn(numericColumns, /satisfaction|score|rating|survey|response|mean|average/i) || numericColumns[2] || numericColumns[0];
+
+          if (type === 'survey') {
+            return {
+              title: (satisfactionCol ? satisfactionCol : 'Responses') + ' by ' + siteCol,
+              note: 'Survey template: emphasizes ratings, scores, or response patterns.',
+              categoryColumn: siteCol,
+              numericColumn: satisfactionCol,
+              mode: satisfactionCol ? 'sum' : 'count'
+            };
+          }
+          if (type === 'program') {
+            return {
+              title: (completedCol ? completedCol : 'Records') + ' by ' + siteCol,
+              note: 'Program evaluation template: emphasizes completed services, outcomes, or participation.',
+              categoryColumn: siteCol,
+              numericColumn: completedCol,
+              mode: completedCol ? 'sum' : 'count'
+            };
+          }
+          if (type === 'operations') {
+            return {
+              title: 'Record count by ' + statusCol,
+              note: 'Operations template: emphasizes workflow status, categories, and activity volume.',
+              categoryColumn: statusCol,
+              numericColumn: null,
+              mode: 'count'
+            };
+          }
+          return {
+            title: (participantCol ? participantCol : 'Records') + ' by ' + siteCol,
+            note: 'KPI summary template: emphasizes high-level volume and performance indicators.',
+            categoryColumn: siteCol,
+            numericColumn: participantCol,
+            mode: participantCol ? 'sum' : 'count'
+          };
         }
 
         function renderPreview(rows, columns) {
@@ -267,7 +319,7 @@
         }
 
         function downloadReport() {
-          const report = '<!doctype html><html><head><meta charset="utf-8"><title>ProgramMetrics Studio Report</title><style>body{font-family:Arial,sans-serif;line-height:1.5;margin:32px;color:#111827}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;padding:8px;text-align:left}</style></head><body><h1>ProgramMetrics Studio Report</h1><p>Dashboard type: ' + escapeHtml(dashboardType.options[dashboardType.selectedIndex].text) + '</p><p>Rows: ' + state.rows.length + ' | Columns: ' + state.columns.length + '</p>' + previewEl.innerHTML + '</body></html>';
+          const report = '<!doctype html><html><head><meta charset="utf-8"><title>ProgramMetrics Studio Report</title><style>body{font-family:Arial,sans-serif;line-height:1.5;margin:32px;color:#111827}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;padding:8px;text-align:left}</style></head><body><h1>ProgramMetrics Studio Report</h1><p>Dataset: ' + escapeHtml(state.sourceLabel) + '</p><p>Dashboard type: ' + escapeHtml(selectedDashboardLabel()) + '</p><p>Rows: ' + state.rows.length + ' | Columns: ' + state.columns.length + '</p>' + chartEl.innerHTML + previewEl.innerHTML + '</body></html>';
           downloadFile(state.fileName + '-dashboard-report.html', report, 'text/html');
         }
 
@@ -280,6 +332,9 @@
           URL.revokeObjectURL(link.href);
         }
 
+        function selectedDashboardLabel() { return dashboardType.options[dashboardType.selectedIndex].text; }
+        function findColumn(columns, pattern) { return columns.find(function (col) { return pattern.test(col); }); }
+        function firstTextColumn(columns, numericColumns) { return columns.find(function (col) { return !numericColumns.includes(col); }); }
         function uniqueValues(rows, column) { return Array.from(new Set(rows.map(function (row) { return String(row[column] || 'Blank'); }))); }
         function isNumeric(value) { return value !== '' && value != null && !Number.isNaN(Number(String(value).replace(/[$,%]/g, ''))); }
         function toNumber(value) { const number = Number(String(value).replace(/[$,%]/g, '')); return Number.isFinite(number) ? number : 0; }
