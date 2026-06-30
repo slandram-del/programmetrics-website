@@ -936,6 +936,18 @@ footer p {
   margin-top: 0;
 }
 
+.button.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.builder-action-note {
+  color: #53627f;
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin-top: 12px;
+}
+
 .builder-summary {
   position: sticky;
   top: 92px;

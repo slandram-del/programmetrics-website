@@ -235,7 +235,12 @@
             <div class="builder-actions">
               <button class="button mini" type="button" id="generate-summary">Generate Estimated Tier 2 Price</button>
               <button class="button mini" type="button" id="download-config">Download Estimate</button>
+              <button class="button mini" type="button" id="start-over">Start Over</button>
+              <a class="button mini is-disabled" id="agree-pay" href="#" aria-disabled="true">Agree & Pay</a>
             </div>
+            <p class="builder-action-note">
+              Change any form selection and generate the estimate again before paying.
+            </p>
           </form>
 
           <aside class="builder-summary reveal visible" aria-live="polite">
@@ -263,6 +268,9 @@
       const form = document.getElementById("tier2-form");
       const output = document.getElementById("summary-output");
       const downloadButton = document.getElementById("download-config");
+      const startOverButton = document.getElementById("start-over");
+      const agreePayButton = document.getElementById("agree-pay");
+      const TIER2_PAYMENT_CHECKOUT_URL = "";
 
       function selectedValues(name) {
         return Array.from(form.querySelectorAll(`input[name="${name}"]:checked`)).map((input) => input.value);
@@ -365,10 +373,38 @@ Customer File Checklist:
         const config = buildConfig();
         const summary = formatConfig(config);
         output.textContent = summary;
+        agreePayButton.classList.remove("is-disabled");
+        agreePayButton.setAttribute("aria-disabled", "false");
         return summary;
       }
 
       document.getElementById("generate-summary").addEventListener("click", updateSummary);
+
+      startOverButton.addEventListener("click", () => {
+        form.reset();
+        document.getElementById("primary-color").value = "#154c79";
+        document.getElementById("accent-color").value = "#14b8a6";
+        output.textContent = "No estimate generated yet.";
+        agreePayButton.classList.add("is-disabled");
+        agreePayButton.setAttribute("aria-disabled", "true");
+        form.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      agreePayButton.addEventListener("click", (event) => {
+        if (agreePayButton.getAttribute("aria-disabled") === "true") {
+          event.preventDefault();
+          output.textContent = "Generate an estimated Tier 2 price before agreeing and paying.";
+          return;
+        }
+
+        if (!TIER2_PAYMENT_CHECKOUT_URL) {
+          event.preventDefault();
+          output.textContent += "\n\nPayment Checkout:\nA secure payment link has not been connected yet. Add the live Tier 2 checkout URL to TIER2_PAYMENT_CHECKOUT_URL in this page to make Agree & Pay open checkout automatically.";
+          return;
+        }
+
+        agreePayButton.href = TIER2_PAYMENT_CHECKOUT_URL;
+      });
 
       downloadButton.addEventListener("click", () => {
         const summary = updateSummary();
