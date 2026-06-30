@@ -1073,9 +1073,19 @@ footer p {
 /* Fix anchor links for sticky header */
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 210px;
+  scroll-padding-top: 92px;
 }
 
 section {
-  scroll-margin-top: 210px;
+  scroll-margin-top: 92px;
+}
+
+@media (max-width: 720px) {
+  html {
+    scroll-padding-top: 150px;
+  }
+
+  section {
+    scroll-margin-top: 150px;
+  }
 }
