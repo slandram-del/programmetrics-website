@@ -623,6 +623,36 @@ h1 {
   margin-top: 24px;
 }
 
+.pricing-block {
+  max-width: 1240px;
+  margin: 0 auto 34px;
+}
+
+.pricing-block:last-of-type {
+  margin-bottom: 0;
+}
+
+.pricing-tier-heading {
+  max-width: 900px;
+  margin: 0 auto 18px;
+  text-align: center;
+}
+
+.pricing-tier-heading h3 {
+  color: var(--navy);
+  font-size: 2rem;
+  margin: 10px 0;
+}
+
+.pricing-tier-heading p {
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.pricing-tier-heading .product-actions {
+  justify-content: center;
+}
+
 .featured-price {
   border-color: rgba(20, 184, 166, 0.5);
   box-shadow: 0 22px 55px rgba(20, 184, 166, 0.12);
@@ -1073,19 +1103,21 @@ footer p {
 /* Fix anchor links for sticky header */
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 92px;
+  scroll-padding-top: 76px;
 }
 
-section {
-  scroll-margin-top: 92px;
+section,
+[id] {
+  scroll-margin-top: 76px;
 }
 
 @media (max-width: 720px) {
   html {
-    scroll-padding-top: 150px;
+    scroll-padding-top: 122px;
   }
 
-  section {
-    scroll-margin-top: 150px;
+  section,
+  [id] {
+    scroll-margin-top: 122px;
   }
 }
