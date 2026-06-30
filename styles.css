@@ -753,6 +753,139 @@ footer p {
   font-weight: 900;
 }
 
+.builder-section {
+  background: #f8fbff;
+}
+
+.builder-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.7fr);
+  gap: 24px;
+  max-width: 1260px;
+  margin: auto;
+  align-items: start;
+}
+
+.builder-form,
+.builder-summary {
+  background: #fff;
+  border: 1px solid rgba(83, 98, 127, 0.18);
+  border-radius: 8px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+  padding: 26px;
+}
+
+.builder-form fieldset {
+  border: 1px solid rgba(83, 98, 127, 0.2);
+  border-radius: 8px;
+  margin: 0 0 22px;
+  padding: 22px;
+}
+
+.builder-form legend {
+  color: var(--navy);
+  font-size: 1.2rem;
+  font-weight: 900;
+  padding: 0 8px;
+}
+
+.builder-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.builder-field {
+  color: var(--navy);
+  display: grid;
+  gap: 8px;
+  font-weight: 900;
+}
+
+.builder-wide {
+  grid-column: 1 / -1;
+}
+
+.builder-field input,
+.builder-field select,
+.builder-field textarea {
+  border: 1px solid rgba(83, 98, 127, 0.35);
+  border-radius: 8px;
+  color: var(--navy);
+  font: inherit;
+  padding: 12px;
+  width: 100%;
+}
+
+.builder-field textarea {
+  resize: vertical;
+}
+
+.builder-choice-block {
+  margin-top: 22px;
+}
+
+.builder-choice-block h3 {
+  color: var(--navy);
+  font-size: 1.05rem;
+  margin-bottom: 12px;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.checkbox-grid label {
+  align-items: center;
+  background: #f6f9ff;
+  border: 1px solid rgba(83, 98, 127, 0.18);
+  border-radius: 8px;
+  color: #26354f;
+  display: flex;
+  gap: 8px;
+  font-weight: 800;
+  min-height: 46px;
+  padding: 10px 12px;
+}
+
+.builder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.builder-summary {
+  position: sticky;
+  top: 92px;
+}
+
+.builder-summary h2 {
+  color: var(--navy);
+  margin-bottom: 12px;
+}
+
+.builder-summary p {
+  color: #53627f;
+  font-weight: 700;
+}
+
+.builder-summary pre {
+  background: #07111f;
+  border-radius: 8px;
+  color: #e6f6ff;
+  font-family: "Courier New", monospace;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  margin-top: 16px;
+  min-height: 320px;
+  overflow: auto;
+  padding: 16px;
+  white-space: pre-wrap;
+}
+
 .policy-page {
   max-width: 980px;
 }
@@ -913,6 +1046,16 @@ footer p {
 
   .product-actions {
     display: grid;
+  }
+
+  .builder-layout,
+  .builder-grid,
+  .checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .builder-summary {
+    position: static;
   }
 
   .lead-box h2 {

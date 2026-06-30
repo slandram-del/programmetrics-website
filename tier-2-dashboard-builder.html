@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tier 2 Dashboard Builder | ProgramMetrics.io</title>
+    <meta
+      name="description"
+      content="Configure a Tier 2 ProgramMetrics dashboard with branding, KPIs, charts, filters, exports, and interactive report options."
+    />
+    <link rel="stylesheet" href="styles-20260610.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html#top">ProgramMetrics.io</a>
+      <nav aria-label="Primary navigation">
+        <a href="index.html#how-it-works">How It Works</a>
+        <a href="studio.html">Studio</a>
+        <a href="index.html#apps">Solutions</a>
+        <a href="index.html#pricing">Pricing</a>
+        <a href="index.html#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-grid">
+          <div class="hero-copy reveal visible">
+            <p class="badge">Tier 2 guided customization</p>
+            <h1>Configure the dashboard you want ProgramMetrics to build.</h1>
+            <p class="hero-subtitle">
+              Use this guided builder to describe branding, KPIs, charts, filters, reports, and export
+              needs. It creates a downloadable configuration summary that can be sent to ProgramMetrics
+              for Tier 2 pricing and build review.
+            </p>
+            <div class="hero-actions">
+              <a class="button primary" href="#builder">Start Builder</a>
+              <a class="button primary" href="studio.html">Try Tier 1 Studio</a>
+            </div>
+          </div>
+          <figure class="hero-dashboard reveal visible">
+            <img src="images/predictive-dashboard.png?v=20260611" alt="ProgramMetrics customized dashboard example" />
+          </figure>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title reveal visible">
+          <h2>What Tier 2 Covers</h2>
+          <p>
+            Tier 2 is for customization that can be captured in a structured configuration. It is a fit
+            when the standard Studio dashboard works, but the organization needs more control over the
+            look, metrics, charts, filters, downloads, or report package.
+          </p>
+        </div>
+        <div class="price-grid three-tier">
+          <article class="price-card reveal visible">
+            <h3>Branding</h3>
+            <p>Organization name, logo placement notes, color preferences, labels, section names, and report tone.</p>
+          </article>
+          <article class="price-card reveal visible">
+            <h3>Dashboard Logic</h3>
+            <p>Priority KPIs, calculated fields, chart types, filters, groupings, tables, and dashboard layout.</p>
+          </article>
+          <article class="price-card reveal visible">
+            <h3>Downloads</h3>
+            <p>PDF summaries, PNG chart exports, cleaned CSV or Excel files, and optional interactive HTML reports.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="builder" class="section builder-section">
+        <div class="section-title reveal visible">
+          <h2>Tier 2 Configuration Builder</h2>
+          <p>
+            Complete the fields that matter. Leave anything unknown blank and ProgramMetrics can review it
+            during follow-up.
+          </p>
+        </div>
+
+        <div class="builder-layout">
+          <form class="builder-form reveal visible" id="tier2-form">
+            <fieldset>
+              <legend>Project Basics</legend>
+              <div class="builder-grid">
+                <label class="builder-field">
+                  Organization Name
+                  <input id="org-name" name="Organization name" type="text" placeholder="Example: Blue Valley Services" />
+                </label>
+                <label class="builder-field">
+                  Contact Email
+                  <input id="contact-email" name="Contact email" type="email" placeholder="name@example.org" />
+                </label>
+                <label class="builder-field">
+                  Project Name
+                  <input id="project-name" name="Project name" type="text" placeholder="Monthly Outcomes Dashboard" />
+                </label>
+                <label class="builder-field">
+                  Starting Point
+                  <select id="starting-point" name="Starting point">
+                    <option>Tier 1 Studio dashboard</option>
+                    <option>ProgramMetrics example dashboard</option>
+                    <option>Existing spreadsheet or report</option>
+                    <option>Existing dashboard screenshot</option>
+                    <option>Not sure yet</option>
+                  </select>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Branding</legend>
+              <div class="builder-grid">
+                <label class="builder-field">
+                  Primary Color
+                  <input id="primary-color" name="Primary color" type="color" value="#154c79" />
+                </label>
+                <label class="builder-field">
+                  Accent Color
+                  <input id="accent-color" name="Accent color" type="color" value="#14b8a6" />
+                </label>
+                <label class="builder-field builder-wide">
+                  Logo or Brand Notes
+                  <textarea id="brand-notes" name="Logo or brand notes" rows="3" placeholder="Logo will be emailed separately, use formal report language, include board-ready section labels, etc."></textarea>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Dashboard Setup</legend>
+              <div class="builder-grid">
+                <label class="builder-field">
+                  Dashboard Type
+                  <select id="dashboard-type" name="Dashboard type">
+                    <option>KPI summary</option>
+                    <option>Survey results</option>
+                    <option>Program evaluation</option>
+                    <option>Operations tracker</option>
+                    <option>Referral or service tracker</option>
+                    <option>Custom dashboard</option>
+                  </select>
+                </label>
+                <label class="builder-field">
+                  Preferred Layout
+                  <select id="layout" name="Preferred layout">
+                    <option>Executive summary first</option>
+                    <option>Charts first</option>
+                    <option>Tables first</option>
+                    <option>Program sections</option>
+                    <option>Not sure</option>
+                  </select>
+                </label>
+                <label class="builder-field builder-wide">
+                  Priority KPIs
+                  <textarea id="kpis" name="Priority KPIs" rows="4" placeholder="List the numbers that should appear at the top of the dashboard. Example: total clients served, completion rate, average days open, referrals by source."></textarea>
+                </label>
+              </div>
+
+              <div class="builder-choice-block">
+                <h3>Charts</h3>
+                <div class="checkbox-grid">
+                  <label><input type="checkbox" name="Charts" value="Bar charts" checked /> Bar charts</label>
+                  <label><input type="checkbox" name="Charts" value="Line trends" /> Line trends</label>
+                  <label><input type="checkbox" name="Charts" value="Pie or donut charts" /> Pie or donut charts</label>
+                  <label><input type="checkbox" name="Charts" value="KPI cards" checked /> KPI cards</label>
+                  <label><input type="checkbox" name="Charts" value="Comparison tables" /> Comparison tables</label>
+                  <label><input type="checkbox" name="Charts" value="Drill-down views" /> Drill-down views</label>
+                </div>
+              </div>
+
+              <div class="builder-choice-block">
+                <h3>Filters and Groupings</h3>
+                <div class="checkbox-grid">
+                  <label><input type="checkbox" name="Filters and groupings" value="Date range" checked /> Date range</label>
+                  <label><input type="checkbox" name="Filters and groupings" value="Program or location" /> Program or location</label>
+                  <label><input type="checkbox" name="Filters and groupings" value="Status or outcome" /> Status or outcome</label>
+                  <label><input type="checkbox" name="Filters and groupings" value="Staff or team" /> Staff or team</label>
+                  <label><input type="checkbox" name="Filters and groupings" value="Demographic groups" /> Demographic groups</label>
+                  <label><input type="checkbox" name="Filters and groupings" value="Custom categories" /> Custom categories</label>
+                </div>
+              </div>
+
+              <div class="builder-choice-block">
+                <h3>Exports</h3>
+                <div class="checkbox-grid">
+                  <label><input type="checkbox" name="Exports" value="PDF summary" checked /> PDF summary</label>
+                  <label><input type="checkbox" name="Exports" value="PNG chart exports" /> PNG chart exports</label>
+                  <label><input type="checkbox" name="Exports" value="Cleaned CSV or Excel" checked /> Cleaned CSV or Excel</label>
+                  <label><input type="checkbox" name="Exports" value="Interactive HTML report" /> Interactive HTML report</label>
+                  <label><input type="checkbox" name="Exports" value="Board-ready narrative" /> Board-ready narrative</label>
+                  <label><input type="checkbox" name="Exports" value="Appendix tables" /> Appendix tables</label>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Data and Delivery Notes</legend>
+              <div class="builder-grid">
+                <label class="builder-field">
+                  File Type
+                  <select id="file-type" name="File type">
+                    <option>Excel</option>
+                    <option>CSV</option>
+                    <option>Google Sheet export</option>
+                    <option>Qualtrics export</option>
+                    <option>Multiple files</option>
+                    <option>Not sure</option>
+                  </select>
+                </label>
+                <label class="builder-field">
+                  Desired Timing
+                  <select id="timing" name="Desired timing">
+                    <option>Flexible</option>
+                    <option>Within 1 week</option>
+                    <option>Within 2 weeks</option>
+                    <option>Monthly recurring</option>
+                    <option>Need to discuss</option>
+                  </select>
+                </label>
+                <label class="builder-field builder-wide">
+                  Special Requirements
+                  <textarea id="requirements" name="Special requirements" rows="4" placeholder="Calculated fields, required wording, privacy limits, columns that need cleanup, reporting deadlines, or anything the dashboard must show."></textarea>
+                </label>
+              </div>
+            </fieldset>
+
+            <p class="policy-note">
+              This builder runs in your browser and does not submit the form automatically. Do not include
+              sensitive regulated data here unless a separate written agreement allows it. Review the
+              <a href="privacy-policy.html">Privacy Policy</a>,
+              <a href="terms-of-service.html">Terms of Service</a>, and
+              <a href="refund-liability-policy.html">Refund & Liability Policy</a>.
+            </p>
+
+            <div class="builder-actions">
+              <button class="button primary" type="button" id="generate-summary">Generate Configuration Summary</button>
+              <button class="button primary secondary-mini" type="button" id="download-config">Download Configuration</button>
+              <a class="button primary secondary-mini" id="email-config" href="mailto:hello@programmetrics.io?subject=Tier%202%20Dashboard%20Builder%20Configuration">Email ProgramMetrics</a>
+            </div>
+          </form>
+
+          <aside class="builder-summary reveal visible" aria-live="polite">
+            <h2>Configuration Summary</h2>
+            <p>
+              Generate a summary after completing the form. Download it and email it to ProgramMetrics with
+              sample files, screenshots, or brand assets when ready.
+            </p>
+            <pre id="summary-output">No configuration generated yet.</pre>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Copyright 2026 ProgramMetrics.io | No-Code Apps | Dashboard Tools | Reporting Systems</p>
+      <p class="footer-links">
+        <a href="refund-liability-policy.html">Refund & Liability Policy</a> |
+        <a href="privacy-policy.html">Privacy Policy</a> |
+        <a href="terms-of-service.html">Terms of Service</a>
+      </p>
+    </footer>
+
+    <script>
+      const form = document.getElementById("tier2-form");
+      const output = document.getElementById("summary-output");
+      const downloadButton = document.getElementById("download-config");
+      const emailLink = document.getElementById("email-config");
+
+      function selectedValues(name) {
+        return Array.from(form.querySelectorAll(`input[name="${name}"]:checked`)).map((input) => input.value);
+      }
+
+      function fieldValue(id) {
+        return document.getElementById(id).value.trim();
+      }
+
+      function buildConfig() {
+        const config = {
+          "Organization name": fieldValue("org-name"),
+          "Contact email": fieldValue("contact-email"),
+          "Project name": fieldValue("project-name"),
+          "Starting point": fieldValue("starting-point"),
+          "Primary color": fieldValue("primary-color"),
+          "Accent color": fieldValue("accent-color"),
+          "Logo or brand notes": fieldValue("brand-notes"),
+          "Dashboard type": fieldValue("dashboard-type"),
+          "Preferred layout": fieldValue("layout"),
+          "Priority KPIs": fieldValue("kpis"),
+          "Charts": selectedValues("Charts"),
+          "Filters and groupings": selectedValues("Filters and groupings"),
+          "Exports": selectedValues("Exports"),
+          "File type": fieldValue("file-type"),
+          "Desired timing": fieldValue("timing"),
+          "Special requirements": fieldValue("requirements"),
+          "Generated": new Date().toLocaleString()
+        };
+
+        return config;
+      }
+
+      function formatConfig(config) {
+        return Object.entries(config)
+          .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") || "None selected" : value || "Not provided"}`)
+          .join("\n");
+      }
+
+      function updateSummary() {
+        const config = buildConfig();
+        const summary = formatConfig(config);
+        output.textContent = summary;
+
+        const subject = encodeURIComponent(`Tier 2 Dashboard Builder Configuration - ${config["Organization name"] || "ProgramMetrics"}`);
+        const body = encodeURIComponent("Hi ProgramMetrics,\n\nI generated a Tier 2 dashboard configuration and would like next steps. I will attach the downloaded configuration file and any relevant sample files.\n\nThank you.");
+        emailLink.href = `mailto:hello@programmetrics.io?subject=${subject}&body=${body}`;
+        return summary;
+      }
+
+      document.getElementById("generate-summary").addEventListener("click", updateSummary);
+
+      downloadButton.addEventListener("click", () => {
+        const summary = updateSummary();
+        const org = fieldValue("org-name").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "programmetrics";
+        const blob = new Blob([summary], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${org}-tier-2-dashboard-configuration.txt`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      });
+    </script>
+  </body>
+</html>
