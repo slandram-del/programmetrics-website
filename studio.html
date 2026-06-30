@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ProgramMetrics Studio | Self-Service Dashboard Generator</title>
-  <meta name="description" content="Upload Excel or CSV data, generate a browser dashboard, preview KPIs and charts, and download standard reports with ProgramMetrics Studio." />
+  <meta name="description" content="Upload Excel or CSV data, validate columns, generate a browser dashboard, preview KPIs and charts, and download standard reports with ProgramMetrics Studio." />
   <link rel="stylesheet" href="styles-20260610.css" />
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
@@ -25,7 +25,7 @@
         <div class="hero-copy reveal visible">
           <p class="badge">Tier 1 self-service</p>
           <h1>Upload your file. Generate your dashboard. Download your results.</h1>
-          <p class="hero-subtitle">ProgramMetrics Studio runs in the browser for standard Excel and CSV dashboard generation. Files are processed locally in the user's browser. Tier 1 does not require ProgramMetrics setup, custom work, or manual handling.</p>
+          <p class="hero-subtitle">ProgramMetrics Studio runs in the browser for standard Excel and CSV dashboard generation. Files are processed locally in the user's browser, with self-service validation, dashboards, reports, and cleaned data downloads. Tier 1 does not require ProgramMetrics setup, custom work, or manual handling.</p>
           <div class="hero-actions"><a class="button primary" href="#studio-tool">Use Studio</a><a class="button primary" href="#tiers">Compare Tiers</a></div>
         </div>
         <figure class="hero-dashboard reveal visible"><img src="images/predictive-dashboard.png?v=20260611" alt="ProgramMetrics Studio dashboard example" /></figure>
@@ -39,7 +39,7 @@
           <div class="studio-control"><label for="data-file">Upload Excel or CSV</label><input id="data-file" type="file" accept=".csv,.xlsx,.xls" /></div>
           <div class="studio-control"><label for="start-row">Header Row</label><input id="start-row" type="number" min="1" step="1" value="1" /></div>
           <div class="studio-control"><label for="dashboard-type">Dashboard Type</label><select id="dashboard-type"><option value="summary">KPI Summary</option><option value="survey">Survey Results</option><option value="program">Program Evaluation</option><option value="operations">Operations Tracker</option></select></div>
-          <div class="studio-toolbar"><button class="button mini secondary-mini" type="button" id="sample-data">Try Example Data</button><button class="button mini secondary-mini" type="button" id="download-csv" disabled>Download CSV</button><button class="button mini secondary-mini" type="button" id="download-report" disabled>Download Report</button></div>
+          <div class="studio-toolbar"><button class="button mini secondary-mini" type="button" id="sample-data">Try Example Data</button><button class="button mini secondary-mini" type="button" id="download-csv" disabled>Download CSV</button><button class="button mini secondary-mini" type="button" id="download-report" disabled>Download Summary</button></div>
         </div>
         <p class="studio-status" id="studio-status">Upload your file to generate a dashboard. Header Row tells Studio where the column names start.</p>
       </div>
@@ -48,7 +48,46 @@
       <div class="studio-panel reveal visible"><h2>Data Preview</h2><div id="data-preview" class="table-wrap"><p class="empty-state">The first rows of your dataset will appear here.</p></div></div>
     </section>
 
-    <section id="tiers" class="section pricing"><div class="section-title reveal visible"><h2>Tier 1 is self-service. Tier 2 starts customization.</h2><p>Use the browser tool when a standard dashboard is enough. Upgrade only when the workflow needs custom logic, design, or support.</p></div><div class="price-grid"><article class="price-card reveal visible"><h3>Tier 1: Self-Service Dashboard Generator</h3><div class="price">$49-$199</div><p>Users upload Excel or CSV data, generate a standard dashboard, preview results, and download reports without ProgramMetrics manual setup.</p></article><article class="price-card reveal visible"><h3>Tier 2: Customized Dashboard</h3><div class="price">$299-$999</div><p>Adds custom fields, labels, charts, branding, report structure, and light workflow support.</p></article><article class="price-card reveal visible"><h3>Tier 3: Custom Application</h3><div class="price">$1,500-$5,000+</div><p>A custom web application built around the user's process, fields, dashboards, reports, and decisions.</p></article><article class="price-card reveal visible"><h3>Tier 4: Enterprise Analytics System</h3><div class="price">$5,000+</div><p>Advanced analytics, automation, AI-assisted summaries, integrations, multi-file workflows, and specialized reporting systems.</p></article></div></section>
+    <section id="tiers" class="section pricing">
+      <div class="section-title reveal visible">
+        <h2>Tier 1 is self-service. Tier 2 is guided customization.</h2>
+        <p>Use Studio when a standard dashboard is enough. Upgrade when branding, custom KPIs, calculated metrics, report options, or an offline interactive HTML report need to be configured.</p>
+      </div>
+      <div class="price-grid three-tier">
+        <article class="price-card reveal visible">
+          <h3>Starter</h3>
+          <div class="price">$49</div>
+          <p>Standard dashboard template, Excel/CSV upload, interactive dashboard, PDF report, PNG chart exports, and cleaned Excel/CSV download.</p>
+        </article>
+        <article class="price-card reveal visible">
+          <h3>Professional</h3>
+          <div class="price">$99</div>
+          <p>Everything in Starter, plus more advanced templates, more visualizations, better filtering, and more export options.</p>
+        </article>
+        <article class="price-card reveal visible">
+          <h3>Premium</h3>
+          <div class="price">$199</div>
+          <p>Everything in Professional, plus the largest template library, advanced analytics, additional reporting options, priority processing, and premium dashboard features.</p>
+        </article>
+      </div>
+      <div class="price-grid two-tier add-on-grid">
+        <article class="price-card reveal visible featured-price">
+          <h3>Tier 2: AI Dashboard Builder</h3>
+          <div class="price">$299-$999+</div>
+          <p>A guided customization form captures organization name, logo, brand colors, sample data, KPIs, charts, tables, filters, groupings, calculated metrics, layout, report downloads, and exports.</p>
+        </article>
+        <article class="price-card reveal visible featured-price">
+          <h3>Interactive HTML Report</h3>
+          <div class="price">Tier 2 add-on</div>
+          <p>Download an offline browser-based report with filters, drill-down charts, expandable sections, summary cards, tables, search, navigation, and branded visuals.</p>
+        </article>
+        <article class="price-card reveal visible">
+          <h3>Tier 3: Enterprise Solutions</h3>
+          <div class="price">Custom quote</div>
+          <p>For custom apps, databases, APIs, authentication, SharePoint, Power BI, Qualtrics, SQL, multi-user systems, ongoing support, and reporting portals.</p>
+        </article>
+      </div>
+    </section>
   </main>
 
   <footer><p>Copyright 2026 ProgramMetrics.io | ProgramMetrics Studio | Self-Service Dashboard Generator</p></footer>
@@ -80,7 +119,7 @@
       function dashboardConfig(columns,numericColumns){const type=dashboardType.value,siteCol=findColumn(columns,/site|location|program|team|group|department|category/i)||firstTextColumn(columns,numericColumns)||columns[0],statusCol=findColumn(columns,/status|stage|type|category|outcome/i)||siteCol,participantCol=findColumn(numericColumns,/participant|client|served|count|total|volume|number/i)||numericColumns[0],completedCol=findColumn(numericColumns,/complete|completed|outcome|success|closed|served/i)||numericColumns[1]||numericColumns[0],satisfactionCol=findColumn(numericColumns,/satisfaction|score|rating|survey|response|mean|average/i)||numericColumns[2]||numericColumns[0];if(type==='survey')return{title:(satisfactionCol||'Responses')+' by '+siteCol,note:'Survey template: ratings, scores, or response patterns.',categoryColumn:siteCol,numericColumn:satisfactionCol,mode:satisfactionCol?'sum':'count'};if(type==='program')return{title:(completedCol||'Records')+' by '+siteCol,note:'Program evaluation template: completed services, outcomes, or participation.',categoryColumn:siteCol,numericColumn:completedCol,mode:completedCol?'sum':'count'};if(type==='operations')return{title:'Record count by '+statusCol,note:'Operations template: workflow status, categories, and activity volume.',categoryColumn:statusCol,numericColumn:null,mode:'count'};return{title:(participantCol||'Records')+' by '+siteCol,note:'KPI summary template: high-level volume and performance indicators.',categoryColumn:siteCol,numericColumn:participantCol,mode:participantCol?'sum':'count'}}
       function renderPreview(rows,columns){if(!rows.length){previewEl.innerHTML='<p class="empty-state">The first rows of your dataset will appear here.</p>';return}const visibleColumns=columns.slice(0,8),body=rows.slice(0,10).map(row=>'<tr>'+visibleColumns.map(col=>'<td>'+escapeHtml(String(row[col]==null?'':row[col]))+'</td>').join('')+'</tr>').join('');previewEl.innerHTML='<table class="data-table"><thead><tr>'+visibleColumns.map(col=>'<th>'+escapeHtml(col)+'</th>').join('')+'</tr></thead><tbody>'+body+'</tbody></table>'}
       function downloadCsv(){const csv=[state.columns.map(csvEscape).join(',')].concat(state.rows.map(row=>state.columns.map(col=>csvEscape(row[col])).join(','))).join('\n');downloadFile(state.fileName+'-dashboard-data.csv',csv,'text/csv')}
-      function downloadReport(){const report='<!doctype html><html><head><meta charset="utf-8"><title>ProgramMetrics Studio Report</title><style>body{font-family:Arial,sans-serif;line-height:1.5;margin:32px;color:#111827}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;padding:8px;text-align:left}</style></head><body><h1>ProgramMetrics Studio Report</h1><p>Dataset: '+escapeHtml(state.sourceLabel)+'</p><p>Header row: '+(headerRowIndex()+1)+'</p><p>Dashboard type: '+escapeHtml(selectedDashboardLabel())+'</p><p>Rows: '+state.rows.length+' | Columns: '+state.columns.length+'</p>'+chartEl.innerHTML+previewEl.innerHTML+'</body></html>';downloadFile(state.fileName+'-dashboard-report.html',report,'text/html')}
+      function downloadReport(){const report='<!doctype html><html><head><meta charset="utf-8"><title>ProgramMetrics Studio Summary</title><style>body{font-family:Arial,sans-serif;line-height:1.5;margin:32px;color:#111827}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;padding:8px;text-align:left}</style></head><body><h1>ProgramMetrics Studio Summary</h1><p>Dataset: '+escapeHtml(state.sourceLabel)+'</p><p>Header row: '+(headerRowIndex()+1)+'</p><p>Dashboard type: '+escapeHtml(selectedDashboardLabel())+'</p><p>Rows: '+state.rows.length+' | Columns: '+state.columns.length+'</p>'+chartEl.innerHTML+previewEl.innerHTML+'</body></html>';downloadFile(state.fileName+'-dashboard-summary.html',report,'text/html')}
       function downloadFile(name,content,type){const blob=new Blob([content],{type:type}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=name;link.click();URL.revokeObjectURL(link.href)}
       function selectedDashboardLabel(){return dashboardType.options[dashboardType.selectedIndex].text}function findColumn(columns,pattern){return columns.find(col=>pattern.test(col))}function firstTextColumn(columns,numericColumns){return columns.find(col=>!numericColumns.includes(col))}function isNumeric(value){return value!==''&&value!=null&&!Number.isNaN(Number(String(value).replace(/[$,%]/g,'')))}function toNumber(value){const number=Number(String(value).replace(/[$,%]/g,''));return Number.isFinite(number)?number:0}function formatNumber(value){return Number(value.toFixed?value.toFixed(2):value).toLocaleString()}function csvEscape(value){const text=String(value==null?'':value);return /[",\n]/.test(text)?'"'+text.replace(/"/g,'""')+'"':text}function escapeHtml(value){return String(value).replace(/[&<>"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[char]))}function setStatus(message){statusEl.textContent=message}
     });

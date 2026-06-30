@@ -611,6 +611,23 @@ h1 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.price-grid.three-tier {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.price-grid.two-tier {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.add-on-grid {
+  margin-top: 24px;
+}
+
+.featured-price {
+  border-color: rgba(20, 184, 166, 0.5);
+  box-shadow: 0 22px 55px rgba(20, 184, 166, 0.12);
+}
+
 .price {
   margin: 14px 0;
   color: var(--blue);
