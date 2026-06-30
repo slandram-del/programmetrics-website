@@ -932,6 +932,10 @@ footer p {
   margin-top: 18px;
 }
 
+.builder-actions .mini {
+  margin-top: 0;
+}
+
 .builder-summary {
   position: sticky;
   top: 92px;

@@ -233,18 +233,18 @@
             </p>
 
             <div class="builder-actions">
-              <button class="button primary" type="button" id="generate-summary">Generate Configuration Summary</button>
-              <button class="button primary secondary-mini" type="button" id="download-config">Download Configuration</button>
+              <button class="button mini" type="button" id="generate-summary">Generate Estimated Tier 2 Price</button>
+              <button class="button mini" type="button" id="download-config">Download Estimate</button>
             </div>
           </form>
 
           <aside class="builder-summary reveal visible" aria-live="polite">
-            <h2>Configuration Summary</h2>
+            <h2>Estimated Tier 2 Price</h2>
             <p>
-              Generate the summary to see the estimated Tier 2 package price, selected dashboard
+              Generate the estimate to see the estimated Tier 2 package price, selected dashboard
               setup, deliverables, file checklist, and completion outputs.
             </p>
-            <pre id="summary-output">No configuration generated yet.</pre>
+            <pre id="summary-output">No estimate generated yet.</pre>
           </aside>
         </div>
       </section>
@@ -377,7 +377,7 @@ Customer File Checklist:
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `${org}-tier-2-dashboard-configuration.txt`;
+        link.download = `${org}-tier-2-dashboard-estimate.txt`;
         document.body.appendChild(link);
         link.click();
         link.remove();
