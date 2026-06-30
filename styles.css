@@ -460,6 +460,10 @@ h1 {
   padding: 26px;
 }
 
+.price-card .template-label {
+  margin-bottom: 12px;
+}
+
 .pill {
   display: inline-block;
   margin: 12px 6px 0 0;
@@ -625,7 +629,12 @@ h1 {
 
 .pricing-block {
   max-width: 1240px;
-  margin: 0 auto 34px;
+  margin: 0 auto 40px;
+  padding: 28px;
+  background: linear-gradient(135deg, #f8fbff, #ffffff);
+  border: 1px solid rgba(83, 98, 127, 0.16);
+  border-radius: 8px;
+  box-shadow: 0 22px 55px rgba(15, 23, 42, 0.06);
 }
 
 .pricing-block:last-of-type {
@@ -634,13 +643,22 @@ h1 {
 
 .pricing-tier-heading {
   max-width: 900px;
-  margin: 0 auto 18px;
+  margin: 0 auto 24px;
   text-align: center;
+}
+
+.pricing-tier-heading .light-badge {
+  border-radius: 8px;
+  display: inline-flex;
+  margin-bottom: 8px;
+  padding: 8px 18px;
+  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .pricing-tier-heading h3 {
   color: var(--navy);
-  font-size: 2rem;
+  font-size: 2.25rem;
   margin: 10px 0;
 }
 
@@ -651,6 +669,33 @@ h1 {
 
 .pricing-tier-heading .product-actions {
   justify-content: center;
+}
+
+.pricing-block.tier-one-block {
+  border-top: 6px solid var(--blue);
+}
+
+.pricing-block.tier-two-block {
+  border-top: 6px solid var(--teal);
+}
+
+.pricing-block.tier-three-block {
+  border-top: 6px solid #7c3aed;
+}
+
+.pricing-block.tier-one-block .light-badge {
+  color: #1e40af;
+  background: #dbeafe;
+}
+
+.pricing-block.tier-two-block .light-badge {
+  color: #0f766e;
+  background: #ccfbf1;
+}
+
+.pricing-block.tier-three-block .light-badge {
+  color: #5b21b6;
+  background: #ede9fe;
 }
 
 .featured-price {
