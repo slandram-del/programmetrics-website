@@ -762,6 +762,16 @@ footer p {
   margin-bottom: 32px;
 }
 
+.policy-header .badge {
+  color: #0f766e;
+  background: #ccfbf1;
+  box-shadow: none;
+}
+
+.policy-header h1 {
+  color: var(--navy);
+}
+
 .policy-effective-date {
   color: #53627f;
   font-weight: 800;
