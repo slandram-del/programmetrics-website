@@ -3,181 +3,38 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
     <title>ProgramMetrics Studio | Self-Service Dashboard Generator</title>
-
-    <meta
-      name="description"
-      content="Upload Excel or CSV data, generate a browser-based dashboard, preview KPIs and charts, and download standard reports with ProgramMetrics Studio."
-    />
-
-    <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="pragma" content="no-cache" />
-    <meta http-equiv="expires" content="0" />
-
+    <meta name="description" content="Upload Excel or CSV data, generate a browser-based dashboard, preview KPIs and charts, and download standard reports with ProgramMetrics Studio." />
     <link rel="stylesheet" href="styles-20260610.css" />
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
     <style>
-      .studio-app {
-        display: grid;
-        gap: 24px;
-      }
-
-      .studio-panel {
-        background: #ffffff;
-        border: 1px solid rgba(15, 23, 42, 0.12);
-        border-radius: 8px;
-        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
-        padding: 24px;
-      }
-
-      .studio-controls {
-        display: grid;
-        grid-template-columns: minmax(220px, 1fr) minmax(180px, 260px) auto;
-        gap: 14px;
-        align-items: end;
-      }
-
-      .studio-control label {
-        color: #53627f;
-        display: block;
-        font-weight: 800;
-        margin-bottom: 8px;
-      }
-
-      .studio-control input,
-      .studio-control select {
-        border: 1px solid rgba(83, 98, 127, 0.35);
-        border-radius: 8px;
-        color: #07111f;
-        font: inherit;
-        padding: 12px;
-        width: 100%;
-      }
-
-      .studio-toolbar {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-
-      .studio-status {
-        color: #53627f;
-        font-weight: 700;
-        margin: 14px 0 0;
-      }
-
-      .metric-grid {
-        display: grid;
-        gap: 14px;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-
-      .metric-card {
-        background: #f6f9ff;
-        border: 1px solid rgba(37, 99, 235, 0.16);
-        border-radius: 8px;
-        padding: 18px;
-      }
-
-      .metric-card span {
-        color: #53627f;
-        display: block;
-        font-size: 0.88rem;
-        font-weight: 800;
-      }
-
-      .metric-card strong {
-        color: #07111f;
-        display: block;
-        font-size: 2rem;
-        margin-top: 6px;
-      }
-
-      .chart-wrap {
-        display: grid;
-        gap: 10px;
-      }
-
-      .bar-row {
-        display: grid;
-        grid-template-columns: minmax(120px, 220px) 1fr auto;
-        gap: 10px;
-        align-items: center;
-      }
-
-      .bar-label {
-        color: #53627f;
-        font-weight: 800;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .bar-track {
-        background: #e8eef9;
-        border-radius: 999px;
-        height: 16px;
-        overflow: hidden;
-      }
-
-      .bar-fill {
-        background: #1ab4a6;
-        height: 100%;
-        min-width: 3px;
-      }
-
-      .bar-value {
-        color: #07111f;
-        font-weight: 800;
-      }
-
-      .table-wrap {
-        overflow: auto;
-      }
-
-      .data-table {
-        border-collapse: collapse;
-        min-width: 720px;
-        width: 100%;
-      }
-
-      .data-table th,
-      .data-table td {
-        border-bottom: 1px solid rgba(83, 98, 127, 0.18);
-        padding: 10px;
-        text-align: left;
-        vertical-align: top;
-      }
-
-      .data-table th {
-        color: #07111f;
-        font-weight: 900;
-      }
-
-      .empty-state {
-        color: #53627f;
-        font-weight: 700;
-      }
-
-      @media (max-width: 860px) {
-        .studio-controls,
-        .metric-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .bar-row {
-          grid-template-columns: 1fr;
-        }
-      }
+      .studio-app { display: grid; gap: 24px; }
+      .studio-panel { background: #fff; border: 1px solid rgba(15,23,42,.12); border-radius: 8px; box-shadow: 0 12px 32px rgba(15,23,42,.08); padding: 24px; }
+      .studio-controls { display: grid; grid-template-columns: minmax(220px,1fr) minmax(180px,260px) auto; gap: 14px; align-items: end; }
+      .studio-control label { color: #53627f; display: block; font-weight: 800; margin-bottom: 8px; }
+      .studio-control input, .studio-control select { border: 1px solid rgba(83,98,127,.35); border-radius: 8px; color: #07111f; font: inherit; padding: 12px; width: 100%; }
+      .studio-toolbar { display: flex; flex-wrap: wrap; gap: 10px; }
+      .studio-status, .empty-state { color: #53627f; font-weight: 700; }
+      .metric-grid { display: grid; gap: 14px; grid-template-columns: repeat(4,minmax(0,1fr)); }
+      .metric-card { background: #f6f9ff; border: 1px solid rgba(37,99,235,.16); border-radius: 8px; padding: 18px; }
+      .metric-card span { color: #53627f; display: block; font-size: .88rem; font-weight: 800; }
+      .metric-card strong { color: #07111f; display: block; font-size: 2rem; margin-top: 6px; }
+      .chart-wrap { display: grid; gap: 10px; }
+      .bar-row { display: grid; grid-template-columns: minmax(120px,220px) 1fr auto; gap: 10px; align-items: center; }
+      .bar-label { color: #53627f; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .bar-track { background: #e8eef9; border-radius: 999px; height: 16px; overflow: hidden; }
+      .bar-fill { background: #1ab4a6; height: 100%; min-width: 3px; }
+      .bar-value { color: #07111f; font-weight: 800; }
+      .table-wrap { overflow: auto; }
+      .data-table { border-collapse: collapse; min-width: 720px; width: 100%; }
+      .data-table th, .data-table td { border-bottom: 1px solid rgba(83,98,127,.18); padding: 10px; text-align: left; vertical-align: top; }
+      .data-table th { color: #07111f; font-weight: 900; }
+      @media (max-width: 860px) { .studio-controls, .metric-grid, .bar-row { grid-template-columns: 1fr; } }
     </style>
   </head>
-
   <body>
     <header class="site-header">
       <a class="brand" href="index.html#top">ProgramMetrics.io</a>
-
       <nav aria-label="Primary navigation">
         <a href="index.html#how-it-works">How It Works</a>
         <a href="studio.html">Studio</a>
@@ -192,42 +49,33 @@
     <main id="top">
       <section class="hero">
         <div class="hero-grid">
-          <div class="hero-copy reveal">
+          <div class="hero-copy reveal visible">
             <p class="badge">Tier 1 self-service</p>
-
             <h1>Upload your file. Generate your dashboard. Download your results.</h1>
-
-            <p class="hero-subtitle">
-              ProgramMetrics Studio runs in the browser for standard Excel and CSV dashboard generation.
-              Files are processed locally in the user's browser. Tier 1 does not require ProgramMetrics setup,
-              custom work, or manual handling.
-            </p>
-
+            <p class="hero-subtitle">ProgramMetrics Studio runs in the browser for standard Excel and CSV dashboard generation. Files are processed locally in the user's browser. Tier 1 does not require ProgramMetrics setup, custom work, or manual handling.</p>
             <div class="hero-actions">
               <a class="button primary" href="#studio-tool">Use Studio</a>
               <a class="button primary" href="#tiers">Compare Tiers</a>
             </div>
           </div>
-
-          <figure class="hero-dashboard reveal">
+          <figure class="hero-dashboard reveal visible">
             <img src="images/predictive-dashboard.png?v=20260611" alt="ProgramMetrics Studio dashboard example" />
           </figure>
         </div>
       </section>
 
       <section id="studio-tool" class="section studio-app">
-        <div class="section-title reveal">
+        <div class="section-title reveal visible">
           <h2>ProgramMetrics Studio</h2>
           <p>Self-service dashboard generation for standard Excel and CSV files.</p>
         </div>
 
-        <div class="studio-panel reveal">
+        <div class="studio-panel reveal visible">
           <div class="studio-controls">
             <div class="studio-control">
               <label for="data-file">Upload Excel or CSV</label>
               <input id="data-file" type="file" accept=".csv,.xlsx,.xls" />
             </div>
-
             <div class="studio-control">
               <label for="dashboard-type">Dashboard Type</label>
               <select id="dashboard-type">
@@ -237,343 +85,209 @@
                 <option value="operations">Operations Tracker</option>
               </select>
             </div>
-
             <div class="studio-toolbar">
               <button class="button mini" type="button" id="sample-data">Load Sample</button>
               <button class="button mini secondary-mini" type="button" id="download-csv" disabled>Download CSV</button>
               <button class="button mini secondary-mini" type="button" id="download-report" disabled>Download Report</button>
             </div>
           </div>
-
           <p class="studio-status" id="studio-status">Upload a file or load sample data to generate a dashboard.</p>
         </div>
 
-        <div class="metric-grid reveal" id="metric-grid">
+        <div class="metric-grid reveal visible" id="metric-grid">
           <article class="metric-card"><span>Rows</span><strong>0</strong></article>
           <article class="metric-card"><span>Columns</span><strong>0</strong></article>
           <article class="metric-card"><span>Numeric Fields</span><strong>0</strong></article>
           <article class="metric-card"><span>Missing Values</span><strong>0</strong></article>
         </div>
 
-        <div class="studio-panel reveal">
+        <div class="studio-panel reveal visible">
           <h2>Dashboard View</h2>
-          <div id="chart" class="chart-wrap">
-            <p class="empty-state">Your chart will appear here after a file is loaded.</p>
-          </div>
+          <div id="chart" class="chart-wrap"><p class="empty-state">Your chart will appear here after a file is loaded.</p></div>
         </div>
 
-        <div class="studio-panel reveal">
+        <div class="studio-panel reveal visible">
           <h2>Data Preview</h2>
-          <div id="data-preview" class="table-wrap">
-            <p class="empty-state">The first rows of your dataset will appear here.</p>
-          </div>
+          <div id="data-preview" class="table-wrap"><p class="empty-state">The first rows of your dataset will appear here.</p></div>
         </div>
       </section>
 
       <section id="tiers" class="section pricing">
-        <div class="section-title reveal">
+        <div class="section-title reveal visible">
           <h2>Tier 1 is self-service. Tier 2 starts customization.</h2>
           <p>Use the browser tool when a standard dashboard is enough. Upgrade only when the workflow needs custom logic, design, or support.</p>
         </div>
-
         <div class="price-grid">
-          <article class="price-card reveal">
-            <h3>Tier 1: Self-Service Dashboard Generator</h3>
-            <div class="price">$49-$199</div>
-            <p>Users upload Excel or CSV data, generate a standard dashboard, preview results, and download reports without ProgramMetrics manual setup.</p>
-          </article>
-
-          <article class="price-card reveal">
-            <h3>Tier 2: Customized Dashboard</h3>
-            <div class="price">$299-$999</div>
-            <p>Adds custom fields, labels, charts, branding, report structure, and light workflow support.</p>
-          </article>
-
-          <article class="price-card reveal">
-            <h3>Tier 3: Custom Application</h3>
-            <div class="price">$1,500-$5,000+</div>
-            <p>A custom web application built around the user's process, fields, dashboards, reports, and decisions.</p>
-          </article>
-
-          <article class="price-card reveal">
-            <h3>Tier 4: Enterprise Analytics System</h3>
-            <div class="price">$5,000+</div>
-            <p>Advanced analytics, automation, AI-assisted summaries, integrations, multi-file workflows, and specialized reporting systems.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="section faq-section">
-        <div class="section-title reveal">
-          <h2>Studio Questions</h2>
-          <p>Clear boundaries for the self-service tier.</p>
-        </div>
-
-        <div class="faq-grid">
-          <article class="faq-card reveal">
-            <h3>Do users need ProgramMetrics to run Tier 1?</h3>
-            <p>No. Tier 1 is self-service. Users upload their file, generate the dashboard, and download outputs in the browser.</p>
-          </article>
-
-          <article class="faq-card reveal">
-            <h3>Are files uploaded to a server?</h3>
-            <p>No. This version processes files locally in the user's browser for standard dashboard generation.</p>
-          </article>
-
-          <article class="faq-card reveal">
-            <h3>Can Tier 1 be customized?</h3>
-            <p>No. Tier 1 uses standard templates. Customization starts at Tier 2.</p>
-          </article>
-
-          <article class="faq-card reveal">
-            <h3>What file types work?</h3>
-            <p>CSV works directly. Excel files are supported in modern browsers through the included spreadsheet reader.</p>
-          </article>
-        </div>
-      </section>
-
-      <section id="contact" class="cta">
-        <div class="reveal">
-          <h2>Need customization?</h2>
-          <p>Use Tier 1 yourself when standard templates are enough. Contact ProgramMetrics when you need Tier 2 customization or a custom application.</p>
-          <a class="email" href="mailto:hello@programmetrics.io?subject=ProgramMetrics%20Studio%20Customization">hello@programmetrics.io</a>
+          <article class="price-card reveal visible"><h3>Tier 1: Self-Service Dashboard Generator</h3><div class="price">$49-$199</div><p>Users upload Excel or CSV data, generate a standard dashboard, preview results, and download reports without ProgramMetrics manual setup.</p></article>
+          <article class="price-card reveal visible"><h3>Tier 2: Customized Dashboard</h3><div class="price">$299-$999</div><p>Adds custom fields, labels, charts, branding, report structure, and light workflow support.</p></article>
+          <article class="price-card reveal visible"><h3>Tier 3: Custom Application</h3><div class="price">$1,500-$5,000+</div><p>A custom web application built around the user's process, fields, dashboards, reports, and decisions.</p></article>
+          <article class="price-card reveal visible"><h3>Tier 4: Enterprise Analytics System</h3><div class="price">$5,000+</div><p>Advanced analytics, automation, AI-assisted summaries, integrations, multi-file workflows, and specialized reporting systems.</p></article>
         </div>
       </section>
     </main>
 
-    <footer>
-      <p>Copyright 2026 ProgramMetrics.io | ProgramMetrics Studio | Self-Service Dashboard Generator</p>
-    </footer>
+    <footer><p>Copyright 2026 ProgramMetrics.io | ProgramMetrics Studio | Self-Service Dashboard Generator</p></footer>
 
-    <script src="script-20260610.js"></script>
     <script>
-      const state = { rows: [], columns: [], fileName: 'sample-data' };
-      const fileInput = document.getElementById('data-file');
-      const dashboardType = document.getElementById('dashboard-type');
-      const statusEl = document.getElementById('studio-status');
-      const metricGrid = document.getElementById('metric-grid');
-      const chartEl = document.getElementById('chart');
-      const previewEl = document.getElementById('data-preview');
-      const downloadCsvBtn = document.getElementById('download-csv');
-      const downloadReportBtn = document.getElementById('download-report');
+      document.addEventListener('DOMContentLoaded', function () {
+        const state = { rows: [], columns: [], fileName: 'sample-data' };
+        const fileInput = document.getElementById('data-file');
+        const dashboardType = document.getElementById('dashboard-type');
+        const statusEl = document.getElementById('studio-status');
+        const metricGrid = document.getElementById('metric-grid');
+        const chartEl = document.getElementById('chart');
+        const previewEl = document.getElementById('data-preview');
+        const downloadCsvBtn = document.getElementById('download-csv');
+        const downloadReportBtn = document.getElementById('download-report');
+        const sampleBtn = document.getElementById('sample-data');
 
-      const sampleRows = [
-        { Site: 'North', Month: 'January', Participants: 42, Completed: 36, Satisfaction: 4.4 },
-        { Site: 'North', Month: 'February', Participants: 51, Completed: 43, Satisfaction: 4.6 },
-        { Site: 'South', Month: 'January', Participants: 38, Completed: 29, Satisfaction: 4.1 },
-        { Site: 'South', Month: 'February', Participants: 46, Completed: 40, Satisfaction: 4.5 },
-        { Site: 'East', Month: 'January', Participants: 31, Completed: 24, Satisfaction: 3.9 },
-        { Site: 'East', Month: 'February', Participants: 35, Completed: 32, Satisfaction: 4.3 }
-      ];
+        const sampleRows = [
+          { Site: 'North', Month: 'January', Participants: 42, Completed: 36, Satisfaction: 4.4 },
+          { Site: 'North', Month: 'February', Participants: 51, Completed: 43, Satisfaction: 4.6 },
+          { Site: 'South', Month: 'January', Participants: 38, Completed: 29, Satisfaction: 4.1 },
+          { Site: 'South', Month: 'February', Participants: 46, Completed: 40, Satisfaction: 4.5 },
+          { Site: 'East', Month: 'January', Participants: 31, Completed: 24, Satisfaction: 3.9 },
+          { Site: 'East', Month: 'February', Participants: 35, Completed: 32, Satisfaction: 4.3 }
+        ];
 
-      fileInput.addEventListener('change', handleFileUpload);
-      dashboardType.addEventListener('change', renderDashboard);
-      document.getElementById('sample-data').addEventListener('click', () => loadRows(sampleRows, 'sample-data'));
-      downloadCsvBtn.addEventListener('click', downloadCsv);
-      downloadReportBtn.addEventListener('click', downloadReport);
+        sampleBtn.addEventListener('click', function () { loadRows(sampleRows, 'sample-data'); });
+        fileInput.addEventListener('change', handleFileUpload);
+        dashboardType.addEventListener('change', renderDashboard);
+        downloadCsvBtn.addEventListener('click', downloadCsv);
+        downloadReportBtn.addEventListener('click', downloadReport);
 
-      function handleFileUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        state.fileName = file.name.replace(/\.[^.]+$/, '') || 'programmetrics-dashboard';
-        const extension = file.name.split('.').pop().toLowerCase();
-
-        if (extension === 'csv') {
-          const reader = new FileReader();
-          reader.onload = () => loadRows(parseCsv(reader.result), state.fileName);
-          reader.readAsText(file);
-          return;
-        }
-
-        if (['xlsx', 'xls'].includes(extension)) {
-          if (!window.XLSX) {
-            setStatus('Excel support could not load. Save the file as CSV and try again.');
+        function handleFileUpload(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+          state.fileName = file.name.replace(/\.[^.]+$/, '') || 'programmetrics-dashboard';
+          const extension = file.name.split('.').pop().toLowerCase();
+          if (extension === 'csv') {
+            const reader = new FileReader();
+            reader.onload = function () { loadRows(parseCsv(reader.result), state.fileName); };
+            reader.readAsText(file);
             return;
           }
-          const reader = new FileReader();
-          reader.onload = () => {
-            const workbook = XLSX.read(new Uint8Array(reader.result), { type: 'array' });
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            loadRows(XLSX.utils.sheet_to_json(sheet, { defval: '' }), state.fileName);
-          };
-          reader.readAsArrayBuffer(file);
-          return;
-        }
-
-        setStatus('Please upload a CSV, XLSX, or XLS file.');
-      }
-
-      function parseCsv(text) {
-        const rows = [];
-        let row = [];
-        let value = '';
-        let inQuotes = false;
-
-        for (let i = 0; i < text.length; i++) {
-          const char = text[i];
-          const next = text[i + 1];
-          if (char === '"' && inQuotes && next === '"') {
-            value += '"';
-            i++;
-          } else if (char === '"') {
-            inQuotes = !inQuotes;
-          } else if (char === ',' && !inQuotes) {
-            row.push(value.trim());
-            value = '';
-          } else if ((char === '\n' || char === '\r') && !inQuotes) {
-            if (value || row.length) {
-              row.push(value.trim());
-              rows.push(row);
-              row = [];
-              value = '';
-            }
-            if (char === '\r' && next === '\n') i++;
-          } else {
-            value += char;
+          if (extension === 'xlsx' || extension === 'xls') {
+            if (!window.XLSX) { setStatus('Excel support could not load. Save the file as CSV and try again.'); return; }
+            const reader = new FileReader();
+            reader.onload = function () {
+              const workbook = XLSX.read(new Uint8Array(reader.result), { type: 'array' });
+              const sheet = workbook.Sheets[workbook.SheetNames[0]];
+              loadRows(XLSX.utils.sheet_to_json(sheet, { defval: '' }), state.fileName);
+            };
+            reader.readAsArrayBuffer(file);
+            return;
           }
-        }
-        if (value || row.length) {
-          row.push(value.trim());
-          rows.push(row);
+          setStatus('Please upload a CSV, XLSX, or XLS file.');
         }
 
-        const headers = rows.shift() || [];
-        return rows.filter(r => r.some(cell => cell !== '')).map(r => {
-          const item = {};
-          headers.forEach((header, index) => item[header || `Column ${index + 1}`] = r[index] || '');
-          return item;
-        });
-      }
-
-      function loadRows(rows, fileName) {
-        state.rows = rows.map(cleanRow);
-        state.columns = Array.from(new Set(state.rows.flatMap(row => Object.keys(row))));
-        state.fileName = fileName;
-        renderDashboard();
-        downloadCsvBtn.disabled = !state.rows.length;
-        downloadReportBtn.disabled = !state.rows.length;
-        setStatus(state.rows.length ? `Generated dashboard from ${state.rows.length} rows.` : 'No usable rows found.');
-      }
-
-      function cleanRow(row) {
-        const cleaned = {};
-        Object.entries(row).forEach(([key, value]) => {
-          cleaned[String(key).trim() || 'Column'] = value == null ? '' : value;
-        });
-        return cleaned;
-      }
-
-      function renderDashboard() {
-        const rows = state.rows;
-        const columns = state.columns;
-        const numericColumns = columns.filter(col => rows.filter(row => isNumeric(row[col])).length >= Math.max(1, rows.length * 0.6));
-        const missingValues = rows.reduce((count, row) => count + columns.filter(col => row[col] === '' || row[col] == null).length, 0);
-
-        metricGrid.innerHTML = metricCard('Rows', rows.length) + metricCard('Columns', columns.length) + metricCard('Numeric Fields', numericColumns.length) + metricCard('Missing Values', missingValues);
-        renderChart(rows, columns, numericColumns);
-        renderPreview(rows, columns);
-      }
-
-      function metricCard(label, value) {
-        return `<article class="metric-card"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value))}</strong></article>`;
-      }
-
-      function renderChart(rows, columns, numericColumns) {
-        if (!rows.length) {
-          chartEl.innerHTML = '<p class="empty-state">Your chart will appear here after a file is loaded.</p>';
-          return;
+        function parseCsv(text) {
+          const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean);
+          const headers = splitCsvLine(lines.shift() || '').map(function (h, i) { return h || 'Column ' + (i + 1); });
+          return lines.map(function (line) {
+            const cells = splitCsvLine(line);
+            const row = {};
+            headers.forEach(function (header, index) { row[header] = cells[index] || ''; });
+            return row;
+          });
         }
 
-        const categoryColumn = columns.find(col => !numericColumns.includes(col) && uniqueValues(rows, col).length > 1 && uniqueValues(rows, col).length <= 20) || columns[0];
-        const numericColumn = numericColumns[0];
-        let data;
-        let title;
+        function splitCsvLine(line) {
+          const out = [];
+          let value = '';
+          let quoted = false;
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"' && quoted && line[i + 1] === '"') { value += '"'; i++; }
+            else if (char === '"') { quoted = !quoted; }
+            else if (char === ',' && !quoted) { out.push(value.trim()); value = ''; }
+            else { value += char; }
+          }
+          out.push(value.trim());
+          return out;
+        }
 
-        if (numericColumn && categoryColumn) {
+        function loadRows(rows, fileName) {
+          state.rows = rows.map(cleanRow);
+          state.columns = Array.from(new Set(state.rows.flatMap(function (row) { return Object.keys(row); })));
+          state.fileName = fileName;
+          renderDashboard();
+          downloadCsvBtn.disabled = !state.rows.length;
+          downloadReportBtn.disabled = !state.rows.length;
+          setStatus(state.rows.length ? 'Generated dashboard from ' + state.rows.length + ' rows.' : 'No usable rows found.');
+        }
+
+        function cleanRow(row) {
+          const cleaned = {};
+          Object.keys(row).forEach(function (key) { cleaned[String(key).trim() || 'Column'] = row[key] == null ? '' : row[key]; });
+          return cleaned;
+        }
+
+        function renderDashboard() {
+          const rows = state.rows;
+          const columns = state.columns;
+          const numericColumns = columns.filter(function (col) { return rows.filter(function (row) { return isNumeric(row[col]); }).length >= Math.max(1, rows.length * .6); });
+          const missingValues = rows.reduce(function (count, row) { return count + columns.filter(function (col) { return row[col] === '' || row[col] == null; }).length; }, 0);
+          metricGrid.innerHTML = metricCard('Rows', rows.length) + metricCard('Columns', columns.length) + metricCard('Numeric Fields', numericColumns.length) + metricCard('Missing Values', missingValues);
+          renderChart(rows, columns, numericColumns);
+          renderPreview(rows, columns);
+        }
+
+        function metricCard(label, value) { return '<article class="metric-card"><span>' + escapeHtml(label) + '</span><strong>' + escapeHtml(String(value)) + '</strong></article>'; }
+
+        function renderChart(rows, columns, numericColumns) {
+          if (!rows.length) { chartEl.innerHTML = '<p class="empty-state">Your chart will appear here after a file is loaded.</p>'; return; }
+          const categoryColumn = columns.find(function (col) { return !numericColumns.includes(col) && uniqueValues(rows, col).length > 1 && uniqueValues(rows, col).length <= 20; }) || columns[0];
+          const numericColumn = numericColumns[0];
           const grouped = new Map();
-          rows.forEach(row => {
+          rows.forEach(function (row) {
             const label = String(row[categoryColumn] || 'Blank');
-            const value = toNumber(row[numericColumn]);
+            const value = numericColumn ? toNumber(row[numericColumn]) : 1;
             grouped.set(label, (grouped.get(label) || 0) + value);
           });
-          data = Array.from(grouped, ([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value).slice(0, 8);
-          title = `${numericColumn} by ${categoryColumn}`;
-        } else {
-          const grouped = new Map();
-          rows.forEach(row => {
-            const label = String(row[categoryColumn] || 'Blank');
-            grouped.set(label, (grouped.get(label) || 0) + 1);
-          });
-          data = Array.from(grouped, ([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value).slice(0, 8);
-          title = `Record count by ${categoryColumn}`;
+          const data = Array.from(grouped, function (entry) { return { label: entry[0], value: entry[1] }; }).sort(function (a, b) { return b.value - a.value; }).slice(0, 8);
+          const max = Math.max.apply(null, data.map(function (item) { return item.value; }).concat([1]));
+          const title = numericColumn ? numericColumn + ' by ' + categoryColumn : 'Record count by ' + categoryColumn;
+          chartEl.innerHTML = '<h3>' + escapeHtml(title) + '</h3>' + data.map(function (item) {
+            const width = Math.max(3, Math.round((item.value / max) * 100));
+            return '<div class="bar-row"><div class="bar-label" title="' + escapeHtml(item.label) + '">' + escapeHtml(item.label) + '</div><div class="bar-track"><div class="bar-fill" style="width:' + width + '%"></div></div><div class="bar-value">' + formatNumber(item.value) + '</div></div>';
+          }).join('');
         }
 
-        const max = Math.max(...data.map(item => item.value), 1);
-        chartEl.innerHTML = `<h3>${escapeHtml(title)}</h3>` + data.map(item => {
-          const width = Math.max(3, Math.round((item.value / max) * 100));
-          return `<div class="bar-row"><div class="bar-label" title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</div><div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div><div class="bar-value">${formatNumber(item.value)}</div></div>`;
-        }).join('');
-      }
-
-      function renderPreview(rows, columns) {
-        if (!rows.length) {
-          previewEl.innerHTML = '<p class="empty-state">The first rows of your dataset will appear here.</p>';
-          return;
+        function renderPreview(rows, columns) {
+          if (!rows.length) { previewEl.innerHTML = '<p class="empty-state">The first rows of your dataset will appear here.</p>'; return; }
+          const visibleColumns = columns.slice(0, 8);
+          const body = rows.slice(0, 10).map(function (row) { return '<tr>' + visibleColumns.map(function (col) { return '<td>' + escapeHtml(String(row[col] == null ? '' : row[col])) + '</td>'; }).join('') + '</tr>'; }).join('');
+          previewEl.innerHTML = '<table class="data-table"><thead><tr>' + visibleColumns.map(function (col) { return '<th>' + escapeHtml(col) + '</th>'; }).join('') + '</tr></thead><tbody>' + body + '</tbody></table>';
         }
 
-        const visibleColumns = columns.slice(0, 8);
-        const body = rows.slice(0, 10).map(row => `<tr>${visibleColumns.map(col => `<td>${escapeHtml(String(row[col] ?? ''))}</td>`).join('')}</tr>`).join('');
-        previewEl.innerHTML = `<table class="data-table"><thead><tr>${visibleColumns.map(col => `<th>${escapeHtml(col)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
-      }
+        function downloadCsv() {
+          const csv = [state.columns.map(csvEscape).join(',')].concat(state.rows.map(function (row) { return state.columns.map(function (col) { return csvEscape(row[col]); }).join(','); })).join('\n');
+          downloadFile(state.fileName + '-dashboard-data.csv', csv, 'text/csv');
+        }
 
-      function downloadCsv() {
-        const csv = [state.columns.map(csvEscape).join(',')].concat(state.rows.map(row => state.columns.map(col => csvEscape(row[col])).join(','))).join('\n');
-        downloadFile(`${state.fileName}-dashboard-data.csv`, csv, 'text/csv');
-      }
+        function downloadReport() {
+          const report = '<!doctype html><html><head><meta charset="utf-8"><title>ProgramMetrics Studio Report</title><style>body{font-family:Arial,sans-serif;line-height:1.5;margin:32px;color:#111827}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;padding:8px;text-align:left}</style></head><body><h1>ProgramMetrics Studio Report</h1><p>Dashboard type: ' + escapeHtml(dashboardType.options[dashboardType.selectedIndex].text) + '</p><p>Rows: ' + state.rows.length + ' | Columns: ' + state.columns.length + '</p>' + previewEl.innerHTML + '</body></html>';
+          downloadFile(state.fileName + '-dashboard-report.html', report, 'text/html');
+        }
 
-      function downloadReport() {
-        const report = `<!doctype html><html><head><meta charset="utf-8"><title>ProgramMetrics Studio Report</title><style>body{font-family:Arial,sans-serif;line-height:1.5;margin:32px;color:#111827}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;padding:8px;text-align:left}</style></head><body><h1>ProgramMetrics Studio Report</h1><p>Dashboard type: ${escapeHtml(dashboardType.options[dashboardType.selectedIndex].text)}</p><p>Rows: ${state.rows.length} | Columns: ${state.columns.length}</p>${previewEl.innerHTML}</body></html>`;
-        downloadFile(`${state.fileName}-dashboard-report.html`, report, 'text/html');
-      }
+        function downloadFile(name, content, type) {
+          const blob = new Blob([content], { type: type });
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = name;
+          link.click();
+          URL.revokeObjectURL(link.href);
+        }
 
-      function downloadFile(name, content, type) {
-        const blob = new Blob([content], { type });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = name;
-        link.click();
-        URL.revokeObjectURL(link.href);
-      }
-
-      function uniqueValues(rows, column) {
-        return Array.from(new Set(rows.map(row => String(row[column] || 'Blank'))));
-      }
-
-      function isNumeric(value) {
-        return value !== '' && value != null && !Number.isNaN(Number(String(value).replace(/[$,%]/g, '')));
-      }
-
-      function toNumber(value) {
-        const number = Number(String(value).replace(/[$,%]/g, ''));
-        return Number.isFinite(number) ? number : 0;
-      }
-
-      function formatNumber(value) {
-        return Number(value.toFixed ? value.toFixed(2) : value).toLocaleString();
-      }
-
-      function csvEscape(value) {
-        const text = String(value ?? '');
-        return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-      }
-
-      function escapeHtml(value) {
-        return String(value).replace(/[&<>"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]));
-      }
-
-      function setStatus(message) {
-        statusEl.textContent = message;
-      }
+        function uniqueValues(rows, column) { return Array.from(new Set(rows.map(function (row) { return String(row[column] || 'Blank'); }))); }
+        function isNumeric(value) { return value !== '' && value != null && !Number.isNaN(Number(String(value).replace(/[$,%]/g, ''))); }
+        function toNumber(value) { const number = Number(String(value).replace(/[$,%]/g, '')); return Number.isFinite(number) ? number : 0; }
+        function formatNumber(value) { return Number(value.toFixed ? value.toFixed(2) : value).toLocaleString(); }
+        function csvEscape(value) { const text = String(value == null ? '' : value); return /[",\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text; }
+        function escapeHtml(value) { return String(value).replace(/[&<>"]/g, function (char) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]; }); }
+        function setStatus(message) { statusEl.textContent = message; }
+      });
     </script>
   </body>
 </html>
