@@ -243,7 +243,8 @@
             <h2>Configuration Summary</h2>
             <p>
               Generate the summary to create a Tier 2 build package. The downloaded file includes
-              the requested dashboard setup, selected deliverables, file checklist, and completion outputs.
+              the requested dashboard setup, selected deliverables, estimated package range, file
+              checklist, and completion outputs.
             </p>
             <pre id="summary-output">No configuration generated yet.</pre>
           </aside>
@@ -298,7 +299,36 @@
         return config;
       }
 
+      function estimateTier2(config) {
+        let estimate = 299;
+        const charts = config["Charts"].length;
+        const filters = config["Filters and groupings"].length;
+        const exports = config["Exports"];
+        const specialRequirements = config["Special requirements"].length;
+
+        if (config["Dashboard type"] === "Custom dashboard") estimate += 175;
+        if (["Program evaluation", "Referral or service tracker"].includes(config["Dashboard type"])) estimate += 75;
+        if (charts > 2) estimate += (charts - 2) * 45;
+        if (filters > 1) estimate += (filters - 1) * 35;
+        if (exports.includes("Interactive HTML report")) estimate += 175;
+        if (exports.includes("Board-ready narrative")) estimate += 125;
+        if (exports.includes("Appendix tables")) estimate += 75;
+        if (config["File type"] === "Multiple files") estimate += 125;
+        if (config["File type"] === "Qualtrics export") estimate += 75;
+        if (config["Desired timing"] === "Within 1 week") estimate += 150;
+        if (config["Desired timing"] === "Monthly recurring") estimate += 175;
+        if (specialRequirements > 250) estimate += 150;
+        if (specialRequirements > 650) estimate += 150;
+
+        if (estimate <= 399) return "$299-$399";
+        if (estimate <= 599) return "$400-$599";
+        if (estimate <= 799) return "$600-$799";
+        if (estimate <= 999) return "$800-$999";
+        return "$999+ or custom quote";
+      }
+
       function formatConfig(config) {
+        const estimate = estimateTier2(config);
         const selectedExports = config["Exports"].length ? config["Exports"].join(", ") : "Standard dashboard outputs";
         const includedDeliverables = [
           "Branded dashboard configuration based on the selections above",
@@ -319,6 +349,12 @@
           .join("\n");
 
         return `${mainSummary}
+
+Estimated Tier 2 Package Range:
+${estimate}
+
+Estimate Note:
+This estimate is for planning only. It does not include taxes, payment processing fees, rush fees not selected above, support subscriptions, hosting, third-party software costs, or separately scoped custom work. Final purchase amount may differ if the submitted files, requested outputs, or project requirements are outside the selected configuration.
 
 Included Tier 2 Build Outputs:
 - ${includedDeliverables.join("\n- ")}
