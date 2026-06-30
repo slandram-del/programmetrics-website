@@ -235,16 +235,14 @@
             <div class="builder-actions">
               <button class="button primary" type="button" id="generate-summary">Generate Configuration Summary</button>
               <button class="button primary secondary-mini" type="button" id="download-config">Download Configuration</button>
-              <a class="button primary secondary-mini" id="email-config" href="mailto:hello@programmetrics.io?subject=Tier%202%20Dashboard%20Builder%20Configuration">Send Configuration</a>
             </div>
           </form>
 
           <aside class="builder-summary reveal visible" aria-live="polite">
             <h2>Configuration Summary</h2>
             <p>
-              Generate the summary to create a Tier 2 build package. The downloaded file includes
-              the requested dashboard setup, selected deliverables, estimated package range, file
-              checklist, and completion outputs.
+              Generate the summary to see the estimated Tier 2 package price, selected dashboard
+              setup, deliverables, file checklist, and completion outputs.
             </p>
             <pre id="summary-output">No configuration generated yet.</pre>
           </aside>
@@ -265,7 +263,6 @@
       const form = document.getElementById("tier2-form");
       const output = document.getElementById("summary-output");
       const downloadButton = document.getElementById("download-config");
-      const emailLink = document.getElementById("email-config");
 
       function selectedValues(name) {
         return Array.from(form.querySelectorAll(`input[name="${name}"]:checked`)).map((input) => input.value);
@@ -348,32 +345,26 @@
           .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") || "None selected" : value || "Not provided"}`)
           .join("\n");
 
-        return `${mainSummary}
-
-Estimated Tier 2 Package Range:
+        return `Estimated Tier 2 Price:
 ${estimate}
 
 Estimate Note:
 This estimate is for planning only. It does not include taxes, payment processing fees, rush fees not selected above, support subscriptions, hosting, third-party software costs, or separately scoped custom work. Final purchase amount may differ if the submitted files, requested outputs, or project requirements are outside the selected configuration.
 
+Configuration Details:
+${mainSummary}
+
 Included Tier 2 Build Outputs:
 - ${includedDeliverables.join("\n- ")}
 
 Customer File Checklist:
-- ${customerItems.join("\n- ")}
-
-Built-In Next Step:
-Download this configuration and send it with the required files or brand assets. ProgramMetrics uses this build package as the dashboard specification for the selected Tier 2 deliverables.`;
+- ${customerItems.join("\n- ")}`;
       }
 
       function updateSummary() {
         const config = buildConfig();
         const summary = formatConfig(config);
         output.textContent = summary;
-
-        const subject = encodeURIComponent(`Tier 2 Dashboard Builder Configuration - ${config["Organization name"] || "ProgramMetrics"}`);
-        const body = encodeURIComponent("Hi ProgramMetrics,\n\nI generated a Tier 2 dashboard build package. I will attach the downloaded configuration file and the required data, sample files, screenshots, or brand assets for the selected deliverables.\n\nThank you.");
-        emailLink.href = `mailto:hello@programmetrics.io?subject=${subject}&body=${body}`;
         return summary;
       }
 
