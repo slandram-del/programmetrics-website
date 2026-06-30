@@ -728,6 +728,84 @@ footer {
   background: var(--navy);
 }
 
+footer p {
+  margin: 0;
+}
+
+.footer-links {
+  margin-top: 10px;
+}
+
+.footer-links a {
+  color: #ccfbf1;
+  font-weight: 800;
+}
+
+.policy-note {
+  margin-top: 18px;
+  color: #53627f;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.policy-note a {
+  color: var(--teal-dark);
+  font-weight: 900;
+}
+
+.policy-page {
+  max-width: 980px;
+}
+
+.policy-header {
+  max-width: 760px;
+  margin-bottom: 32px;
+}
+
+.policy-effective-date {
+  color: #53627f;
+  font-weight: 800;
+}
+
+.policy-content {
+  display: grid;
+  gap: 18px;
+  padding: 34px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+}
+
+.policy-content h2,
+.policy-content h3,
+.policy-content p,
+.policy-content ul {
+  margin: 0;
+}
+
+.policy-content h2 {
+  margin-top: 14px;
+  color: var(--navy);
+}
+
+.policy-content h2:first-child {
+  margin-top: 0;
+}
+
+.policy-content h3 {
+  color: var(--teal-dark);
+}
+
+.policy-content ul {
+  padding-left: 22px;
+  color: #53627f;
+}
+
+.policy-content li + li {
+  margin-top: 8px;
+}
+
 .reveal {
   opacity: 0;
   transform: translateY(18px);

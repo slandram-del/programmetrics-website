@@ -197,12 +197,36 @@
       margin: 0 auto 26px;
     }
 
+    .policy-note {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .policy-note a,
+    .footer-links a {
+      color: var(--accent-dark);
+      font-weight: 800;
+    }
+
+    .cta .policy-note a {
+      color: #fff;
+      text-decoration: underline;
+    }
+
     footer {
       text-align: center;
       padding: 30px 8%;
       color: var(--muted);
       border-top: 1px solid var(--border);
       background: white;
+    }
+
+    footer p {
+      margin: 0;
+    }
+
+    .footer-links {
+      margin-top: 10px;
     }
 
     @media (max-width: 700px) {
@@ -481,6 +505,10 @@
     Use Studio for self-service dashboard generation, or reach out when the work needs
     guided customization, an interactive HTML report, integrations, or enterprise support.
   </p>
+  <p class="policy-note">
+    Self-service dashboard purchases are generally final once generated and available for download.
+    Review the <a href="refund-liability-policy.html">Refund & Liability Policy</a>.
+  </p>
 
   <a class="button" href="studio.html">Launch Studio</a>
   <a class="button secondary" href="index.html#contact">Contact ProgramMetrics</a>
@@ -488,6 +516,9 @@
 
 <footer>
   <p>Copyright 2026 ProgramMetrics.io | hello@programmetrics.io</p>
+  <p class="footer-links">
+    <a href="refund-liability-policy.html">Refund & Liability Policy</a>
+  </p>
 </footer>
 
 </body>
