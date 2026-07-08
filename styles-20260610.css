@@ -2929,3 +2929,217 @@ input.is-locked {
   color: var(--muted);
   line-height: 1.45;
 }
+/* Studio PowerBI-style dashboard preview */
+.dashboard-canvas {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(219, 228, 239, 0.45);
+}
+
+.dashboard-tile-wide {
+  border-left: 5px solid #14b8a6;
+}
+
+.dashboard-visual-grid-wide {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.dashboard-tile {
+  min-height: 210px;
+}
+
+.dashboard-kpi-card.is-clickable {
+  width: 100%;
+  min-height: 108px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.dashboard-kpi-card.is-clickable:hover,
+.dashboard-kpi-card.is-clickable:focus-visible {
+  border-color: #14b8a6;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.dashboard-kpi-card small {
+  display: block;
+  margin-top: 8px;
+  color: #0f766e;
+  font-weight: 900;
+  font-size: 0.78rem;
+}
+
+.dashboard-mini-list {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.55fr) minmax(0, 1fr);
+  gap: 8px 12px;
+  align-items: start;
+}
+
+.dashboard-mini-list span {
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 0.82rem;
+}
+
+.dashboard-mini-list b {
+  color: var(--navy);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.dashboard-trend-bars {
+  min-height: 150px;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(22px, 1fr));
+  gap: 7px;
+  align-items: end;
+  padding-top: 8px;
+}
+
+.dashboard-trend-bars div {
+  display: grid;
+  gap: 4px;
+  align-items: end;
+  min-width: 0;
+  text-align: center;
+}
+
+.dashboard-trend-bars i {
+  display: block;
+  min-height: 8px;
+  border-radius: 6px 6px 2px 2px;
+  background: linear-gradient(180deg, #2563eb 0%, #14b8a6 100%);
+}
+
+.dashboard-trend-bars span,
+.dashboard-trend-bars b {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-trend-bars b {
+  color: var(--navy);
+}
+
+.dashboard-bar-row.quality-bar i {
+  background: linear-gradient(90deg, #14b8a6 0%, #2563eb 100%);
+}
+
+.dashboard-large-number {
+  display: block;
+  margin: 8px 0;
+  color: var(--blue);
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.dashboard-ring {
+  width: 132px;
+  height: 132px;
+  display: grid;
+  place-items: center;
+  margin: 10px auto;
+  border-radius: 50%;
+  background: conic-gradient(#14b8a6 var(--score), #e2e8f0 0);
+  position: relative;
+}
+
+.dashboard-ring::after {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.dashboard-ring strong,
+.dashboard-ring span {
+  position: relative;
+  z-index: 1;
+  display: block;
+  text-align: center;
+}
+
+.dashboard-ring strong {
+  color: var(--navy);
+  font-size: 1.8rem;
+}
+
+.dashboard-ring span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.studio-detail-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(7, 21, 37, 0.42);
+}
+
+.studio-detail-panel.visible {
+  display: flex;
+}
+
+.studio-detail-card {
+  width: min(620px, 100%);
+  max-height: min(760px, 86vh);
+  overflow: auto;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 26px 70px rgba(15, 23, 42, 0.24);
+  padding: 20px;
+}
+
+.studio-detail-close {
+  float: right;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  background: #eef6ff;
+  color: var(--navy);
+  font-weight: 900;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+
+.studio-detail-content h3 {
+  margin: 0 0 12px;
+  color: var(--navy);
+}
+
+.studio-detail-content p,
+.studio-detail-content li {
+  color: var(--slate);
+  line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+  .dashboard-visual-grid-wide {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-trend-bars {
+    grid-template-columns: repeat(6, minmax(24px, 1fr));
+  }
+}

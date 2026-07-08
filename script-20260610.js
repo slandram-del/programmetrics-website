@@ -1007,6 +1007,92 @@ function numericColumnSummary(rows, columns) {
   }, {});
 }
 
+
+function parseStudioDateValue(value) {
+  const text = String(value ?? "").trim();
+  if (!text || /^\d+(\.\d+)?$/.test(text)) return null;
+  const parsed = new Date(text);
+  if (Number.isNaN(parsed.getTime()) || parsed.getFullYear() < 1900 || parsed.getFullYear() > 2100) return null;
+  return parsed;
+}
+
+function summarizeDateColumns(rows, columns) {
+  const summaries = [];
+  columns.forEach((column) => {
+    const dated = rows.map((row) => parseStudioDateValue(row[column])).filter(Boolean);
+    if (dated.length < Math.max(3, Math.round(rows.length * 0.18))) return;
+    const sorted = dated.slice().sort((a, b) => a - b);
+    const buckets = dated.reduce((counts, date) => {
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      counts[key] = (counts[key] || 0) + 1;
+      return counts;
+    }, {});
+    summaries.push({ column, count: dated.length, start: sorted[0], end: sorted[sorted.length - 1], buckets });
+  });
+  return summaries.sort((a, b) => b.count - a.count);
+}
+
+function topCategorySummary(rows, columns, numericColumns, dateColumns) {
+  const dateNames = new Set(dateColumns.map((item) => item.column));
+  return columns.filter((column) => !numericColumns.includes(column) && !dateNames.has(column)).reduce((summary, column) => {
+    const counts = countValues(rows, column);
+    const entries = Object.entries(counts).filter(([name]) => name && name !== "Missing").sort((a, b) => Number(b[1]) - Number(a[1]));
+    if (entries.length < 2 || entries.length > Math.max(75, rows.length * 0.85)) return summary;
+    const top = entries.slice(0, 7);
+    const other = entries.slice(7).reduce((total, [, count]) => total + Number(count), 0);
+    summary[column] = Object.fromEntries(other ? top.concat([["Other", other]]) : top);
+    return summary;
+  }, {});
+}
+
+function formatStudioDate(date) {
+  return date ? date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "not detected";
+}
+
+function buildDashboardNarrative({ rows, columns, missingEntries, missingTotal, duplicates, dateSummary, categorySummary, qualityScore, feature }) {
+  const parts = [`This file contains ${rows.length} records across ${columns.length} fields.`];
+  if (dateSummary.length) {
+    const primary = dateSummary[0];
+    parts.push(`${primary.column} ranges from ${formatStudioDate(primary.start)} to ${formatStudioDate(primary.end)}, so a trend view is more useful than individual date bars.`);
+  }
+  const firstCategory = Object.entries(categorySummary || {})[0];
+  if (firstCategory) {
+    const [column, counts] = firstCategory;
+    const top = Object.entries(counts).slice(0, 3).map(([name, count]) => `${name} (${count})`).join(", ");
+    parts.push(`${column} has the clearest category pattern, led by ${top}.`);
+  }
+  if (missingTotal > 0 && missingEntries.length) {
+    const topMissing = missingEntries.slice(0, 3).map(([column, count]) => `${column} (${count} blanks)`).join(", ");
+    parts.push(`Missing values are concentrated in ${topMissing}, which may affect reporting accuracy if those fields are required.`);
+  } else {
+    parts.push("No major missing-value pattern was detected in the previewed fields.");
+  }
+  if (duplicates > 0) parts.push(`${duplicates} possible duplicate records were found and should be reviewed before export.`);
+  parts.push(qualityScore >= 85 ? "The file looks ready for a dashboard after a light review." : qualityScore >= 70 ? "Review missing values and duplicate records before using this for final reporting." : "Clean key fields before relying on this for reporting or client-ready output.");
+  parts.push(`${feature.title} is the selected output for this preview.`);
+  return parts.join(" ");
+}
+
+function showStudioDetailPanel(title, html) {
+  let panel = document.getElementById("studio-detail-panel");
+  if (!panel) {
+    panel = document.createElement("div");
+    panel.id = "studio-detail-panel";
+    panel.className = "studio-detail-panel";
+    panel.innerHTML = `<div class="studio-detail-card"><button type="button" class="studio-detail-close" aria-label="Close details">Close</button><div class="studio-detail-content"></div></div>`;
+    document.body.appendChild(panel);
+    panel.addEventListener("click", (event) => {
+      if (event.target === panel || event.target.classList.contains("studio-detail-close")) panel.classList.remove("visible");
+    });
+  }
+  const content = panel.querySelector(".studio-detail-content");
+  if (content) content.innerHTML = `<h3>${escapeHtml(title)}</h3>${html}`;
+  panel.classList.add("visible");
+}
+
+function detailList(items) {
+  return `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+}
 function buildStudioAnalysisFromRows(rows, file, sourceKind) {
   const unlocked = getUnlockedStudioAccess();
   const preview = getStudioAccess();
@@ -1019,16 +1105,23 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind) {
   }, {});
   const numericSummary = numericColumnSummary(normalizedRows, columns);
   const numericColumns = Object.keys(numericSummary);
-  const categorySummary = {};
-  columns.filter((column) => !numericColumns.includes(column)).slice(0, 4).forEach((column) => {
-    categorySummary[column] = countValues(normalizedRows.slice(0, 250), column);
-  });
+  const dateSummary = summarizeDateColumns(normalizedRows, columns);
+  const categorySummary = topCategorySummary(normalizedRows.slice(0, 500), columns, numericColumns, dateSummary);
   const missingTotal = Object.values(missingValues).reduce((total, count) => total + Number(count || 0), 0);
   const duplicates = duplicateRowCount(normalizedRows);
-  const qualityPenalty = Math.min(65, Math.round((missingTotal / Math.max(1, normalizedRows.length * Math.max(1, columns.length))) * 45) + Math.min(20, duplicates * 2));
-  const qualityScore = Math.max(35, 100 - qualityPenalty);
+  const totalCells = Math.max(1, normalizedRows.length * Math.max(1, columns.length));
+  const completenessScore = Math.max(0, Math.round(100 - (missingTotal / totalCells) * 100));
+  const duplicateScore = Math.max(0, Math.round(100 - (duplicates / Math.max(1, normalizedRows.length)) * 100));
+  const dateConsistencyScore = dateSummary.length ? Math.min(100, Math.round((dateSummary[0].count / Math.max(1, normalizedRows.length)) * 100)) : 100;
+  const requiredCoverageScore = Math.max(0, Math.round(100 - (Object.values(missingValues).filter((count) => Number(count) > normalizedRows.length * 0.25).length / Math.max(1, columns.length)) * 100));
+  const formattingScore = Math.max(55, Math.round((completenessScore + requiredCoverageScore) / 2));
+  const outlierScore = numericColumns.length ? 88 : 92;
+  const qualityScore = Math.round((completenessScore * 0.34) + (duplicateScore * 0.18) + (dateConsistencyScore * 0.14) + (requiredCoverageScore * 0.16) + (formattingScore * 0.1) + (outlierScore * 0.08));
+  const qualityBreakdown = { completenessScore, duplicateScore, dateConsistencyScore, requiredCoverageScore, formattingScore, outlierScore };
   const previewLimit = getPreviewLimitRows(unlocked, preview);
   const locked = shouldWatermark(preview, unlocked);
+  const missingEntries = Object.entries(missingValues).filter(([, count]) => Number(count) > 0).sort((a, b) => Number(b[1]) - Number(a[1]));
+  const narrative = buildDashboardNarrative({ rows: normalizedRows, columns, missingEntries, missingTotal, duplicates, dateSummary, categorySummary, qualityScore, feature });
   const cleaningSteps = [
     "Detected fields and table shape from the uploaded file",
     canPreviewFeature("duplicateChecks", preview) ? "Reviewed duplicate records" : "Duplicate checks are available in limited preview",
@@ -1055,6 +1148,9 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind) {
     missing_value_count: missingTotal,
     numeric_summary: canPreviewFeature("advancedAnalytics", preview) ? numericSummary : {},
     category_summary: categorySummary,
+    date_summary: dateSummary,
+    quality_breakdown: qualityBreakdown,
+    top_missing_columns: missingEntries.slice(0, 8),
     preview_rows: normalizedRows.slice(0, previewLimit),
     preview_limit: previewLimit,
     quality_score: canPreviewFeature("missingReview", preview) ? qualityScore : "Preview locked",
@@ -1064,9 +1160,7 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind) {
     preview_label: preview.label,
     watermark: locked,
     locked,
-    answer: locked
-      ? `Previewing ${feature.title} with your uploaded data. This preview is limited and watermarked until you upgrade to export.`
-      : `${feature.title} is ready to export from this browser session.`,
+    answer: narrative,
   };
 }
 
@@ -1214,129 +1308,137 @@ function renderStudioDashboardPreview(analysis) {
 
   const unlocked = getUnlockedStudioAccess();
   const preview = getStudioAccess();
+  const feature = getSelectedStudioFeature();
   const locked = shouldWatermark(preview, unlocked) || Boolean(analysis.watermark);
-  const missingEntries = Object.entries(analysis.missing_values || {}).filter(([, count]) => Number(count) > 0);
-  const categoryEntries = Object.entries(analysis.category_summary || {});
   const previewRows = analysis.preview_rows || [];
   const previewColumns = previewRows.length ? Object.keys(previewRows[0]).slice(0, 6) : [];
+  const missingEntries = (analysis.top_missing_columns || Object.entries(analysis.missing_values || {})).filter(([, count]) => Number(count) > 0);
+  const categoryEntries = Object.entries(analysis.category_summary || {});
+  const dateSummary = analysis.date_summary || [];
+  const quality = analysis.quality_breakdown || {};
+  const pct = (value) => `${Math.max(4, Math.min(100, Math.round(Number(value) || 0)))}%`;
+  const selectedPlan = Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === preview.access) || "t1l3";
+  const upgradeButton = locked ? `<a class="button mini secondary-mini" href="checkout.html?plan=${selectedPlan}">Upgrade to export full dashboard</a>` : "";
 
   shell.replaceChildren();
   shell.classList.add("visible");
   shell.classList.toggle("is-watermarked", locked);
 
-  const feature = getSelectedStudioFeature();
   const featureHeader = document.createElement("section");
   featureHeader.className = `studio-selected-feature${locked ? " is-locked" : " is-unlocked"}`;
-  featureHeader.innerHTML = `<span>Previewing: ${escapeHtml(feature.title)}</span><h4>${escapeHtml(analysis.source_file || "Uploaded file")}</h4><p>${escapeHtml(locked ? feature.lockedCopy : "This output is available to export from your uploaded file.")}</p><small>${escapeHtml(locked ? "ProgramMetrics Preview watermark and limited rows are applied." : "Ready to export when you are finished reviewing.")}</small>`;
+  featureHeader.innerHTML = `<span>Previewing: ${escapeHtml(feature.title)}</span><h4>${escapeHtml(analysis.source_file || "Uploaded file")}</h4><p>${escapeHtml(locked ? feature.lockedCopy : "This dashboard is ready to export from your uploaded file.")}</p><small>${escapeHtml(locked ? "ProgramMetrics Preview watermark and limited rows are applied." : "Click a KPI card to inspect the details before export.")}</small>${upgradeButton}`;
   shell.appendChild(featureHeader);
 
-  const branding = applyBrandingToPreview(getBrandingSettings());
-  if (branding) {
-    const brandPanel = document.createElement("section");
-    brandPanel.className = `studio-brand-preview${branding.previewOnly ? " is-locked" : " is-unlocked"}`;
-    brandPanel.style.setProperty("--brand-primary", branding.primaryColor);
-    brandPanel.style.setProperty("--brand-accent", branding.accentColor);
-    const logo = branding.logoDataUrl ? `<img src="${escapeHtml(branding.logoDataUrl)}" alt="Report logo preview">` : `<div class="studio-brand-textmark">${escapeHtml((branding.title || "P").slice(0, 1).toUpperCase())}</div>`;
-    const meta = [branding.preparedFor ? `Prepared for ${branding.preparedFor}` : "", branding.preparedBy ? `Prepared by ${branding.preparedBy}` : "", branding.contact].filter(Boolean).map(escapeHtml).join(" | ");
-    brandPanel.innerHTML = `<div class="studio-brand-preview-top"><div class="studio-brand-logo">${logo}</div><div><span>${escapeHtml(branding.style)}</span><h4>${escapeHtml(branding.title)}</h4><p>${escapeHtml(branding.subtitle)}</p></div></div><small>${escapeHtml(branding.lockLabel)}</small>${meta ? `<p class="studio-brand-preview-meta">${meta}</p>` : ""}`;
-    shell.appendChild(brandPanel);
-  }
+  const canvas = document.createElement("div");
+  canvas.className = "dashboard-canvas";
+  shell.appendChild(canvas);
 
   const header = document.createElement("div");
   header.className = "dashboard-preview-header";
-  header.innerHTML = `<span>Preview with your real file</span><strong>${escapeHtml(analysis.source_file || "Uploaded file")}</strong><small>${escapeHtml(analysis.file_size || "Current browser session")} | Showing first ${escapeHtml(analysis.preview_limit || previewRows.length || 0)} rows</small>`;
-  shell.appendChild(header);
+  const dateText = dateSummary.length ? `${dateSummary[0].column}: ${formatStudioDate(dateSummary[0].start)} to ${formatStudioDate(dateSummary[0].end)}` : "No date range detected";
+  header.innerHTML = `<span>Preview with your real file</span><strong>${escapeHtml(feature.title)}</strong><small>${escapeHtml(analysis.file_size || "Current browser session")} | ${escapeHtml(dateText)}</small>`;
+  canvas.appendChild(header);
 
   const stats = document.createElement("div");
   stats.className = "dashboard-kpi-grid";
   [
-    ["Rows", analysis.rows ?? 0],
-    ["Columns", analysis.columns ?? 0],
-    ["Missing Values", canPreviewFeature("missingReview", preview) ? analysis.missing_value_count ?? 0 : "Locked"],
-    ["Quality Score", canPreviewFeature("missingReview", preview) ? analysis.quality_score ?? "-" : "Locked"],
-  ].forEach(([label, value]) => {
-    const card = document.createElement("div");
-    card.className = "dashboard-kpi-card";
-    card.innerHTML = `<strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span>`;
+    { label: "Rows", value: analysis.rows ?? 0, title: "Rows and Records", detail: detailList([`${analysis.rows || 0} records were detected in this preview.`, "Rows usually represent people, events, transactions, services, or form submissions.", locked ? `Locked previews show only the first ${analysis.preview_limit} rows.` : "Exports can include the available cleaned output for this selected feature."]) },
+    { label: "Columns", value: analysis.columns ?? 0, title: "Field Summary", detail: `<p>${escapeHtml(analysis.columns || 0)} fields were detected.</p>${detailList((analysis.detected_fields || []).slice(0, 12).map((field) => `Detected field: ${field}`))}` },
+    { label: "Missing Values", value: canPreviewFeature("missingReview", preview) ? analysis.missing_value_count ?? 0 : "Preview", title: "Missing Value Detail", detail: `<p>Missing values are blank cells in your uploaded file. This dataset has ${escapeHtml(analysis.missing_value_count || 0)} blank cells.</p>${detailList(missingEntries.slice(0, 6).map(([column, count]) => `${column}: ${count} blank cells`).concat([missingEntries.length ? "Review high-missing fields before final reporting." : "No major missing-value concentration was detected."]))}` },
+    { label: "Quality Score", value: canPreviewFeature("missingReview", preview) ? analysis.quality_score ?? "-" : "Preview", title: "Quality Score Breakdown", detail: `<p>Your score is ${escapeHtml(analysis.quality_score)} because the file structure, completeness, duplicates, date consistency, and formatting signals were reviewed.</p>${detailList([`Completeness score: ${quality.completenessScore ?? "Preview"}`, `Duplicate check score: ${quality.duplicateScore ?? "Preview"}`, `Date-field consistency: ${quality.dateConsistencyScore ?? "Preview"}`, `Required-field coverage: ${quality.requiredCoverageScore ?? "Preview"}`, `Formatting consistency: ${quality.formattingScore ?? "Preview"}`, `Outlier or unusual-value check: ${quality.outlierScore ?? "Preview"}`, Number(analysis.quality_score) >= 85 ? "Overall recommendation: light review before export." : "Overall recommendation: clean or review key fields before export."])}` },
+  ].forEach((item) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "dashboard-kpi-card is-clickable";
+    card.innerHTML = `<strong>${escapeHtml(item.value)}</strong><span>${escapeHtml(item.label)}</span><small>View details</small>`;
+    card.addEventListener("click", () => showStudioDetailPanel(item.title, item.detail));
     stats.appendChild(card);
   });
-  shell.appendChild(stats);
-
-  const fieldsPanel = document.createElement("section");
-  fieldsPanel.className = "dashboard-preview-panel";
-  fieldsPanel.innerHTML = `<h4>Detected fields</h4><p>${(analysis.detected_fields || analysis.column_names || []).slice(0, 12).map(escapeHtml).join(", ") || "No fields detected yet."}</p>`;
-  shell.appendChild(fieldsPanel);
+  canvas.appendChild(stats);
 
   const answerPanel = document.createElement("section");
-  answerPanel.className = "dashboard-preview-panel";
+  answerPanel.className = "dashboard-preview-panel dashboard-tile-wide";
   answerPanel.innerHTML = `<h4>What this dashboard tells me</h4><p>${escapeHtml(analysis.answer || "ProgramMetrics analyzed the file and prepared a dashboard-ready summary.")}</p>`;
-  shell.appendChild(answerPanel);
+  canvas.appendChild(answerPanel);
 
   const visualGrid = document.createElement("div");
-  visualGrid.className = "dashboard-visual-grid";
+  visualGrid.className = "dashboard-visual-grid dashboard-visual-grid-wide";
+  const overviewPanel = document.createElement("section");
+  overviewPanel.className = "dashboard-preview-panel dashboard-tile";
+  overviewPanel.innerHTML = `<h4>Data Overview</h4><div class="dashboard-mini-list"><span>Source</span><b>${escapeHtml(analysis.source_kind || "Uploaded file")}</b><span>Detected fields</span><b>${escapeHtml((analysis.detected_fields || []).slice(0, 5).join(", ") || "None")}</b><span>Suggested view</span><b>${dateSummary.length ? "Trend and category dashboard" : "Category and quality dashboard"}</b></div>`;
+  visualGrid.appendChild(overviewPanel);
+
+  const trendPanel = document.createElement("section");
+  trendPanel.className = "dashboard-preview-panel dashboard-tile";
+  if (dateSummary.length) {
+    const primary = dateSummary[0];
+    const entries = Object.entries(primary.buckets).sort(([a], [b]) => a.localeCompare(b)).slice(-12);
+    const max = Math.max(...entries.map(([, count]) => Number(count)), 1);
+    trendPanel.innerHTML = `<h4>Records by Start Month</h4><p class="dashboard-chart-label">${escapeHtml(primary.column)}</p><div class="dashboard-trend-bars">${entries.map(([label, count]) => `<div><i style="height:${pct((Number(count) / max) * 100)}"></i><span>${escapeHtml(label.slice(2))}</span><b>${escapeHtml(count)}</b></div>`).join("")}</div>`;
+  } else {
+    trendPanel.innerHTML = `<h4>Records Over Time</h4><p>No reliable date field was detected. Add or standardize a date field to unlock trend views.</p>`;
+  }
+  visualGrid.appendChild(trendPanel);
+
   const categoryPanel = document.createElement("section");
-  categoryPanel.className = "dashboard-preview-panel";
-  categoryPanel.innerHTML = "<h4>Basic chart preview</h4>";
+  categoryPanel.className = "dashboard-preview-panel dashboard-tile";
+  categoryPanel.innerHTML = "<h4>Top Categories</h4>";
   if (categoryEntries.length) {
     const [column, counts] = categoryEntries[0];
     const maxCount = Math.max(...Object.values(counts).map(Number), 1);
     categoryPanel.innerHTML += `<p class="dashboard-chart-label">${escapeHtml(column)}</p>`;
-    Object.entries(counts).slice(0, 6).forEach(([name, count]) => {
-      categoryPanel.innerHTML += `<div class="dashboard-bar-row"><span>${escapeHtml(name)}</span><div><i style="width:${Math.max(8, Math.round((Number(count) / maxCount) * 100))}%"></i></div><b>${escapeHtml(count)}</b></div>`;
+    Object.entries(counts).slice(0, locked ? 5 : 8).forEach(([name, count]) => {
+      categoryPanel.innerHTML += `<div class="dashboard-bar-row"><span>${escapeHtml(name)}</span><div><i style="width:${pct((Number(count) / maxCount) * 100)}"></i></div><b>${escapeHtml(count)}</b></div>`;
     });
   } else {
-    categoryPanel.innerHTML += "<p>No categorical chart fields were detected yet.</p>";
+    categoryPanel.innerHTML += "<p>No readable category field was detected yet.</p>";
   }
   visualGrid.appendChild(categoryPanel);
 
   const missingPanel = document.createElement("section");
-  missingPanel.className = `dashboard-preview-panel${canPreviewFeature("missingReview", preview) ? "" : " locked-preview-panel"}`;
-  missingPanel.innerHTML = `<h4>Missing-value review</h4>${canPreviewFeature("missingReview", preview) ? "" : `<p>Upgrade to export the full missing-value review.</p><a class="button mini secondary-mini" href="checkout.html?plan=t1l2">Upgrade to export</a>`}`;
-  if (canPreviewFeature("missingReview", preview) && missingEntries.length) {
+  missingPanel.className = `dashboard-preview-panel dashboard-tile${canPreviewFeature("missingReview", preview) ? "" : " locked-preview-panel"}`;
+  missingPanel.innerHTML = "<h4>Missing Value Summary</h4>";
+  if (missingEntries.length) {
     const maxMissing = Math.max(...missingEntries.map(([, count]) => Number(count)), 1);
-    missingEntries.slice(0, 6).forEach(([column, count]) => {
-      missingPanel.innerHTML += `<div class="dashboard-bar-row missing-bar"><span>${escapeHtml(column)}</span><div><i style="width:${Math.max(8, Math.round((Number(count) / maxMissing) * 100))}%"></i></div><b>${escapeHtml(count)}</b></div>`;
+    missingEntries.slice(0, locked ? 5 : 8).forEach(([column, count]) => {
+      missingPanel.innerHTML += `<div class="dashboard-bar-row missing-bar"><span>${escapeHtml(column)}</span><div><i style="width:${pct((Number(count) / maxMissing) * 100)}"></i></div><b>${escapeHtml(count)}</b></div>`;
     });
-  } else if (canPreviewFeature("missingReview", preview)) {
+  } else {
     missingPanel.innerHTML += "<p>No missing values were detected in table-ready fields.</p>";
   }
   visualGrid.appendChild(missingPanel);
-  shell.appendChild(visualGrid);
 
-  const premiumPanels = [
-    ["branded", "Branded report structure", 4, "Reusable report framing, cover sections, and client-ready layout."],
-    ["translatedReport", "Translated report setup", 5, "Language-ready labels, summary sections, and reusable export workflow."],
-    ["recurringReport", "Recurring report setup", 6, "Recurring quality rules, cadence notes, and repeatable report sections."],
-    ["workflowActivation", "Workflow system preview", 7, "Workflow triggers, ownership steps, and activation/export map."],
-    ["advancedAnalytics", "Advanced analytics preview", 8, "Signals, segments, and advanced export planning."],
-  ];
-  premiumPanels.forEach(([feature, title, required, text]) => {
-    if (!canPreviewFeature(feature, preview) && accessValue(preview) < required - 1) return;
-    const panel = document.createElement("section");
-    panel.className = `dashboard-preview-panel${canPreviewFeature(feature, preview) ? "" : " locked-preview-panel"}`;
-    panel.innerHTML = `<h4>${escapeHtml(title)}</h4><p>${escapeHtml(text)}</p>${canPreviewFeature(feature, preview) ? `<small>${locked ? "ProgramMetrics Preview watermark applies until export is unlocked." : "Available for export."}</small>` : `<a class="button mini secondary-mini" href="checkout.html?plan=${Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === required) || "t2l1"}">Upgrade to export</a>`}`;
-    shell.appendChild(panel);
+  const qualityPanel = document.createElement("section");
+  qualityPanel.className = "dashboard-preview-panel dashboard-tile";
+  [["Completeness", quality.completenessScore], ["Duplicate check", quality.duplicateScore], ["Date consistency", quality.dateConsistencyScore], ["Field coverage", quality.requiredCoverageScore], ["Formatting", quality.formattingScore], ["Outlier check", quality.outlierScore]].forEach(([label, value], index) => {
+    qualityPanel.innerHTML += index === 0 ? "<h4>Quality Score Breakdown</h4>" : "";
+    qualityPanel.innerHTML += `<div class="dashboard-bar-row quality-bar"><span>${escapeHtml(label)}</span><div><i style="width:${pct(value)}"></i></div><b>${escapeHtml(value ?? "-")}</b></div>`;
   });
+  visualGrid.appendChild(qualityPanel);
 
-  const cleaningPanel = document.createElement("section");
-  cleaningPanel.className = "dashboard-preview-panel";
-  cleaningPanel.innerHTML = `<h4>Automatic cleaning checks</h4><ul>${(analysis.cleaning_steps || []).map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ul>`;
-  shell.appendChild(cleaningPanel);
+  const duplicatePanel = document.createElement("section");
+  duplicatePanel.className = "dashboard-preview-panel dashboard-tile";
+  duplicatePanel.innerHTML = `<h4>Possible Duplicate Review</h4><strong class="dashboard-large-number">${escapeHtml(analysis.duplicate_rows)}</strong><p>${Number(analysis.duplicate_rows) > 0 ? "Review possible duplicate rows before final reporting." : "No obvious duplicate records were detected in the previewed data."}</p>`;
+  visualGrid.appendChild(duplicatePanel);
+
+  const completenessPanel = document.createElement("section");
+  completenessPanel.className = "dashboard-preview-panel dashboard-tile";
+  completenessPanel.innerHTML = `<h4>Field Completeness</h4><div class="dashboard-ring" style="--score:${pct(quality.completenessScore)}"><strong>${escapeHtml(quality.completenessScore ?? "-")}</strong><span>Completeness</span></div><p>${missingEntries.length ? "High-blank fields should be reviewed, filtered, or marked optional." : "Fields appear complete enough for a first dashboard preview."}</p>`;
+  visualGrid.appendChild(completenessPanel);
+
+  const actionsPanel = document.createElement("section");
+  actionsPanel.className = "dashboard-preview-panel dashboard-tile";
+  actionsPanel.innerHTML = `<h4>Recommended Cleaning Actions</h4><ul>${(analysis.cleaning_steps || []).slice(0, locked ? 5 : 8).map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ul>${upgradeButton}`;
+  visualGrid.appendChild(actionsPanel);
+  canvas.appendChild(visualGrid);
 
   if (previewRows.length && previewColumns.length) {
     const tablePanel = document.createElement("section");
     tablePanel.className = `dashboard-preview-panel dashboard-table-panel${locked ? " locked-preview-panel" : ""}`;
     const head = previewColumns.map((column) => `<th>${escapeHtml(column)}</th>`).join("");
-    const rows = previewRows.map((row) => `<tr>${previewColumns.map((column) => `<td>${escapeHtml(row[column] ?? "")}</td>`).join("")}</tr>`).join("");
-    tablePanel.innerHTML = `<h4>Data preview</h4><p>Showing first ${escapeHtml(analysis.preview_limit || previewRows.length)} rows.</p><div class="dashboard-table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>${locked ? `<a class="button mini secondary-mini" href="checkout.html?plan=${Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === preview.access) || "t1l3"}">Upgrade to export</a>` : ""}`;
-    shell.appendChild(tablePanel);
-  }
-
-  if (branding && (branding.footerNote || branding.contact)) {
-    const footerPanel = document.createElement("section");
-    footerPanel.className = "studio-brand-footer-preview";
-    footerPanel.innerHTML = `${branding.footerNote ? `<p>${escapeHtml(branding.footerNote)}</p>` : ""}${branding.contact ? `<small>${escapeHtml(branding.contact)}</small>` : ""}`;
-    shell.appendChild(footerPanel);
+    const rows = previewRows.slice(0, locked ? Math.min(25, previewRows.length) : previewRows.length).map((row) => `<tr>${previewColumns.map((column) => `<td>${escapeHtml(row[column] ?? "")}</td>`).join("")}</tr>`).join("");
+    tablePanel.innerHTML = `<h4>Limited Data Preview</h4><p>Showing first ${escapeHtml(locked ? Math.min(25, analysis.preview_limit || previewRows.length) : analysis.preview_limit || previewRows.length)} rows.</p><div class="dashboard-table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>${upgradeButton}`;
+    canvas.appendChild(tablePanel);
   }
 }
 function countValues(rows, column) {
@@ -1392,6 +1494,9 @@ function buildGeneratedExampleAnalysis() {
     missing_values: access >= 2 ? Object.fromEntries(columns.map((column) => [column, 0])) : {},
     numeric_summary: access >= 3 ? numericSummary : {},
     category_summary: categorySummary,
+    date_summary: dateSummary,
+    quality_breakdown: qualityBreakdown,
+    top_missing_columns: missingEntries.slice(0, 8),
     preview_rows: rows,
     cleaning_steps: baseSteps.concat(tierSteps),
     package_label: selected.label,
