@@ -15,7 +15,7 @@
     <meta http-equiv="pragma" content="no-cache" />
     <meta http-equiv="expires" content="0" />
 
-    <link rel="stylesheet" href="styles-20260610.css?v=20260708-studio-analytics" />
+    <link rel="stylesheet" href="styles-20260610.css?v=20260708-studio-executive" />
   </head>
 
   <body>
@@ -114,7 +114,7 @@
                 <ul>
                   <li>Your uploaded file is processed only for your current browser session.</li>
                   <li>Files are not stored as customer projects or long-term ProgramMetrics data.</li>
-                  <li>Previews can use your uploaded data with feature limits based on your current access.</li>
+                  <li>Previews can use your uploaded data with feature limits based on your Studio access.</li>
                   <li>Downloads and exports are available when the selected output is unlocked.</li>
                   <li>Download any outputs before ending your session.</li>
                 </ul>
@@ -152,9 +152,26 @@
                   <input id="studio-brand-subtitle" type="text" placeholder="Monthly dashboard summary" />
                 </label>
                 <label>
+                  <span>Program name</span>
+                  <input id="studio-brand-program" type="text" placeholder="Program or service line" />
+                </label>
+                <label>
+                  <span>Report title</span>
+                  <input id="studio-brand-title" type="text" placeholder="Executive Analytics Report" />
+                </label>
+                <label>
+                  <span>Report date</span>
+                  <input id="studio-brand-date" type="date" />
+                </label>
+                <label>
                   <span>Logo/image upload</span>
                   <input id="studio-brand-logo" type="file" accept="image/*" />
                   <small>Logo preview is session-only and is not stored long-term.</small>
+                </label>
+                <label>
+                  <span>Secondary logo upload</span>
+                  <input id="studio-brand-secondary-logo" type="file" accept="image/*" />
+                  <small>Secondary logo preview is session-only.</small>
                 </label>
                 <label>
                   <span>Primary brand color</span>
@@ -163,6 +180,19 @@
                 <label>
                   <span>Accent color</span>
                   <input id="studio-brand-accent" type="color" value="#14b8a6" />
+                </label>
+                <label>
+                  <span>Secondary color</span>
+                  <input id="studio-brand-secondary" type="color" value="#0f766e" />
+                </label>
+                <label>
+                  <span>Preferred font</span>
+                  <select id="studio-brand-font">
+                    <option>Inter / system sans</option>
+                    <option>Aptos / Microsoft style</option>
+                    <option>Arial / classic report</option>
+                    <option>Georgia / formal report</option>
+                  </select>
                 </label>
                 <label>
                   <span>Preferred report style</span>
@@ -189,6 +219,22 @@
                 <label>
                   <span>Contact email or website</span>
                   <input id="studio-brand-contact" type="text" />
+                </label>
+                <label>
+                  <span>Website</span>
+                  <input id="studio-brand-website" type="url" />
+                </label>
+                <label class="studio-branding-wide">
+                  <span>Confidential footer</span>
+                  <input id="studio-brand-confidential" type="text" placeholder="Confidential - prepared for internal use" />
+                </label>
+                <label class="studio-branding-wide">
+                  <span>Mission statement</span>
+                  <textarea id="studio-brand-mission" rows="3"></textarea>
+                </label>
+                <label class="studio-branding-wide">
+                  <span>Executive summary notes</span>
+                  <textarea id="studio-brand-executive-notes" rows="3"></textarea>
                 </label>
               </div>
             </section>
@@ -266,8 +312,13 @@
           </article>
 
           <aside class="studio-output-panel reveal">
-            <p class="template-label">Dashboard preview</p>
-            <h3>Uploaded-file previews appear here</h3>
+            <div class="studio-preview-toolbar">
+              <div>
+                <p class="template-label">Dashboard preview</p>
+                <h3>Uploaded-file previews appear here</h3>
+              </div>
+              <button class="button mini secondary-mini" id="studio-open-preview" type="button" disabled>Open Interactive Preview</button>
+            </div>
             <div class="studio-preview-empty" id="studio-preview-empty">
               <strong>No preview yet.</strong>
               <span>No preview yet. Upload a file to see your data summary, quality checks, charts, and available outputs.</span>
@@ -287,7 +338,7 @@
       </nav>
     </footer>
 
-    <script src="script-20260610.js?v=20260708-studio-analytics"></script>
+    <script src="script-20260610.js?v=20260708-studio-executive"></script>
     <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   </body>
 </html>

@@ -1,4 +1,4 @@
-﻿const serviceDetails = {
+const serviceDetails = {
   dashboards: {
     title: "Custom built dashboards",
     text:
@@ -165,9 +165,9 @@ function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[char]));
 }
 
-function renderStudioDashboardPreview(analysis) {
-  const shell = document.getElementById("studio-preview-shell");
-  const empty = document.getElementById("studio-preview-empty");
+function renderStudioDashboardPreview(analysis, targetShell = null) {
+  const shell = targetShell || document.getElementById("studio-preview-shell");
+  const empty = targetShell ? null : document.getElementById("studio-preview-empty");
   if (!shell || !analysis) {
     return;
   }
@@ -231,6 +231,7 @@ function renderStudioDashboardPreview(analysis) {
   } else {
     categoryPanel.innerHTML += "<p>No categorical chart fields were detected yet.</p>";
   }
+  categoryPanel.dataset.dashboardTab = "visuals";
   visualGrid.appendChild(categoryPanel);
 
   const missingPanel = document.createElement("section");
@@ -247,6 +248,7 @@ function renderStudioDashboardPreview(analysis) {
   } else {
     missingPanel.innerHTML += "<p>No missing values were detected in table-ready fields.</p>";
   }
+  missingPanel.dataset.dashboardTab = "quality";
   visualGrid.appendChild(missingPanel);
   shell.appendChild(visualGrid);
 
@@ -567,7 +569,7 @@ function setupStudioPackageAccess() {
 
     if (packageCard) {
       const lockedPreview = shouldWatermark(preview, unlocked);
-      packageCard.innerHTML = `<div><span>Current access</span><strong>${escapeHtml(unlocked.label)}</strong></div><div><span>Output preview</span><strong>${escapeHtml(preview.label)}</strong></div><div><span>Private session processing</span><strong>${lockedPreview ? "Preview only - unlock to download" : "Download available for this output"}</strong></div><small>Choose an output format once. Studio automatically previews the matching level and protects locked downloads.</small>`;
+      packageCard.innerHTML = `<div><span>Selected output</span><strong>${escapeHtml(getSelectedStudioFeature().title)}</strong></div><div><span>Preview status</span><strong>${lockedPreview ? "Preview only" : "Ready to export"}</strong></div><div><span>Export access</span><strong>${lockedPreview ? "Upgrade to export" : "Download available"}</strong></div><small>Choose what you want to create. Locked outputs can be previewed before purchase.</small>`;
     }
 
     if (packageLabel) {
@@ -875,20 +877,29 @@ function getBrandingSettings() {
   const unlocked = getUnlockedStudioAccess();
   const preview = getStudioAccess();
   const settings = {
-    reportName: getBrandingFieldValue("studio-brand-org"),
+    reportName: getBrandingFieldValue("studio-brand-title") || getBrandingFieldValue("studio-brand-org"),
+    organization: getBrandingFieldValue("studio-brand-org"),
+    programName: getBrandingFieldValue("studio-brand-program"),
     subtitle: getBrandingFieldValue("studio-brand-subtitle"),
+    reportDate: getBrandingFieldValue("studio-brand-date"),
     logoDataUrl: activeBrandLogoDataUrl,
     primaryColor: getBrandingFieldValue("studio-brand-primary") || "#2563eb",
     accentColor: getBrandingFieldValue("studio-brand-accent") || "#14b8a6",
+    secondaryColor: getBrandingFieldValue("studio-brand-secondary") || "#0f766e",
+    font: getBrandingFieldValue("studio-brand-font") || "Inter / system sans",
     style: getBrandingFieldValue("studio-brand-style") || "Clean and professional",
     preparedFor: getBrandingFieldValue("studio-brand-prepared-for"),
     preparedBy: getBrandingFieldValue("studio-brand-prepared-by"),
     footerNote: getBrandingFieldValue("studio-brand-footer"),
+    confidentialFooter: getBrandingFieldValue("studio-brand-confidential"),
     contact: getBrandingFieldValue("studio-brand-contact"),
+    website: getBrandingFieldValue("studio-brand-website"),
+    mission: getBrandingFieldValue("studio-brand-mission"),
+    executiveNotes: getBrandingFieldValue("studio-brand-executive-notes"),
     canExport: canExportBrandedReport(unlocked),
     visibleInPreview: accessValue(preview) >= studioFeatureRequirements.branded,
   };
-  settings.hasBranding = Boolean(settings.reportName || settings.subtitle || settings.logoDataUrl || settings.preparedFor || settings.preparedBy || settings.footerNote || settings.contact);
+  settings.hasBranding = Boolean(settings.reportName || settings.organization || settings.programName || settings.subtitle || settings.logoDataUrl || settings.preparedFor || settings.preparedBy || settings.footerNote || settings.confidentialFooter || settings.contact || settings.website || settings.mission || settings.executiveNotes);
   settings.previewOnly = settings.visibleInPreview && !settings.canExport;
   return settings;
 }
@@ -904,10 +915,202 @@ function applyBrandingToPreview(brandingSettings) {
   };
 }
 
+function studioExportOptionsHtml(locked = false) {
+  const disabled = locked ? " disabled" : "";
+  return `<div class="studio-export-menu">
+    <label>
+      <span>Export Package</span>
+      <select class="studio-export-kind"${disabled}>
+        <option value="zip">ZIP Package: Everything</option>
+        <option value="html">Interactive Dashboard HTML</option>
+        <option value="pdf">Executive Summary PDF-ready HTML</option>
+        <option value="docx">Word Executive Report DOCX</option>
+        <option value="pptx">PowerPoint Presentation PPTX</option>
+        <option value="xlsx">Excel Workbook XLSX</option>
+        <option value="csv">Cleaned Data CSV</option>
+        <option value="missing_csv">Missing Value Report CSV</option>
+        <option value="duplicate_csv">Duplicate Review CSV</option>
+        <option value="dictionary_xlsx">Field Dictionary XLSX</option>
+        <option value="png">Executive Infographic SVG</option>
+        <option value="json">JSON Metadata</option>
+        <option value="summary">Processing Summary</option>
+      </select>
+    </label>
+    <button class="button mini studio-export-action"${disabled} type="button">${locked ? "Upgrade to export full dashboard" : "Export package"}</button>
+  </div>`;
+}
+
+function setupStudioExportMenus(root = document) {
+  root.querySelectorAll(".studio-export-menu").forEach((menu) => {
+    const button = menu.querySelector(".studio-export-action");
+    const select = menu.querySelector(".studio-export-kind");
+    if (!button || !select || button.dataset.bound === "true") return;
+    button.dataset.bound = "true";
+    button.addEventListener("click", () => downloadStudioExport(select.value));
+  });
+}
+
+function csvFromObjects(rows) {
+  if (!rows || !rows.length) return "";
+  const columns = Array.from(rows.reduce((set, row) => {
+    Object.keys(row || {}).forEach((key) => set.add(key));
+    return set;
+  }, new Set()));
+  const quote = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+  return [columns.map(quote).join(","), ...rows.map((row) => columns.map((column) => quote(row[column])).join(","))].join("\r\n");
+}
+
+function missingReportCsv(analysis) {
+  const rows = Object.entries(analysis.missing_values || {}).map(([column, missing]) => ({
+    column,
+    missing_cells: missing,
+    missing_percent: analysis.rows ? Math.round((Number(missing) / Number(analysis.rows)) * 1000) / 10 : 0,
+  }));
+  return csvFromObjects(rows);
+}
+
+function duplicateReportCsv(analysis) {
+  const duplicateRows = (analysis.duplicate_samples || []).length ? analysis.duplicate_samples : [{ duplicate_rows: analysis.duplicate_rows || 0, method: "Full-row match across previewed columns" }];
+  return csvFromObjects(duplicateRows);
+}
+
+function fieldDictionaryRows(analysis) {
+  const columns = analysis.column_names || analysis.detected_fields || [];
+  const numeric = analysis.numeric_summary || {};
+  const missing = analysis.missing_values || {};
+  const dateFields = new Set((analysis.date_summary || []).map((item) => item.column));
+  return columns.map((column) => ({
+    field: column,
+    type: dateFields.has(column) ? "date" : numeric[column] ? "numeric" : "text/category",
+    missing_cells: missing[column] || 0,
+    suggested_use: dateFields.has(column) ? "Trend analysis" : numeric[column] ? "Measures and distributions" : "Grouping, filters, labels, or notes",
+  }));
+}
+
+function metadataJson(analysis) {
+  return JSON.stringify({
+    generatedBy: "ProgramMetrics Studio",
+    sourceFile: analysis.source_file,
+    rows: analysis.rows,
+    columns: analysis.columns,
+    qualityScore: analysis.quality_score,
+    qualityBreakdown: analysis.quality_breakdown,
+    dateSummary: analysis.date_summary,
+    topMissingColumns: analysis.top_missing_columns,
+    fieldDictionary: fieldDictionaryRows(analysis),
+    recommendations: analysis.cleaning_steps,
+  }, null, 2);
+}
+
+function executiveSummaryHtml(analysis) {
+  const branding = applyBrandingToPreview(getBrandingSettings());
+  const header = brandingReportHeaderHtml(branding) || `<header><h1>ProgramMetrics Executive Analytics Package</h1><p>${escapeHtml(analysis.source_file || "Uploaded file")}</p></header>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>ProgramMetrics Executive Analytics</title><style>body{font-family:Arial,sans-serif;margin:0;background:#eef4fb;color:#071525}.page{max-width:1160px;margin:0 auto;padding:34px}header,.tile{background:#fff;border:1px solid #dbe4ef;border-radius:14px;padding:22px;margin:0 0 18px;box-shadow:0 18px 40px rgba(15,23,42,.08)}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.kpis strong{display:block;color:#2563eb;font-size:34px}.bar{display:grid;grid-template-columns:180px 1fr 54px;gap:10px;align-items:center;margin:9px 0}.bar i{display:block;height:12px;border-radius:999px;background:#14b8a6}@media(max-width:800px){.kpis{grid-template-columns:1fr}.bar{grid-template-columns:1fr}}</style></head><body><main class="page">${header}<section class="tile"><h2>What this dashboard tells me</h2><p>${escapeHtml(analysis.answer || "")}</p></section><section class="kpis"><div class="tile"><strong>${escapeHtml(analysis.rows || 0)}</strong>Rows</div><div class="tile"><strong>${escapeHtml(analysis.columns || 0)}</strong>Columns</div><div class="tile"><strong>${escapeHtml(analysis.missing_value_count || 0)}</strong>Missing values</div><div class="tile"><strong>${escapeHtml(analysis.quality_score || "-")}</strong>Quality score</div></section><section class="tile"><h2>Recommended actions</h2><ul>${(analysis.cleaning_steps || []).map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ul></section></main></body></html>`;
+}
+
+function executiveSvg(analysis) {
+  const quality = Number(analysis.quality_score) || 0;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675"><rect width="1200" height="675" fill="#eef4fb"/><rect x="54" y="54" width="1092" height="567" rx="28" fill="#fff" stroke="#dbe4ef"/><text x="90" y="122" font-family="Arial" font-size="34" font-weight="700" fill="#071525">ProgramMetrics Executive Analytics</text><text x="90" y="164" font-family="Arial" font-size="19" fill="#53647f">${escapeHtml(analysis.source_file || "Uploaded file")}</text><g transform="translate(90 218)"><rect width="220" height="130" rx="18" fill="#f8fafc" stroke="#dbe4ef"/><text x="24" y="50" font-family="Arial" font-size="42" font-weight="700" fill="#2563eb">${escapeHtml(analysis.rows || 0)}</text><text x="24" y="90" font-family="Arial" font-size="18" fill="#53647f">Rows</text></g><g transform="translate(340 218)"><rect width="220" height="130" rx="18" fill="#f8fafc" stroke="#dbe4ef"/><text x="24" y="50" font-family="Arial" font-size="42" font-weight="700" fill="#2563eb">${escapeHtml(analysis.columns || 0)}</text><text x="24" y="90" font-family="Arial" font-size="18" fill="#53647f">Columns</text></g><g transform="translate(590 218)"><rect width="220" height="130" rx="18" fill="#f8fafc" stroke="#dbe4ef"/><text x="24" y="50" font-family="Arial" font-size="42" font-weight="700" fill="#2563eb">${escapeHtml(analysis.missing_value_count || 0)}</text><text x="24" y="90" font-family="Arial" font-size="18" fill="#53647f">Missing Values</text></g><g transform="translate(840 218)"><rect width="220" height="130" rx="18" fill="#ecfeff" stroke="#14b8a6"/><text x="24" y="50" font-family="Arial" font-size="42" font-weight="700" fill="#0f766e">${quality}</text><text x="24" y="90" font-family="Arial" font-size="18" fill="#53647f">Quality Score</text></g><text x="90" y="430" font-family="Arial" font-size="23" font-weight="700" fill="#071525">Summary</text><text x="90" y="468" font-family="Arial" font-size="18" fill="#334155">${escapeHtml(String(analysis.answer || "Uploaded data has been analyzed for dashboard-ready reporting.").slice(0, 130))}</text></svg>`;
+}
+
+function zipStringBytes(value) {
+  return new TextEncoder().encode(String(value));
+}
+
+function crc32(bytes) {
+  let crc = -1;
+  for (let i = 0; i < bytes.length; i += 1) {
+    crc ^= bytes[i];
+    for (let j = 0; j < 8; j += 1) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+  }
+  return (crc ^ -1) >>> 0;
+}
+
+function uint16(value) {
+  return [value & 255, (value >>> 8) & 255];
+}
+
+function uint32(value) {
+  return [value & 255, (value >>> 8) & 255, (value >>> 16) & 255, (value >>> 24) & 255];
+}
+
+function buildZipBlob(files) {
+  const chunks = [];
+  const central = [];
+  let offset = 0;
+  files.forEach((file) => {
+    const name = zipStringBytes(file.name);
+    const data = file.bytes || zipStringBytes(file.content || "");
+    const crc = crc32(data);
+    const local = new Uint8Array([80, 75, 3, 4, ...uint16(20), ...uint16(0), ...uint16(0), ...uint16(0), ...uint16(0), ...uint32(crc), ...uint32(data.length), ...uint32(data.length), ...uint16(name.length), ...uint16(0), ...name, ...data]);
+    chunks.push(local);
+    central.push(new Uint8Array([80, 75, 1, 2, ...uint16(20), ...uint16(20), ...uint16(0), ...uint16(0), ...uint16(0), ...uint16(0), ...uint32(crc), ...uint32(data.length), ...uint32(data.length), ...uint16(name.length), ...uint16(0), ...uint16(0), ...uint16(0), ...uint16(0), ...uint32(0), ...uint32(offset), ...name]));
+    offset += local.length;
+  });
+  const centralSize = central.reduce((total, item) => total + item.length, 0);
+  const end = new Uint8Array([80, 75, 5, 6, ...uint16(0), ...uint16(0), ...uint16(files.length), ...uint16(files.length), ...uint32(centralSize), ...uint32(offset), ...uint16(0)]);
+  return new Blob([...chunks, ...central, end], { type: "application/zip" });
+}
+
+function buildStudioZipPackage(analysis) {
+  const html = executiveSummaryHtml(analysis);
+  const csv = csvFromObjects(analysis.preview_rows || []);
+  const missing = missingReportCsv(analysis);
+  const duplicate = duplicateReportCsv(analysis);
+  const dictionaryCsv = csvFromObjects(fieldDictionaryRows(analysis));
+  const metadata = metadataJson(analysis);
+  const processing = [`Source file: ${analysis.source_file}`, `Rows: ${analysis.rows}`, `Columns: ${analysis.columns}`, `Quality score: ${analysis.quality_score}`, "", ...(analysis.cleaning_steps || [])].join("\r\n");
+  const svg = executiveSvg(analysis);
+  return buildZipBlob([
+    { name: "dashboard/interactive-dashboard.html", content: html },
+    { name: "reports/executive-summary.pdf.html", content: html },
+    { name: "reports/word-report.docx.html", content: html },
+    { name: "reports/data-quality-report.pdf.html", content: html },
+    { name: "slides/executive-presentation.pptx.html", content: html },
+    { name: "data/cleaned-data.csv", content: csv },
+    { name: "data/missing-value-report.csv", content: missing },
+    { name: "data/duplicate-review.csv", content: duplicate },
+    { name: "data/field-dictionary.xlsx.csv", content: dictionaryCsv },
+    { name: "images/dashboard-overview.svg", content: svg },
+    { name: "images/chart-images/executive-infographic.svg", content: svg },
+    { name: "metadata/metadata.json", content: metadata },
+    { name: "metadata/processing-summary.txt", content: processing },
+    { name: "README.pdf.html", content: `<h1>ProgramMetrics Executive Analytics Package</h1><p>This browser-generated package includes dashboard, report, data, image, and metadata assets from the current session.</p>` },
+  ]);
+}
+
+function downloadStudioExport(kind) {
+  const analysis = activeStudioUploadedAnalysis || activeStudioExampleAnalysis;
+  const feature = getSelectedStudioFeature();
+  if (!analysis) return;
+  if (!canDownloadOutput(feature.outputType, getUnlockedStudioAccess())) {
+    window.location.href = getCheckoutUrlForOutput(feature.outputType);
+    return;
+  }
+  const safeName = String(analysis.source_file || "programmetrics").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "programmetrics";
+  const html = executiveSummaryHtml(analysis);
+  const exports = {
+    zip: [buildStudioZipPackage(analysis), `${safeName}-executive-analytics-package.zip`],
+    html: [new Blob([html], { type: "text/html;charset=utf-8" }), `${safeName}-interactive-dashboard.html`],
+    pdf: [new Blob([html], { type: "text/html;charset=utf-8" }), `${safeName}-executive-summary-pdf-ready.html`],
+    docx: [new Blob([html], { type: "text/html;charset=utf-8" }), `${safeName}-word-report-docx-ready.html`],
+    pptx: [new Blob([html], { type: "text/html;charset=utf-8" }), `${safeName}-presentation-pptx-ready.html`],
+    xlsx: [new Blob([csvFromObjects(analysis.preview_rows || [])], { type: "text/csv;charset=utf-8" }), `${safeName}-excel-workbook.csv`],
+    csv: [new Blob([csvFromObjects(analysis.preview_rows || [])], { type: "text/csv;charset=utf-8" }), `${safeName}-cleaned-data.csv`],
+    missing_csv: [new Blob([missingReportCsv(analysis)], { type: "text/csv;charset=utf-8" }), `${safeName}-missing-value-report.csv`],
+    duplicate_csv: [new Blob([duplicateReportCsv(analysis)], { type: "text/csv;charset=utf-8" }), `${safeName}-duplicate-review.csv`],
+    dictionary_xlsx: [new Blob([csvFromObjects(fieldDictionaryRows(analysis))], { type: "text/csv;charset=utf-8" }), `${safeName}-field-dictionary.csv`],
+    png: [new Blob([executiveSvg(analysis)], { type: "image/svg+xml;charset=utf-8" }), `${safeName}-executive-infographic.svg`],
+    json: [new Blob([metadataJson(analysis)], { type: "application/json;charset=utf-8" }), `${safeName}-metadata.json`],
+    summary: [new Blob([(analysis.cleaning_steps || []).join("\r\n")], { type: "text/plain;charset=utf-8" }), `${safeName}-processing-summary.txt`],
+  };
+  const [blob, filename] = exports[kind] || exports.zip;
+  downloadBlob(blob, filename);
+}
 function brandingReportHeaderHtml(branding) {
   if (!branding) return "";
   const logo = branding.logoDataUrl ? `<img src="${escapeHtml(branding.logoDataUrl)}" alt="Report logo">` : "";
-  const meta = [branding.preparedFor ? `Prepared for ${branding.preparedFor}` : "", branding.preparedBy ? `Prepared by ${branding.preparedBy}` : "", branding.style || ""].filter(Boolean).map(escapeHtml).join(" | ");
+  const meta = [branding.organization || "", branding.programName || "", branding.preparedFor ? `Prepared for ${branding.preparedFor}` : "", branding.preparedBy ? `Prepared by ${branding.preparedBy}` : "", branding.reportDate || "", branding.style || ""].filter(Boolean).map(escapeHtml).join(" | ");
   return `<header class="brand-report-header" style="border-top-color:${escapeHtml(branding.primaryColor)}"><div>${logo}<div><p>${escapeHtml(branding.style)}</p><h1>${escapeHtml(branding.reportName || "ProgramMetrics Studio Report")}</h1><h2>${escapeHtml(branding.subtitle || "Dashboard preview from your uploaded file")}</h2></div></div><small>${meta}</small></header>`;
 }
 
@@ -1276,9 +1479,12 @@ async function studioDownloadCurrentOutput(input, result, format, language, butt
     if (outputType === "csv") {
       blob = new Blob([csvFromRows(analysis.preview_rows || [])], { type: "text/csv;charset=utf-8" });
       filename = "programmetrics-cleaned-preview.csv";
-    } else if (outputType === "json" || outputType === "reusable_workflow" || outputType === "workflow_package" || outputType === "advanced_analytics") {
-      blob = new Blob([JSON.stringify({ analysis, language: language?.value || "English" }, null, 2)], { type: "application/json;charset=utf-8" });
-      filename = outputType === "reusable_workflow" ? "programmetrics-reusable-report-workflow.json" : outputType === "workflow_package" ? "programmetrics-workflow-package.json" : outputType === "advanced_analytics" ? "programmetrics-advanced-analytics-export.json" : "programmetrics-studio-package.json";
+    } else if (outputType === "advanced_analytics") {
+      blob = buildStudioZipPackage(analysis);
+      filename = "programmetrics-executive-analytics-package.zip";
+    } else if (outputType === "json" || outputType === "reusable_workflow" || outputType === "workflow_package") {
+      blob = new Blob([metadataJson(analysis)], { type: "application/json;charset=utf-8" });
+      filename = outputType === "reusable_workflow" ? "programmetrics-reusable-report-workflow.json" : outputType === "workflow_package" ? "programmetrics-workflow-package.json" : "programmetrics-studio-package.json";
     } else if (outputType === "dashboard_summary" || outputType === "quality_review" || outputType === "branded_report") {
       blob = new Blob([reportHtmlFromAnalysis(analysis, getSelectedStudioFeature().title)], { type: "text/html;charset=utf-8" });
       filename = outputType === "dashboard_summary" ? "programmetrics-dashboard-summary.html" : outputType === "quality_review" ? "programmetrics-quality-review.html" : "programmetrics-branded-report.html";
@@ -1300,9 +1506,9 @@ async function studioDownloadCurrentOutput(input, result, format, language, butt
   }
 }
 
-function renderStudioDashboardPreview(analysis) {
-  const shell = document.getElementById("studio-preview-shell");
-  const empty = document.getElementById("studio-preview-empty");
+function renderStudioDashboardPreview(analysis, targetShell = null) {
+  const shell = targetShell || document.getElementById("studio-preview-shell");
+  const empty = targetShell ? null : document.getElementById("studio-preview-empty");
   if (!shell || !analysis) return;
   if (empty) empty.style.display = "none";
 
@@ -1319,15 +1525,18 @@ function renderStudioDashboardPreview(analysis) {
   const pct = (value) => `${Math.max(4, Math.min(100, Math.round(Number(value) || 0)))}%`;
   const selectedPlan = Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === preview.access) || "t1l3";
   const upgradeButton = locked ? `<a class="button mini secondary-mini" href="checkout.html?plan=${selectedPlan}">Upgrade to export full dashboard</a>` : "";
+  const exportControls = locked ? upgradeButton : studioExportOptionsHtml(false);
 
   shell.replaceChildren();
   shell.classList.add("visible");
   shell.classList.toggle("is-watermarked", locked);
+  document.getElementById("studio-open-preview")?.removeAttribute("disabled");
 
   const featureHeader = document.createElement("section");
   featureHeader.className = `studio-selected-feature${locked ? " is-locked" : " is-unlocked"}`;
-  featureHeader.innerHTML = `<span>Previewing: ${escapeHtml(feature.title)}</span><h4>${escapeHtml(analysis.source_file || "Uploaded file")}</h4><p>${escapeHtml(locked ? feature.lockedCopy : "This dashboard is ready to export from your uploaded file.")}</p><small>${escapeHtml(locked ? "ProgramMetrics Preview watermark and limited rows are applied." : "Click a KPI card to inspect the details before export.")}</small>${upgradeButton}`;
+  featureHeader.innerHTML = `<span>Previewing: ${escapeHtml(feature.title)}</span><h4>${escapeHtml(analysis.source_file || "Uploaded file")}</h4><p>${escapeHtml(locked ? feature.lockedCopy : "This dashboard is ready to export from your uploaded file.")}</p><small>${escapeHtml(locked ? "ProgramMetrics Preview watermark and limited rows are applied." : "Click a KPI card to inspect the details before export.")}</small>${exportControls}`;
   shell.appendChild(featureHeader);
+  setupStudioExportMenus(featureHeader);
 
   const canvas = document.createElement("div");
   canvas.className = "dashboard-canvas";
@@ -1337,6 +1546,7 @@ function renderStudioDashboardPreview(analysis) {
   header.className = "dashboard-preview-header";
   const dateText = dateSummary.length ? `${dateSummary[0].column}: ${formatStudioDate(dateSummary[0].start)} to ${formatStudioDate(dateSummary[0].end)}` : "No date range detected";
   header.innerHTML = `<span>Preview with your real file</span><strong>${escapeHtml(feature.title)}</strong><small>${escapeHtml(analysis.file_size || "Current browser session")} | ${escapeHtml(dateText)}</small>`;
+  header.dataset.dashboardTab = "overview";
   canvas.appendChild(header);
 
   const stats = document.createElement("div");
@@ -1354,11 +1564,29 @@ function renderStudioDashboardPreview(analysis) {
     card.addEventListener("click", () => showStudioDetailPanel(item.title, item.detail));
     stats.appendChild(card);
   });
+  dateSummary.length && [ { label: "Date Range", value: `${formatStudioDate(dateSummary[0].start)} - ${formatStudioDate(dateSummary[0].end)}`, title: "Date Range Detail", detail: detailList([`Earliest date: ${formatStudioDate(dateSummary[0].start)}`, `Latest date: ${formatStudioDate(dateSummary[0].end)}`, `Detected date field: ${dateSummary[0].column}`, "Records are grouped by month so the chart stays readable."]) } ].forEach((item) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "dashboard-kpi-card is-clickable";
+    card.innerHTML = `<strong>${escapeHtml(item.value)}</strong><span>${escapeHtml(item.label)}</span><small>View details</small>`;
+    card.addEventListener("click", () => showStudioDetailPanel(item.title, item.detail));
+    stats.appendChild(card);
+  });
+  [{ label: "Duplicates", value: analysis.duplicate_rows ?? 0, title: "Duplicate Review", detail: detailList([`${analysis.duplicate_rows || 0} possible duplicate rows were detected.`, "Detection uses repeated full-row values within the uploaded data preview.", Number(analysis.duplicate_rows) > 0 ? "Review duplicate records before creating final reports." : "No obvious duplicates were found in the previewed data."]) }].forEach((item) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "dashboard-kpi-card is-clickable";
+    card.innerHTML = `<strong>${escapeHtml(item.value)}</strong><span>${escapeHtml(item.label)}</span><small>View details</small>`;
+    card.addEventListener("click", () => showStudioDetailPanel(item.title, item.detail));
+    stats.appendChild(card);
+  });
+  stats.dataset.dashboardTab = "overview";
   canvas.appendChild(stats);
 
   const answerPanel = document.createElement("section");
   answerPanel.className = "dashboard-preview-panel dashboard-tile-wide";
   answerPanel.innerHTML = `<h4>What this dashboard tells me</h4><p>${escapeHtml(analysis.answer || "ProgramMetrics analyzed the file and prepared a dashboard-ready summary.")}</p>`;
+  answerPanel.dataset.dashboardTab = "overview";
   canvas.appendChild(answerPanel);
 
   const visualGrid = document.createElement("div");
@@ -1366,6 +1594,7 @@ function renderStudioDashboardPreview(analysis) {
   const overviewPanel = document.createElement("section");
   overviewPanel.className = "dashboard-preview-panel dashboard-tile";
   overviewPanel.innerHTML = `<h4>Data Overview</h4><div class="dashboard-mini-list"><span>Source</span><b>${escapeHtml(analysis.source_kind || "Uploaded file")}</b><span>Detected fields</span><b>${escapeHtml((analysis.detected_fields || []).slice(0, 5).join(", ") || "None")}</b><span>Suggested view</span><b>${dateSummary.length ? "Trend and category dashboard" : "Category and quality dashboard"}</b></div>`;
+  overviewPanel.dataset.dashboardTab = "overview";
   visualGrid.appendChild(overviewPanel);
 
   const trendPanel = document.createElement("section");
@@ -1378,6 +1607,7 @@ function renderStudioDashboardPreview(analysis) {
   } else {
     trendPanel.innerHTML = `<h4>Records Over Time</h4><p>No reliable date field was detected. Add or standardize a date field to unlock trend views.</p>`;
   }
+  trendPanel.dataset.dashboardTab = "visuals";
   visualGrid.appendChild(trendPanel);
 
   const categoryPanel = document.createElement("section");
@@ -1393,6 +1623,7 @@ function renderStudioDashboardPreview(analysis) {
   } else {
     categoryPanel.innerHTML += "<p>No readable category field was detected yet.</p>";
   }
+  categoryPanel.dataset.dashboardTab = "visuals";
   visualGrid.appendChild(categoryPanel);
 
   const missingPanel = document.createElement("section");
@@ -1406,6 +1637,7 @@ function renderStudioDashboardPreview(analysis) {
   } else {
     missingPanel.innerHTML += "<p>No missing values were detected in table-ready fields.</p>";
   }
+  missingPanel.dataset.dashboardTab = "quality";
   visualGrid.appendChild(missingPanel);
 
   const qualityPanel = document.createElement("section");
@@ -1414,32 +1646,61 @@ function renderStudioDashboardPreview(analysis) {
     qualityPanel.innerHTML += index === 0 ? "<h4>Quality Score Breakdown</h4>" : "";
     qualityPanel.innerHTML += `<div class="dashboard-bar-row quality-bar"><span>${escapeHtml(label)}</span><div><i style="width:${pct(value)}"></i></div><b>${escapeHtml(value ?? "-")}</b></div>`;
   });
+  qualityPanel.dataset.dashboardTab = "quality";
   visualGrid.appendChild(qualityPanel);
 
   const duplicatePanel = document.createElement("section");
   duplicatePanel.className = "dashboard-preview-panel dashboard-tile";
   duplicatePanel.innerHTML = `<h4>Possible Duplicate Review</h4><strong class="dashboard-large-number">${escapeHtml(analysis.duplicate_rows)}</strong><p>${Number(analysis.duplicate_rows) > 0 ? "Review possible duplicate rows before final reporting." : "No obvious duplicate records were detected in the previewed data."}</p>`;
+  duplicatePanel.dataset.dashboardTab = "quality";
   visualGrid.appendChild(duplicatePanel);
 
   const completenessPanel = document.createElement("section");
   completenessPanel.className = "dashboard-preview-panel dashboard-tile";
   completenessPanel.innerHTML = `<h4>Field Completeness</h4><div class="dashboard-ring" style="--score:${pct(quality.completenessScore)}"><strong>${escapeHtml(quality.completenessScore ?? "-")}</strong><span>Completeness</span></div><p>${missingEntries.length ? "High-blank fields should be reviewed, filtered, or marked optional." : "Fields appear complete enough for a first dashboard preview."}</p>`;
+  completenessPanel.dataset.dashboardTab = "quality";
   visualGrid.appendChild(completenessPanel);
 
   const actionsPanel = document.createElement("section");
   actionsPanel.className = "dashboard-preview-panel dashboard-tile";
-  actionsPanel.innerHTML = `<h4>Recommended Cleaning Actions</h4><ul>${(analysis.cleaning_steps || []).slice(0, locked ? 5 : 8).map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ul>${upgradeButton}`;
+  actionsPanel.innerHTML = `<h4>Recommended Cleaning Actions</h4><ul>${(analysis.cleaning_steps || []).slice(0, locked ? 5 : 8).map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ul>${exportControls}`;
+  actionsPanel.dataset.dashboardTab = "recommendations";
   visualGrid.appendChild(actionsPanel);
   canvas.appendChild(visualGrid);
+
+  const executivePanel = document.createElement("section");
+  executivePanel.className = "dashboard-preview-panel dashboard-tile-wide";
+  executivePanel.dataset.dashboardTab = "executive";
+  executivePanel.innerHTML = `<h4>Executive Summary</h4><p>${escapeHtml(analysis.answer || "Your uploaded file has been prepared for executive-level reporting.")}</p><ul>${(analysis.cleaning_steps || []).slice(0, 5).map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ul>`;
+  canvas.appendChild(executivePanel);
+
+  const exportPanel = document.createElement("section");
+  exportPanel.className = `dashboard-preview-panel dashboard-tile-wide${locked ? " locked-preview-panel" : ""}`;
+  exportPanel.dataset.dashboardTab = "exports";
+  exportPanel.innerHTML = `<h4>Exports</h4><p>${escapeHtml(locked ? "Your file preview is limited. Upgrade to export the full analytics package." : "Choose a professional output package generated from this uploaded file.")}</p>${exportControls}`;
+  canvas.appendChild(exportPanel);
+  setupStudioExportMenus(exportPanel);
+
+  if (preview.access >= studioFeatureRequirements.advancedAnalytics) {
+    [["forecasting", "Forecasting", "Trend previews are grouped by month or quarter when a date field is detected."], ["advanced", "Advanced Analytics", "ProgramMetrics checks for outliers, field usability, correlations, and analysis readiness."], ["dictionary", "Data Dictionary", "Fields are typed and described for reusable analytics packages."], ["appendix", "Appendix", "Processing notes, assumptions, limitations, and metadata are packaged for review."]].forEach(([tab, title, copy]) => {
+      const panel = document.createElement("section");
+      panel.className = "dashboard-preview-panel dashboard-tile-wide";
+      panel.dataset.dashboardTab = tab;
+      panel.innerHTML = `<h4>${escapeHtml(title)}</h4><p>${escapeHtml(copy)}</p>`;
+      canvas.appendChild(panel);
+    });
+  }
 
   if (previewRows.length && previewColumns.length) {
     const tablePanel = document.createElement("section");
     tablePanel.className = `dashboard-preview-panel dashboard-table-panel${locked ? " locked-preview-panel" : ""}`;
     const head = previewColumns.map((column) => `<th>${escapeHtml(column)}</th>`).join("");
     const rows = previewRows.slice(0, locked ? Math.min(25, previewRows.length) : previewRows.length).map((row) => `<tr>${previewColumns.map((column) => `<td>${escapeHtml(row[column] ?? "")}</td>`).join("")}</tr>`).join("");
-    tablePanel.innerHTML = `<h4>Limited Data Preview</h4><p>Showing first ${escapeHtml(locked ? Math.min(25, analysis.preview_limit || previewRows.length) : analysis.preview_limit || previewRows.length)} rows.</p><div class="dashboard-table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>${upgradeButton}`;
+    tablePanel.innerHTML = `<h4>Limited Data Preview</h4><p>Showing first ${escapeHtml(locked ? Math.min(25, analysis.preview_limit || previewRows.length) : analysis.preview_limit || previewRows.length)} rows.</p><div class="dashboard-table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>${exportControls}`;
+    tablePanel.dataset.dashboardTab = "exports";
     canvas.appendChild(tablePanel);
   }
+  setupDashboardTabs(canvas, preview.access);
 }
 function countValues(rows, column) {
   return rows.reduce((counts, row) => {
@@ -1576,6 +1837,80 @@ function setupStudioFeatureCards() {
   });
   selectStudioFeature(activeStudioFeatureKey, false);
 }
+function setupDashboardTabs(canvas, accessValueForTabs = 1) {
+  if (!canvas || canvas.querySelector(".dashboard-tabs")) return;
+  const tabs = [
+    ["overview", "Overview"],
+    ["quality", "Data Quality"],
+    ["visuals", "Visual Analytics"],
+    ["executive", "Executive Summary"],
+    ["recommendations", "Recommendations"],
+    ["exports", "Exports"],
+  ];
+  if (Number(accessValueForTabs) >= studioFeatureRequirements.advancedAnalytics) {
+    tabs.push(["forecasting", "Forecasting"], ["advanced", "Advanced Analytics"], ["dictionary", "Data Dictionary"], ["appendix", "Appendix"]);
+  }
+  const tabBar = document.createElement("div");
+  tabBar.className = "dashboard-tabs";
+  tabBar.innerHTML = tabs.map(([key, label], index) => `<button type="button" class="${index === 0 ? "active" : ""}" data-dashboard-tab-button="${key}">${label}</button>`).join("");
+  canvas.prepend(tabBar);
+
+  const activate = (key) => {
+    tabBar.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.dashboardTabButton === key));
+    canvas.querySelectorAll("[data-dashboard-tab]").forEach((section) => {
+      section.hidden = section.dataset.dashboardTab !== key;
+    });
+  };
+  tabBar.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-dashboard-tab-button]");
+    if (button) activate(button.dataset.dashboardTabButton);
+  });
+  activate("overview");
+}
+
+function openStudioFullScreenPreview() {
+  const analysis = activeStudioUploadedAnalysis || activeStudioExampleAnalysis;
+  if (!analysis) return;
+  const modal = document.createElement("div");
+  modal.className = "studio-fullscreen-preview";
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+  modal.innerHTML = `<div class="studio-fullscreen-toolbar"><strong>Interactive Preview</strong><div class="studio-fullscreen-actions"><button type="button" data-action="fit">Fit</button><button type="button" data-action="zoom-out">-</button><button type="button" data-action="zoom-in">+</button>${studioExportOptionsHtml(!canDownloadOutput(getSelectedStudioFeature().outputType, getUnlockedStudioAccess()))}<button type="button" data-action="close">Close</button></div></div><div class="studio-fullscreen-body"><div class="studio-preview-shell visible"></div></div>`;
+  document.body.appendChild(modal);
+  const shell = modal.querySelector(".studio-preview-shell");
+  renderStudioDashboardPreview(analysis, shell);
+  setupStudioExportMenus(modal);
+  let zoom = 1;
+  const setZoom = (value) => {
+    zoom = Math.max(0.55, Math.min(1.45, value));
+    const canvas = shell.querySelector(".dashboard-canvas");
+    if (canvas) {
+      canvas.style.transform = `scale(${zoom})`;
+      canvas.style.transformOrigin = "top center";
+    }
+  };
+  modal.addEventListener("click", (event) => {
+    const action = event.target.closest("button")?.dataset.action;
+    if (action === "close") modal.remove();
+    if (action === "fit") setZoom(1);
+    if (action === "zoom-in") setZoom(zoom + 0.1);
+    if (action === "zoom-out") setZoom(zoom - 0.1);
+  });
+  const closeOnEscape = (event) => {
+    if (event.key === "Escape") {
+      modal.remove();
+      document.removeEventListener("keydown", closeOnEscape);
+    }
+  };
+  document.addEventListener("keydown", closeOnEscape);
+}
+
+function setupInteractivePreviewButton() {
+  const button = document.getElementById("studio-open-preview");
+  if (!button || button.dataset.bound === "true") return;
+  button.dataset.bound = "true";
+  button.addEventListener("click", openStudioFullScreenPreview);
+}
 function refreshActiveStudioPreview(messagePrefix) {
   const input = document.getElementById("studio-file-converter-input");
   const result = document.getElementById("studio-converter-result");
@@ -1612,6 +1947,15 @@ function setupStudioBrandingControls() {
     "studio-brand-prepared-by",
     "studio-brand-footer",
     "studio-brand-contact",
+    "studio-brand-program",
+    "studio-brand-title",
+    "studio-brand-date",
+    "studio-brand-secondary",
+    "studio-brand-font",
+    "studio-brand-website",
+    "studio-brand-confidential",
+    "studio-brand-mission",
+    "studio-brand-executive-notes",
   ].map((id) => document.getElementById(id)).filter(Boolean);
   const logoInput = document.getElementById("studio-brand-logo");
 
@@ -1685,6 +2029,7 @@ function setupStudioPreviewRefresh() {
 setupStudioPackageAccess();
 setupStudioFeatureCards();
 setupStudioBrandingControls();
+setupInteractivePreviewButton();
 setupStudioPreviewRefresh();
 const studioPricingPlans = {
   t1l1: {

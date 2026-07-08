@@ -3143,3 +3143,225 @@ input.is-locked {
     grid-template-columns: repeat(6, minmax(24px, 1fr));
   }
 }
+/* Premium Studio analytics workspace */
+.studio-workspace-grid {
+  max-width: 1640px;
+  grid-template-columns: minmax(300px, 0.34fr) minmax(760px, 1.66fr);
+  gap: 24px;
+}
+
+.studio-control-panel {
+  position: sticky;
+  top: 86px;
+  max-height: calc(100vh - 108px);
+  overflow: auto;
+}
+
+.studio-output-panel {
+  position: static;
+  max-height: none;
+  overflow: visible;
+  padding: 24px;
+  background: #f8fafc;
+}
+
+.studio-preview-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.studio-preview-toolbar h3 {
+  margin-bottom: 0;
+}
+
+.studio-preview-toolbar .button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+.studio-preview-shell.visible {
+  padding: 16px;
+  border-color: #dbeafe;
+  background: #eef4fb;
+}
+
+.dashboard-canvas {
+  min-height: 72vh;
+  gap: 18px;
+  padding: 18px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 24px 55px rgba(15, 23, 42, 0.08);
+}
+
+.dashboard-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px;
+  border: 1px solid #dbe4ef;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.dashboard-tabs button,
+.studio-fullscreen-toolbar button {
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--navy);
+  cursor: pointer;
+  font-weight: 900;
+  padding: 10px 12px;
+  white-space: nowrap;
+}
+
+.dashboard-tabs button.active {
+  border-color: #14b8a6;
+  background: #ecfeff;
+  color: #0f766e;
+}
+
+.dashboard-kpi-grid {
+  grid-template-columns: repeat(6, minmax(130px, 1fr));
+}
+
+.dashboard-kpi-card.is-clickable strong {
+  font-size: clamp(1.35rem, 2vw, 2.05rem);
+}
+
+.dashboard-preview-header,
+.dashboard-preview-panel,
+.dashboard-kpi-card {
+  border-radius: 12px;
+}
+
+.dashboard-visual-grid-wide {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dashboard-tile-wide {
+  grid-column: 1 / -1;
+}
+
+.studio-export-menu {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.studio-export-menu label {
+  display: grid;
+  gap: 6px;
+  min-width: min(100%, 320px);
+  color: var(--navy);
+  font-weight: 900;
+}
+
+.studio-export-menu select {
+  min-height: 44px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--navy);
+  font: inherit;
+  font-weight: 800;
+  padding: 8px 10px;
+}
+
+.studio-fullscreen-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: #071525;
+}
+
+.studio-fullscreen-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #dbe4ef;
+}
+
+.studio-fullscreen-toolbar strong {
+  color: var(--navy);
+  font-size: 1rem;
+}
+
+.studio-fullscreen-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.studio-fullscreen-actions .studio-export-menu {
+  margin-top: 0;
+}
+
+.studio-fullscreen-actions .studio-export-menu label span {
+  display: none;
+}
+
+.studio-fullscreen-actions .studio-export-menu select {
+  width: 230px;
+}
+
+.studio-fullscreen-body {
+  overflow: auto;
+  padding: 24px;
+  background: #eef4fb;
+}
+
+.studio-fullscreen-body .studio-preview-shell {
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+.studio-fullscreen-body .studio-selected-feature {
+  margin-bottom: 16px;
+}
+
+@media (max-width: 1280px) {
+  .studio-workspace-grid {
+    grid-template-columns: minmax(280px, 0.45fr) minmax(620px, 1.55fr);
+  }
+
+  .dashboard-kpi-grid,
+  .dashboard-visual-grid-wide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .studio-workspace-grid,
+  .dashboard-kpi-grid,
+  .dashboard-visual-grid-wide {
+    grid-template-columns: 1fr;
+  }
+
+  .studio-control-panel {
+    position: static;
+    max-height: none;
+  }
+
+  .studio-preview-toolbar,
+  .studio-fullscreen-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
