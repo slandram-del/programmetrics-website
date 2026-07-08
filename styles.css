@@ -3365,3 +3365,317 @@ input.is-locked {
     flex-direction: column;
   }
 }
+
+/* Studio full-page analytics workspace refinement */
+.studio-workspace-grid {
+  max-width: 1660px;
+  grid-template-columns: 1fr;
+}
+
+.studio-control-panel {
+  position: static;
+  max-height: none;
+  overflow: visible;
+  display: grid;
+  gap: 22px;
+}
+
+.studio-package-picker,
+.studio-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.upload-zone {
+  min-height: 150px;
+}
+
+.feature-access-panel {
+  padding: 24px;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.feature-access-grid {
+  grid-template-columns: repeat(4, minmax(190px, 1fr));
+}
+
+.studio-actions {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) minmax(220px, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.studio-actions::after {
+  content: "Open Interactive Preview from the dashboard header after generating a preview.";
+  display: grid;
+  align-items: center;
+  min-height: 56px;
+  padding: 0 16px;
+  border: 1px solid #99f6e4;
+  border-radius: 10px;
+  background: #ecfeff;
+  color: #0f766e;
+  font-weight: 900;
+}
+
+.studio-output-panel {
+  padding: 28px;
+  background: #edf4fb;
+}
+
+.studio-preview-toolbar {
+  padding: 16px 18px;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.07);
+}
+
+#studio-open-preview {
+  min-width: 240px;
+  background: #2563eb;
+  color: #fff;
+}
+
+.dashboard-canvas {
+  min-height: 78vh;
+  padding: 22px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.dashboard-preview-header {
+  display: grid;
+  gap: 6px;
+  padding: 20px;
+  border-left: 0;
+  background: linear-gradient(135deg, #071525 0%, #143b73 100%);
+  color: #fff;
+}
+
+.dashboard-preview-header span,
+.dashboard-preview-header small {
+  color: #bfdbfe;
+}
+
+.dashboard-preview-header strong {
+  color: #fff;
+  font-size: clamp(1.5rem, 2.4vw, 2.5rem);
+}
+
+.dashboard-kpi-grid {
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+}
+
+.dashboard-kpi-card.is-clickable {
+  border: 1px solid #dbe4ef;
+  background: #fff;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.07);
+}
+
+.dashboard-insight-cards,
+.stats-dashboard-grid,
+.missing-code-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-insight-cards article,
+.stats-dashboard-grid div,
+.missing-code-summary {
+  padding: 14px;
+  border: 1px solid #dbe4ef;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #334155;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.stats-dashboard-grid strong,
+.missing-code-summary b {
+  display: block;
+  color: #2563eb;
+  font-size: 1.8rem;
+}
+
+.field-heatmap {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.field-heatmap span {
+  min-height: 42px;
+  padding: 8px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #14b8a6 var(--complete), #fee2e2 var(--complete));
+  color: #071525;
+  font-size: 0.72rem;
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.missing-code-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.missing-code-chips span {
+  padding: 7px 10px;
+  border: 1px solid #99f6e4;
+  border-radius: 999px;
+  background: #ecfeff;
+  color: #0f766e;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.missing-code-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+.missing-code-controls input {
+  min-height: 44px;
+  flex: 1 1 260px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+}
+
+.missing-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.quality-detail-score {
+  display: inline-grid;
+  place-items: center;
+  width: 150px;
+  height: 150px;
+  border-radius: 999px;
+  background: conic-gradient(#14b8a6 0 78%, #e2e8f0 78% 100%);
+  color: #071525;
+}
+
+.quality-detail-score strong {
+  font-size: 2.4rem;
+}
+
+@media (max-width: 1100px) {
+  .feature-access-grid,
+  .dashboard-kpi-grid,
+  .dashboard-insight-cards,
+  .stats-dashboard-grid,
+  .missing-code-summary,
+  .field-heatmap {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .studio-package-picker,
+  .studio-options-grid,
+  .studio-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .feature-access-grid,
+  .dashboard-kpi-grid,
+  .dashboard-insight-cards,
+  .stats-dashboard-grid,
+  .missing-code-summary,
+  .field-heatmap,
+  .missing-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Studio analytics refinement details */
+.studio-fullscreen-title {
+  display: grid;
+  gap: 4px;
+}
+
+.studio-fullscreen-title span {
+  color: #53647f;
+  font-weight: 800;
+  font-size: 0.88rem;
+}
+
+.lock-chip {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 4px 8px;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 0.72rem;
+  font-weight: 900;
+  vertical-align: middle;
+}
+
+.dashboard-table-wrap table {
+  font-size: 0.84rem;
+}
+
+.dashboard-table-wrap th {
+  background: #eff6ff;
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.histogram-bars {
+  min-height: 180px;
+  margin-bottom: 16px;
+}
+
+.dashboard-preview-panel h5 {
+  margin: 14px 0 8px;
+  color: var(--navy);
+  font-size: 0.95rem;
+}
+
+.studio-selected-feature {
+  border-radius: 14px;
+}
+
+.studio-selected-feature .studio-export-menu,
+.dashboard-preview-panel .studio-export-menu {
+  padding: 12px;
+  border: 1px solid #dbe4ef;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.locked-preview-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.locked-preview-panel::after {
+  content: "ProgramMetrics Preview";
+  position: absolute;
+  inset: auto -40px 18px auto;
+  transform: rotate(-10deg);
+  color: rgba(37, 99, 235, 0.16);
+  font-size: 1.4rem;
+  font-weight: 1000;
+  pointer-events: none;
+}

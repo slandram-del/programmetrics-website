@@ -206,7 +206,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
 
   const answerPanel = document.createElement("section");
   answerPanel.className = "dashboard-preview-panel";
-  answerPanel.innerHTML = `<h4>What this dashboard tells me</h4><p>${escapeHtml(analysis.answer || "ProgramMetrics analyzed the file and prepared a dashboard-ready summary.")}</p>`;
+  answerPanel.innerHTML = `<h4>What this dashboard tells me</h4><div class="dashboard-insight-cards">${insightCards.map((insight) => `<article>${escapeHtml(insight)}</article>`).join("")}</div>`;
   shell.appendChild(answerPanel);
 
   const visualGrid = document.createElement("div");
@@ -248,8 +248,14 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   } else {
     missingPanel.innerHTML += "<p>No missing values were detected in table-ready fields.</p>";
   }
-  missingPanel.dataset.dashboardTab = "quality";
+  missingPanel.dataset.dashboardTab = "missing";
   visualGrid.appendChild(missingPanel);
+
+  const heatmapPanel = document.createElement("section");
+  heatmapPanel.className = "dashboard-preview-panel dashboard-tile";
+  heatmapPanel.dataset.dashboardTab = "visuals";
+  heatmapPanel.innerHTML = `<h4>Field Completeness Heatmap</h4><div class="field-heatmap">${Object.entries(missingProfile.byColumn || {}).slice(0, 48).map(([column, count]) => { const complete = analysis.rows ? Math.round(100 - (Number(count) / analysis.rows) * 100) : 100; return `<span title="${escapeHtml(column)}: ${complete}% complete" style="--complete:${complete}%">${escapeHtml(column.slice(0, 14))}</span>`; }).join("")}</div>`;
+  visualGrid.appendChild(heatmapPanel);
   shell.appendChild(visualGrid);
 
   const cleaningPanel = document.createElement("section");
@@ -487,6 +493,8 @@ let activeStudioExampleAnalysis = null;
 let activeStudioUploadedAnalysis = null;
 let activeBrandLogoDataUrl = "";
 let activeStudioFeatureKey = "conversion";
+const defaultStudioMissingCodes = ["", " ", "NA", "N/A", "n/a", "null", "NULL", "unknown", "Unknown", "blank", "Blank", "not reported", "Not Reported", "missing", "Missing", "--", "-"];
+let activeStudioMissingCodes = defaultStudioMissingCodes.slice();
 
 setupFileConverter("file-converter-input", "converter-result", "file-output-language", "file-output-format", "file-convert-button", "file-analyze-button", "file-insight-panel");
 setupFileConverter("studio-file-converter-input", "studio-converter-result", "studio-output-language", "studio-output-format", "studio-convert-button", "studio-analyze-button", "studio-insight-panel");
@@ -1194,22 +1202,41 @@ function duplicateRowCount(rows) {
   return duplicates;
 }
 
+function quantile(sorted, q) {
+  if (!sorted.length) return 0;
+  const pos = (sorted.length - 1) * q;
+  const base = Math.floor(pos);
+  const rest = pos - base;
+  return sorted[base + 1] !== undefined ? sorted[base] + rest * (sorted[base + 1] - sorted[base]) : sorted[base];
+}
+
 function numericColumnSummary(rows, columns) {
   return columns.reduce((summary, column) => {
     const values = rows.map((row) => Number(row[column])).filter((value) => Number.isFinite(value));
-    if (values.length >= Math.max(2, Math.round(rows.length * 0.35))) {
+    if (values.length >= Math.max(2, Math.round(rows.length * 0.25))) {
       const sorted = values.slice().sort((a, b) => a - b);
-      summary[column] = {
-        min: sorted[0],
-        max: sorted[sorted.length - 1],
-        mean: values.reduce((total, value) => total + value, 0) / values.length,
-        median: sorted[Math.floor(sorted.length / 2)],
-      };
+      const mean = values.reduce((total, value) => total + value, 0) / values.length;
+      const variance = values.reduce((total, value) => total + Math.pow(value - mean, 2), 0) / Math.max(1, values.length - 1);
+      const q1 = quantile(sorted, 0.25);
+      const median = quantile(sorted, 0.5);
+      const q3 = quantile(sorted, 0.75);
+      const iqr = q3 - q1;
+      const lowerFence = q1 - 1.5 * iqr;
+      const upperFence = q3 + 1.5 * iqr;
+      const binCount = Math.min(8, Math.max(4, Math.ceil(Math.sqrt(values.length))));
+      const min = sorted[0];
+      const max = sorted[sorted.length - 1];
+      const width = Math.max((max - min) / binCount, 1);
+      const histogram = Array.from({ length: binCount }, (_, index) => ({ label: `${Math.round(min + width * index)}-${Math.round(index === binCount - 1 ? max : min + width * (index + 1))}`, count: 0 }));
+      values.forEach((value) => {
+        const index = Math.min(binCount - 1, Math.max(0, Math.floor((value - min) / width)));
+        histogram[index].count += 1;
+      });
+      summary[column] = { min, max, mean, median, q1, q3, standardDeviation: Math.sqrt(Math.max(0, variance)), outlierCount: values.filter((value) => value < lowerFence || value > upperFence).length, validCount: values.length, missingCount: rows.length - values.length, histogram };
     }
     return summary;
   }, {});
 }
-
 
 function parseStudioDateValue(value) {
   const text = String(value ?? "").trim();
@@ -1296,21 +1323,74 @@ function showStudioDetailPanel(title, html) {
 function detailList(items) {
   return `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
 }
+function isStudioMissingValue(value, codes = activeStudioMissingCodes) {
+  if (value === null || value === undefined) return true;
+  const text = String(value).trim();
+  return codes.some((code) => String(code).trim() === text);
+}
+
+function calculateMissingProfile(rows, columns, codes = activeStudioMissingCodes) {
+  const byColumn = {};
+  const sampleRows = [];
+  let missingCells = 0;
+  let missingRows = 0;
+  rows.forEach((row, index) => {
+    let rowMissing = 0;
+    columns.forEach((column) => {
+      if (isStudioMissingValue(row[column], codes)) {
+        byColumn[column] = (byColumn[column] || 0) + 1;
+        missingCells += 1;
+        rowMissing += 1;
+      } else if (!Object.prototype.hasOwnProperty.call(byColumn, column)) {
+        byColumn[column] = 0;
+      }
+    });
+    if (rowMissing > 0) {
+      missingRows += 1;
+      if (sampleRows.length < 8) sampleRows.push({ row: index + 1, missingFields: rowMissing, preview: columns.slice(0, 4).map((column) => `${column}: ${row[column] ?? ""}`).join(" | ") });
+    }
+  });
+  const totalCells = Math.max(1, rows.length * Math.max(1, columns.length));
+  const entries = Object.entries(byColumn).filter(([, count]) => Number(count) > 0).sort((a, b) => Number(b[1]) - Number(a[1]));
+  return { byColumn, missingRows, missingCells, missingColumns: entries.length, missingPercent: Math.round((missingCells / totalCells) * 1000) / 10, entries, sampleRows };
+}
+
+function buildInsightCards(analysis) {
+  const dateSummary = analysis.date_summary || [];
+  const missing = analysis.missing_profile || {};
+  const insights = [`This file contains ${analysis.rows || 0} records across ${analysis.columns || 0} fields.`];
+  if (dateSummary.length) insights.push(`${dateSummary[0].column} spans ${formatStudioDate(dateSummary[0].start)} to ${formatStudioDate(dateSummary[0].end)}, so monthly trend analysis is recommended.`);
+  if (Number(analysis.duplicate_rows) > 0) insights.push(`${analysis.duplicate_rows} possible duplicate records were detected and should be reviewed.`);
+  if (Number(missing.missingCells) > 0) insights.push(`${missing.missingColumns || 0} fields contain coded blanks, covering ${missing.missingCells || 0} missing cells across ${missing.missingRows || 0} rows.`);
+  insights.push(Number(analysis.quality_score) >= 85 ? "This file is ready for dashboard preview after a light review." : "This file is ready for preview, but should be cleaned before final reporting.");
+  return insights.slice(0, 5);
+}
+
+function missingDetailHtml(analysis) {
+  const profile = analysis.missing_profile || {};
+  const entries = profile.entries || [];
+  const rows = profile.sampleRows || [];
+  return `<p>Missing rows are records that contain at least one blank or coded missing value. Missing cells are the total number of blank or coded missing fields across the dataset. A file can have many missing cells concentrated in the same rows.</p><div class="missing-detail-grid"><b>${escapeHtml(profile.missingRows || 0)}</b><span>Missing rows</span><b>${escapeHtml(profile.missingCells || 0)}</b><span>Missing cells</span><b>${escapeHtml(profile.missingColumns || 0)}</b><span>Fields with blanks</span><b>${escapeHtml(profile.missingPercent || 0)}%</b><span>Missing percent</span></div><h4>Top missing columns</h4>${detailList(entries.slice(0, 10).map(([column, count]) => `${column}: ${count} missing cells (${analysis.rows ? Math.round((Number(count) / analysis.rows) * 1000) / 10 : 0}%)`))}<h4>Sample rows with missing values</h4>${detailList(rows.map((row) => `Row ${row.row}: ${row.missingFields} missing fields - ${row.preview}`))}<p>Recommendation: review high-missing fields, decide which codes should count as missing, and clean or filter fields before final export.</p>`;
+}
+
+function qualityDetailHtml(analysis) {
+  const quality = analysis.quality_breakdown || {};
+  const items = [["Completeness", quality.completenessScore], ["Duplicate score", quality.duplicateScore], ["Date consistency", quality.dateConsistencyScore], ["Formatting", quality.formattingScore], ["Field usability", quality.requiredCoverageScore], ["Numeric validity", quality.numericValidityScore], ["Categorical usability", quality.categoricalUsabilityScore], ["Outlier check", quality.outlierScore]];
+  return `<div class="quality-detail-score"><strong>${escapeHtml(analysis.quality_score || "-")}</strong><span>Overall quality score</span></div><p>Your quality score reflects completeness, duplicates, date consistency, formatting, field usability, numeric validity, categorical usability, and unusual-value checks.</p>${items.map(([label, value]) => `<div class="dashboard-bar-row quality-bar"><span>${escapeHtml(label)}</span><div><i style="width:${Math.max(4, Math.min(100, Number(value) || 0))}%"></i></div><b>${escapeHtml(value ?? "-")}</b></div>`).join("")}`;
+}
 function buildStudioAnalysisFromRows(rows, file, sourceKind) {
   const unlocked = getUnlockedStudioAccess();
   const preview = getStudioAccess();
   const feature = getSelectedStudioFeature();
   const normalizedRows = normalizeRows(rows).slice(0, 2000);
   const columns = normalizedRows.length ? Object.keys(normalizedRows[0]) : [];
-  const missingValues = columns.reduce((counts, column) => {
-    counts[column] = normalizedRows.filter((row) => String(row[column] ?? "").trim() === "").length;
-    return counts;
-  }, {});
+  const missingProfile = calculateMissingProfile(normalizedRows, columns);
+  const missingValues = missingProfile.byColumn;
   const numericSummary = numericColumnSummary(normalizedRows, columns);
   const numericColumns = Object.keys(numericSummary);
   const dateSummary = summarizeDateColumns(normalizedRows, columns);
   const categorySummary = topCategorySummary(normalizedRows.slice(0, 500), columns, numericColumns, dateSummary);
-  const missingTotal = Object.values(missingValues).reduce((total, count) => total + Number(count || 0), 0);
+  const missingTotal = missingProfile.missingCells;
   const duplicates = duplicateRowCount(normalizedRows);
   const totalCells = Math.max(1, normalizedRows.length * Math.max(1, columns.length));
   const completenessScore = Math.max(0, Math.round(100 - (missingTotal / totalCells) * 100));
@@ -1318,12 +1398,14 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind) {
   const dateConsistencyScore = dateSummary.length ? Math.min(100, Math.round((dateSummary[0].count / Math.max(1, normalizedRows.length)) * 100)) : 100;
   const requiredCoverageScore = Math.max(0, Math.round(100 - (Object.values(missingValues).filter((count) => Number(count) > normalizedRows.length * 0.25).length / Math.max(1, columns.length)) * 100));
   const formattingScore = Math.max(55, Math.round((completenessScore + requiredCoverageScore) / 2));
-  const outlierScore = numericColumns.length ? 88 : 92;
-  const qualityScore = Math.round((completenessScore * 0.34) + (duplicateScore * 0.18) + (dateConsistencyScore * 0.14) + (requiredCoverageScore * 0.16) + (formattingScore * 0.1) + (outlierScore * 0.08));
-  const qualityBreakdown = { completenessScore, duplicateScore, dateConsistencyScore, requiredCoverageScore, formattingScore, outlierScore };
+  const numericValidityScore = numericColumns.length ? Math.max(60, 100 - Math.round(Object.values(numericSummary).reduce((total, item) => total + (item.outlierCount || 0), 0) / Math.max(1, normalizedRows.length) * 100)) : 92;
+  const categoricalUsabilityScore = Math.min(100, Math.max(62, Object.keys(categorySummary).length * 14 + 62));
+  const outlierScore = numericColumns.length ? numericValidityScore : 92;
+  const qualityScore = Math.round((completenessScore * 0.3) + (duplicateScore * 0.16) + (dateConsistencyScore * 0.12) + (requiredCoverageScore * 0.14) + (formattingScore * 0.1) + (numericValidityScore * 0.09) + (categoricalUsabilityScore * 0.05) + (outlierScore * 0.04));
+  const qualityBreakdown = { completenessScore, duplicateScore, dateConsistencyScore, requiredCoverageScore, formattingScore, numericValidityScore, categoricalUsabilityScore, outlierScore };
   const previewLimit = getPreviewLimitRows(unlocked, preview);
   const locked = shouldWatermark(preview, unlocked);
-  const missingEntries = Object.entries(missingValues).filter(([, count]) => Number(count) > 0).sort((a, b) => Number(b[1]) - Number(a[1]));
+  const missingEntries = missingProfile.entries;
   const narrative = buildDashboardNarrative({ rows: normalizedRows, columns, missingEntries, missingTotal, duplicates, dateSummary, categorySummary, qualityScore, feature });
   const cleaningSteps = [
     "Detected fields and table shape from the uploaded file",
@@ -1348,8 +1430,13 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind) {
     detected_fields: columns,
     duplicate_rows: canPreviewFeature("duplicateChecks", preview) ? duplicates : "Preview locked",
     missing_values: canPreviewFeature("missingReview", preview) ? missingValues : {},
+    missing_profile: missingProfile,
+    missing_rows: missingProfile.missingRows,
     missing_value_count: missingTotal,
-    numeric_summary: canPreviewFeature("advancedAnalytics", preview) ? numericSummary : {},
+    missing_columns_count: missingProfile.missingColumns,
+    missing_percent: missingProfile.missingPercent,
+    missing_codes: activeStudioMissingCodes.slice(),
+    numeric_summary: numericSummary,
     category_summary: categorySummary,
     date_summary: dateSummary,
     quality_breakdown: qualityBreakdown,
@@ -1364,6 +1451,7 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind) {
     watermark: locked,
     locked,
     answer: narrative,
+    insights: buildInsightCards({ rows: normalizedRows.length, columns: columns.length, duplicate_rows: duplicates, missing_profile: missingProfile, date_summary: dateSummary, quality_score: qualityScore }),
   };
 }
 
@@ -1522,6 +1610,9 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   const categoryEntries = Object.entries(analysis.category_summary || {});
   const dateSummary = analysis.date_summary || [];
   const quality = analysis.quality_breakdown || {};
+  const missingProfile = analysis.missing_profile || {};
+  const numericEntries = Object.entries(analysis.numeric_summary || {});
+  const insightCards = analysis.insights || buildInsightCards(analysis);
   const pct = (value) => `${Math.max(4, Math.min(100, Math.round(Number(value) || 0)))}%`;
   const selectedPlan = Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === preview.access) || "t1l3";
   const upgradeButton = locked ? `<a class="button mini secondary-mini" href="checkout.html?plan=${selectedPlan}">Upgrade to export full dashboard</a>` : "";
@@ -1552,10 +1643,13 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   const stats = document.createElement("div");
   stats.className = "dashboard-kpi-grid";
   [
-    { label: "Rows", value: analysis.rows ?? 0, title: "Rows and Records", detail: detailList([`${analysis.rows || 0} records were detected in this preview.`, "Rows usually represent people, events, transactions, services, or form submissions.", locked ? `Locked previews show only the first ${analysis.preview_limit} rows.` : "Exports can include the available cleaned output for this selected feature."]) },
-    { label: "Columns", value: analysis.columns ?? 0, title: "Field Summary", detail: `<p>${escapeHtml(analysis.columns || 0)} fields were detected.</p>${detailList((analysis.detected_fields || []).slice(0, 12).map((field) => `Detected field: ${field}`))}` },
-    { label: "Missing Values", value: canPreviewFeature("missingReview", preview) ? analysis.missing_value_count ?? 0 : "Preview", title: "Missing Value Detail", detail: `<p>Missing values are blank cells in your uploaded file. This dataset has ${escapeHtml(analysis.missing_value_count || 0)} blank cells.</p>${detailList(missingEntries.slice(0, 6).map(([column, count]) => `${column}: ${count} blank cells`).concat([missingEntries.length ? "Review high-missing fields before final reporting." : "No major missing-value concentration was detected."]))}` },
-    { label: "Quality Score", value: canPreviewFeature("missingReview", preview) ? analysis.quality_score ?? "-" : "Preview", title: "Quality Score Breakdown", detail: `<p>Your score is ${escapeHtml(analysis.quality_score)} because the file structure, completeness, duplicates, date consistency, and formatting signals were reviewed.</p>${detailList([`Completeness score: ${quality.completenessScore ?? "Preview"}`, `Duplicate check score: ${quality.duplicateScore ?? "Preview"}`, `Date-field consistency: ${quality.dateConsistencyScore ?? "Preview"}`, `Required-field coverage: ${quality.requiredCoverageScore ?? "Preview"}`, `Formatting consistency: ${quality.formattingScore ?? "Preview"}`, `Outlier or unusual-value check: ${quality.outlierScore ?? "Preview"}`, Number(analysis.quality_score) >= 85 ? "Overall recommendation: light review before export." : "Overall recommendation: clean or review key fields before export."])}` },
+    { label: "Total records", value: analysis.rows ?? 0, title: "Rows and Records", detail: detailList([`${analysis.rows || 0} records were detected in this preview.`, "Rows usually represent people, events, transactions, services, or form submissions.", locked ? `Locked previews show only the first ${analysis.preview_limit} rows.` : "Exports can include the available cleaned output for this selected feature."]) },
+    { label: "Total fields", value: analysis.columns ?? 0, title: "Field Summary", detail: `<p>${escapeHtml(analysis.columns || 0)} fields were detected.</p>${detailList((analysis.detected_fields || []).slice(0, 16).map((field) => `Detected field: ${field}`))}` },
+    { label: "Missing rows", value: missingProfile.missingRows ?? 0, title: "Missing Rows", detail: missingDetailHtml(analysis) },
+    { label: "Missing cells", value: missingProfile.missingCells ?? 0, title: "Missing Cells", detail: missingDetailHtml(analysis) },
+    { label: "Fields with blanks", value: missingProfile.missingColumns ?? 0, title: "Fields with Blanks", detail: missingDetailHtml(analysis) },
+    { label: "Missing %", value: `${missingProfile.missingPercent ?? 0}%`, title: "Missing Percentage", detail: missingDetailHtml(analysis) },
+    { label: "Quality score", value: canPreviewFeature("missingReview", preview) ? analysis.quality_score ?? "-" : "Preview", title: "Quality Score Breakdown", detail: qualityDetailHtml(analysis) },
   ].forEach((item) => {
     const card = document.createElement("button");
     card.type = "button";
@@ -1585,7 +1679,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
 
   const answerPanel = document.createElement("section");
   answerPanel.className = "dashboard-preview-panel dashboard-tile-wide";
-  answerPanel.innerHTML = `<h4>What this dashboard tells me</h4><p>${escapeHtml(analysis.answer || "ProgramMetrics analyzed the file and prepared a dashboard-ready summary.")}</p>`;
+  answerPanel.innerHTML = `<h4>What this dashboard tells me</h4><div class="dashboard-insight-cards">${insightCards.map((insight) => `<article>${escapeHtml(insight)}</article>`).join("")}</div>`;
   answerPanel.dataset.dashboardTab = "overview";
   canvas.appendChild(answerPanel);
 
@@ -1637,8 +1731,14 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   } else {
     missingPanel.innerHTML += "<p>No missing values were detected in table-ready fields.</p>";
   }
-  missingPanel.dataset.dashboardTab = "quality";
+  missingPanel.dataset.dashboardTab = "missing";
   visualGrid.appendChild(missingPanel);
+
+  const heatmapPanel = document.createElement("section");
+  heatmapPanel.className = "dashboard-preview-panel dashboard-tile";
+  heatmapPanel.dataset.dashboardTab = "visuals";
+  heatmapPanel.innerHTML = `<h4>Field Completeness Heatmap</h4><div class="field-heatmap">${Object.entries(missingProfile.byColumn || {}).slice(0, 48).map(([column, count]) => { const complete = analysis.rows ? Math.round(100 - (Number(count) / analysis.rows) * 100) : 100; return `<span title="${escapeHtml(column)}: ${complete}% complete" style="--complete:${complete}%">${escapeHtml(column.slice(0, 14))}</span>`; }).join("")}</div>`;
+  visualGrid.appendChild(heatmapPanel);
 
   const qualityPanel = document.createElement("section");
   qualityPanel.className = "dashboard-preview-panel dashboard-tile";
@@ -1664,7 +1764,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   const actionsPanel = document.createElement("section");
   actionsPanel.className = "dashboard-preview-panel dashboard-tile";
   actionsPanel.innerHTML = `<h4>Recommended Cleaning Actions</h4><ul>${(analysis.cleaning_steps || []).slice(0, locked ? 5 : 8).map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ul>${exportControls}`;
-  actionsPanel.dataset.dashboardTab = "recommendations";
+  actionsPanel.dataset.dashboardTab = "executive";
   visualGrid.appendChild(actionsPanel);
   canvas.appendChild(visualGrid);
 
@@ -1680,6 +1780,33 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   exportPanel.innerHTML = `<h4>Exports</h4><p>${escapeHtml(locked ? "Your file preview is limited. Upgrade to export the full analytics package." : "Choose a professional output package generated from this uploaded file.")}</p>${exportControls}`;
   canvas.appendChild(exportPanel);
   setupStudioExportMenus(exportPanel);
+
+  const missingCodingPanel = document.createElement("section");
+  missingCodingPanel.className = `dashboard-preview-panel dashboard-tile-wide${locked ? " locked-preview-panel" : ""}`;
+  missingCodingPanel.dataset.dashboardTab = "missing";
+  missingCodingPanel.innerHTML = `<h4>Missing Value Coding</h4><p>Select which values should be treated as missing. Changes apply to the current browser session only.</p><div class="missing-code-chips">${activeStudioMissingCodes.map((code) => `<span>${escapeHtml(code === "" ? "empty string" : code)}</span>`).join("")}</div><div class="missing-code-controls"><input id="studio-missing-code-input" type="text" placeholder="Add custom missing code" /><button class="button mini secondary-mini" type="button" id="studio-add-missing-code">Add code</button><button class="button mini" type="button" id="studio-reset-missing-codes">Reset defaults</button></div><div class="missing-code-summary"><b>${escapeHtml(missingProfile.missingCells || 0)}</b><span>Current missing cells</span><b>${escapeHtml(missingProfile.missingRows || 0)}</b><span>Rows affected</span><b>${escapeHtml(missingProfile.missingColumns || 0)}</b><span>Affected fields</span></div><p>${escapeHtml(locked ? "Unlock to export the full missing-value coding report." : "Download a missing-value report from the Exports tab.")}</p>`;
+  canvas.appendChild(missingCodingPanel);
+  const addMissingCode = missingCodingPanel.querySelector("#studio-add-missing-code");
+  const resetMissingCodes = missingCodingPanel.querySelector("#studio-reset-missing-codes");
+  addMissingCode?.addEventListener("click", () => {
+    const input = missingCodingPanel.querySelector("#studio-missing-code-input");
+    const value = String(input?.value || "").trim();
+    if (value && !activeStudioMissingCodes.includes(value)) activeStudioMissingCodes.push(value);
+    refreshActiveStudioPreview("Missing-value coding updated.");
+  });
+  resetMissingCodes?.addEventListener("click", () => {
+    activeStudioMissingCodes = defaultStudioMissingCodes.slice();
+    refreshActiveStudioPreview("Missing-value coding reset.");
+  });
+
+  const descriptivePanel = document.createElement("section");
+  descriptivePanel.className = "dashboard-preview-panel dashboard-tile-wide";
+  descriptivePanel.dataset.dashboardTab = "stats";
+  const numericRows = numericEntries.slice(0, locked ? 4 : 10).map(([column, item]) => `<tr><td>${escapeHtml(column)}</td><td>${escapeHtml(Math.round(item.mean * 100) / 100)}</td><td>${escapeHtml(Math.round(item.median * 100) / 100)}</td><td>${escapeHtml(item.min)}</td><td>${escapeHtml(item.max)}</td><td>${escapeHtml(Math.round(item.standardDeviation * 100) / 100)}</td><td>${escapeHtml(Math.round(item.q1 * 100) / 100)} / ${escapeHtml(Math.round(item.q3 * 100) / 100)}</td><td>${escapeHtml(item.outlierCount)}</td></tr>`).join("");
+  const histogram = numericEntries[0]?.[1]?.histogram || [];
+  const histogramMax = Math.max(...histogram.map((bin) => bin.count), 1);
+  descriptivePanel.innerHTML = `<h4>Descriptive Statistics</h4><div class="stats-dashboard-grid"><div><strong>${escapeHtml(numericEntries.length)}</strong><span>Numeric fields</span></div><div><strong>${escapeHtml(Object.keys(analysis.category_summary || {}).length)}</strong><span>Categorical fields</span></div><div><strong>${escapeHtml((analysis.date_summary || []).length)}</strong><span>Date fields</span></div><div><strong>${escapeHtml(missingProfile.missingColumns || 0)}</strong><span>Fields with blanks</span></div></div>${histogram.length ? `<h5>Numeric distribution: ${escapeHtml(numericEntries[0][0])}</h5><div class="dashboard-trend-bars histogram-bars">${histogram.map((bin) => `<div><i style="height:${pct((bin.count / histogramMax) * 100)}"></i><span>${escapeHtml(bin.label)}</span><b>${escapeHtml(bin.count)}</b></div>`).join("")}</div>` : ""}<div class="dashboard-table-wrap"><table><thead><tr><th>Field</th><th>Mean</th><th>Median</th><th>Min</th><th>Max</th><th>Std dev</th><th>Q1 / Q3</th><th>Outliers</th></tr></thead><tbody>${numericRows || `<tr><td colspan="8">No reliable numeric fields were detected.</td></tr>`}</tbody></table></div>`;
+  canvas.appendChild(descriptivePanel);
 
   if (preview.access >= studioFeatureRequirements.advancedAnalytics) {
     [["forecasting", "Forecasting", "Trend previews are grouped by month or quarter when a date field is detected."], ["advanced", "Advanced Analytics", "ProgramMetrics checks for outliers, field usability, correlations, and analysis readiness."], ["dictionary", "Data Dictionary", "Fields are typed and described for reusable analytics packages."], ["appendix", "Appendix", "Processing notes, assumptions, limitations, and metadata are packaged for review."]].forEach(([tab, title, copy]) => {
@@ -1842,14 +1969,13 @@ function setupDashboardTabs(canvas, accessValueForTabs = 1) {
   const tabs = [
     ["overview", "Overview"],
     ["quality", "Data Quality"],
+    ["stats", "Descriptive Statistics"],
+    ["missing", "Missing Values"],
     ["visuals", "Visual Analytics"],
-    ["executive", "Executive Summary"],
-    ["recommendations", "Recommendations"],
+    ["advanced", "Advanced Analytics"],
+    ["executive", "Executive Report"],
     ["exports", "Exports"],
   ];
-  if (Number(accessValueForTabs) >= studioFeatureRequirements.advancedAnalytics) {
-    tabs.push(["forecasting", "Forecasting"], ["advanced", "Advanced Analytics"], ["dictionary", "Data Dictionary"], ["appendix", "Appendix"]);
-  }
   const tabBar = document.createElement("div");
   tabBar.className = "dashboard-tabs";
   tabBar.innerHTML = tabs.map(([key, label], index) => `<button type="button" class="${index === 0 ? "active" : ""}" data-dashboard-tab-button="${key}">${label}</button>`).join("");
@@ -1875,7 +2001,8 @@ function openStudioFullScreenPreview() {
   modal.className = "studio-fullscreen-preview";
   modal.setAttribute("role", "dialog");
   modal.setAttribute("aria-modal", "true");
-  modal.innerHTML = `<div class="studio-fullscreen-toolbar"><strong>Interactive Preview</strong><div class="studio-fullscreen-actions"><button type="button" data-action="fit">Fit</button><button type="button" data-action="zoom-out">-</button><button type="button" data-action="zoom-in">+</button>${studioExportOptionsHtml(!canDownloadOutput(getSelectedStudioFeature().outputType, getUnlockedStudioAccess()))}<button type="button" data-action="close">Close</button></div></div><div class="studio-fullscreen-body"><div class="studio-preview-shell visible"></div></div>`;
+  const fullscreenLocked = !canDownloadOutput(getSelectedStudioFeature().outputType, getUnlockedStudioAccess());
+  modal.innerHTML = `<div class="studio-fullscreen-toolbar"><div class="studio-fullscreen-title"><strong>ProgramMetrics Studio Dashboard</strong><span>${escapeHtml(analysis.source_file || "Uploaded file")} | ${escapeHtml(getSelectedStudioFeature().title)} | ${fullscreenLocked ? "Preview only - export locked" : "Export unlocked"}</span></div><div class="studio-fullscreen-actions"><button type="button" data-action="fit">Fit</button><button type="button" data-action="zoom-out">-</button><button type="button" data-action="zoom-in">+</button>${studioExportOptionsHtml(fullscreenLocked)}<button type="button" data-action="close">Close</button></div></div><div class="studio-fullscreen-body"><div class="studio-preview-shell visible"></div></div>`;
   document.body.appendChild(modal);
   const shell = modal.querySelector(".studio-preview-shell");
   renderStudioDashboardPreview(analysis, shell);
