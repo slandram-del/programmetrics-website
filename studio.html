@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -15,7 +15,7 @@
     <meta http-equiv="pragma" content="no-cache" />
     <meta http-equiv="expires" content="0" />
 
-    <link rel="stylesheet" href="styles-20260610.css?v=20260708-studio-fix" />
+    <link rel="stylesheet" href="styles-20260610.css?v=20260708-studio-branding" />
   </head>
 
   <body>
@@ -141,6 +141,63 @@
               </select>
             </label>
 
+            <section class="studio-branding-panel" id="studio-branding-panel" hidden>
+              <div class="studio-branding-heading">
+                <p class="template-label">Report Branding</p>
+                <h4>Customize your report</h4>
+                <p>Add branding details that ProgramMetrics can apply to dashboards, reports, and downloadable outputs.</p>
+                <span class="branding-preview-label">Branding preview &mdash; export requires Tier 2 Level 1+</span>
+              </div>
+              <div class="studio-branding-grid">
+                <label>
+                  <span>Organization or report name</span>
+                  <input id="studio-brand-org" type="text" placeholder="ProgramMetrics Studio Report" />
+                </label>
+                <label>
+                  <span>Report subtitle</span>
+                  <input id="studio-brand-subtitle" type="text" placeholder="Monthly dashboard summary" />
+                </label>
+                <label>
+                  <span>Logo/image upload</span>
+                  <input id="studio-brand-logo" type="file" accept="image/*" />
+                  <small>Logo preview is session-only and is not stored long-term.</small>
+                </label>
+                <label>
+                  <span>Primary brand color</span>
+                  <input id="studio-brand-primary" type="color" value="#2563eb" />
+                </label>
+                <label>
+                  <span>Accent color</span>
+                  <input id="studio-brand-accent" type="color" value="#14b8a6" />
+                </label>
+                <label>
+                  <span>Preferred report style</span>
+                  <select id="studio-brand-style">
+                    <option>Clean and professional</option>
+                    <option>Grant/compliance</option>
+                    <option>Executive summary</option>
+                    <option>Operations dashboard</option>
+                    <option>Client-facing report</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Prepared for</span>
+                  <input id="studio-brand-prepared-for" type="text" />
+                </label>
+                <label>
+                  <span>Prepared by</span>
+                  <input id="studio-brand-prepared-by" type="text" />
+                </label>
+                <label class="studio-branding-wide">
+                  <span>Footer note or disclaimer</span>
+                  <textarea id="studio-brand-footer" rows="3"></textarea>
+                </label>
+                <label>
+                  <span>Contact email or website</span>
+                  <input id="studio-brand-contact" type="text" />
+                </label>
+              </div>
+            </section>
             <label class="upload-zone" for="studio-file-converter-input">
               <span>Upload your business file</span>
               <small>Drag and drop or choose a spreadsheet, CSV, or business data file. Your file is processed only for this browser session and is not stored as long-term ProgramMetrics data.</small>
@@ -173,6 +230,7 @@
                   <option value="pdf" data-required-access="3">PDF report - requires Tier 1 Level 3+</option>
                   <option value="html" data-required-access="3">HTML report - requires Tier 1 Level 3+</option>
                   <option value="json" data-required-access="4">JSON package - requires Tier 2+</option>
+                  <option value="branded_report" data-required-access="4">Branded report - requires Tier 2 Level 1+</option>
                   <option value="workflow_package" data-required-access="7">Workflow package - requires Tier 3</option>
                   <option value="advanced_analytics" data-required-access="8">Advanced analytics export - requires Tier 4</option>
                 </select>
@@ -230,7 +288,7 @@
       </nav>
     </footer>
 
-    <script src="script-20260610.js?v=20260708-studio-fix"></script>
+    <script src="script-20260610.js?v=20260708-studio-branding"></script>
     <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   </body>
 </html>

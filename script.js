@@ -1,4 +1,4 @@
-const serviceDetails = {
+﻿const serviceDetails = {
   dashboards: {
     title: "Custom built dashboards",
     text:
@@ -483,6 +483,7 @@ function setupFileConverter(inputId, resultId, languageId, formatId, buttonId, a
 
 let activeStudioExampleAnalysis = null;
 let activeStudioUploadedAnalysis = null;
+let activeBrandLogoDataUrl = "";
 
 setupFileConverter("file-converter-input", "converter-result", "file-output-language", "file-output-format", "file-convert-button", "file-analyze-button", "file-insight-panel");
 setupFileConverter("studio-file-converter-input", "studio-converter-result", "studio-output-language", "studio-output-format", "studio-convert-button", "studio-analyze-button", "studio-insight-panel");
@@ -805,6 +806,59 @@ function getRequiredLevelForOutput(outputType) {
   return studioOutputRequirements[outputType] || 1;
 }
 
+function canUseBranding(unlockedLevel) {
+  return accessValue(unlockedLevel) >= studioFeatureRequirements.branded;
+}
+
+function canExportBrandedReport(unlockedLevel) {
+  return canUseBranding(unlockedLevel);
+}
+
+function getBrandingFieldValue(id) {
+  const field = document.getElementById(id);
+  return field ? String(field.value || "").trim() : "";
+}
+
+function getBrandingSettings() {
+  const unlocked = getUnlockedStudioAccess();
+  const preview = getStudioAccess();
+  const settings = {
+    reportName: getBrandingFieldValue("studio-brand-org"),
+    subtitle: getBrandingFieldValue("studio-brand-subtitle"),
+    logoDataUrl: activeBrandLogoDataUrl,
+    primaryColor: getBrandingFieldValue("studio-brand-primary") || "#2563eb",
+    accentColor: getBrandingFieldValue("studio-brand-accent") || "#14b8a6",
+    style: getBrandingFieldValue("studio-brand-style") || "Clean and professional",
+    preparedFor: getBrandingFieldValue("studio-brand-prepared-for"),
+    preparedBy: getBrandingFieldValue("studio-brand-prepared-by"),
+    footerNote: getBrandingFieldValue("studio-brand-footer"),
+    contact: getBrandingFieldValue("studio-brand-contact"),
+    canExport: canExportBrandedReport(unlocked),
+    visibleInPreview: accessValue(preview) >= studioFeatureRequirements.branded,
+  };
+  settings.hasBranding = Boolean(settings.reportName || settings.subtitle || settings.logoDataUrl || settings.preparedFor || settings.preparedBy || settings.footerNote || settings.contact);
+  settings.previewOnly = settings.visibleInPreview && !settings.canExport;
+  return settings;
+}
+
+function applyBrandingToPreview(brandingSettings) {
+  const branding = brandingSettings || getBrandingSettings();
+  if (!branding.visibleInPreview) return null;
+  return {
+    ...branding,
+    title: branding.reportName || "ProgramMetrics Studio Report",
+    subtitle: branding.subtitle || "Dashboard preview from your uploaded file",
+    lockLabel: "Branding preview \u2014 export requires Tier 2 Level 1+",
+  };
+}
+
+function brandingReportHeaderHtml(branding) {
+  if (!branding) return "";
+  const logo = branding.logoDataUrl ? `<img src="${escapeHtml(branding.logoDataUrl)}" alt="Report logo">` : "";
+  const meta = [branding.preparedFor ? `Prepared for ${branding.preparedFor}` : "", branding.preparedBy ? `Prepared by ${branding.preparedBy}` : "", branding.style || ""].filter(Boolean).map(escapeHtml).join(" | ");
+  return `<header class="brand-report-header" style="border-top-color:${escapeHtml(branding.primaryColor)}"><div>${logo}<div><p>${escapeHtml(branding.style)}</p><h1>${escapeHtml(branding.reportName || "ProgramMetrics Studio Report")}</h1><h2>${escapeHtml(branding.subtitle || "Dashboard preview from your uploaded file")}</h2></div></div><small>${meta}</small></header>`;
+}
+
 function getPreviewLimitRows(unlockedLevel, selectedPreviewLevel) {
   const unlocked = accessValue(unlockedLevel);
   const preview = accessValue(selectedPreviewLevel);
@@ -1037,8 +1091,12 @@ function reportHtmlFromAnalysis(analysis, formatLabel) {
   const columns = (analysis.preview_rows?.length ? Object.keys(analysis.preview_rows[0]) : []).slice(0, 8);
   const head = columns.map((column) => `<th>${escapeHtml(column)}</th>`).join("");
   const body = (analysis.preview_rows || []).map((row) => `<tr>${columns.map((column) => `<td>${escapeHtml(row[column])}</td>`).join("")}</tr>`).join("");
+  const branding = getBrandingSettings();
+  const exportBranding = canExportBrandedReport(getUnlockedStudioAccess()) && (branding.hasBranding || formatLabel === "Branded report");
+  const brandedHeader = exportBranding ? brandingReportHeaderHtml(branding) : `<h1>ProgramMetrics Studio ${escapeHtml(formatLabel)}</h1>`;
+  const brandedFooter = exportBranding && (branding.footerNote || branding.contact) ? `<footer>${branding.footerNote ? `<p>${escapeHtml(branding.footerNote)}</p>` : ""}${branding.contact ? `<small>${escapeHtml(branding.contact)}</small>` : ""}</footer>` : "";
   const watermark = analysis.watermark ? "body:before{content:'ProgramMetrics Preview';position:fixed;top:42%;left:-10%;right:-10%;transform:rotate(-28deg);font-size:82px;font-weight:900;color:rgba(37,99,235,.16);z-index:9999;pointer-events:none;white-space:nowrap}" : "";
-  return `<!doctype html><html><head><meta charset="utf-8"><title>ProgramMetrics Studio ${escapeHtml(formatLabel)}</title><style>body{font-family:Arial,sans-serif;margin:36px;color:#071525;background:#f8fafc;line-height:1.5;position:relative}${watermark}.card,section{background:#fff;border:1px solid #dbe4ef;border-radius:8px;padding:18px;margin:14px 0}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.kpis strong{display:block;color:#2563eb;font-size:28px}table{width:100%;border-collapse:collapse;background:#fff}th,td{border:1px solid #dbe4ef;padding:8px;text-align:left;font-size:13px}th{background:#eef6ff}</style></head><body><h1>ProgramMetrics Studio ${escapeHtml(formatLabel)}</h1><p><strong>Unlocked:</strong> ${escapeHtml(analysis.unlocked_label)} | <strong>Previewing:</strong> ${escapeHtml(analysis.preview_label)}</p><p>${escapeHtml(analysis.answer)}</p><div class="kpis"><div class="card"><strong>${escapeHtml(analysis.rows)}</strong>Rows</div><div class="card"><strong>${escapeHtml(analysis.columns)}</strong>Columns</div><div class="card"><strong>${escapeHtml(analysis.duplicate_rows)}</strong>Duplicates</div><div class="card"><strong>${escapeHtml(analysis.quality_score)}</strong>Quality score</div></div><section><h2>Session preview rows</h2><p>Showing first ${escapeHtml(analysis.preview_limit)} rows.</p><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></section></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>ProgramMetrics Studio ${escapeHtml(formatLabel)}</title><style>body{font-family:Arial,sans-serif;margin:36px;color:#071525;background:#f8fafc;line-height:1.5;position:relative}${watermark}.card,section{background:#fff;border:1px solid #dbe4ef;border-radius:8px;padding:18px;margin:14px 0}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.kpis strong{display:block;color:#2563eb;font-size:28px}.brand-report-header{background:#fff;border:1px solid #dbe4ef;border-top:8px solid #2563eb;border-radius:8px;padding:24px;margin-bottom:18px}.brand-report-header>div{display:flex;gap:16px;align-items:center}.brand-report-header img{width:72px;height:72px;object-fit:contain;border:1px solid #dbe4ef;border-radius:8px}.brand-report-header p{margin:0;color:#0f766e;font-weight:700;text-transform:uppercase;font-size:12px}.brand-report-header h1{margin:4px 0;color:#071525}.brand-report-header h2{margin:0;color:#475569;font-size:18px;font-weight:600}.brand-report-header small,footer{color:#64748b}table{width:100%;border-collapse:collapse;background:#fff}th,td{border:1px solid #dbe4ef;padding:8px;text-align:left;font-size:13px}th{background:#eef6ff}@media(max-width:800px){.kpis{grid-template-columns:1fr}.brand-report-header>div{display:block}}</style></head><body>${brandedHeader}<p><strong>Unlocked:</strong> ${escapeHtml(analysis.unlocked_label)} | <strong>Previewing:</strong> ${escapeHtml(analysis.preview_label)}</p><p>${escapeHtml(analysis.answer)}</p><div class="kpis"><div class="card"><strong>${escapeHtml(analysis.rows)}</strong>Rows</div><div class="card"><strong>${escapeHtml(analysis.columns)}</strong>Columns</div><div class="card"><strong>${escapeHtml(analysis.duplicate_rows)}</strong>Duplicates</div><div class="card"><strong>${escapeHtml(analysis.quality_score)}</strong>Quality score</div></div><section><h2>Session preview rows</h2><p>Showing first ${escapeHtml(analysis.preview_limit)} rows.</p><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></section>${brandedFooter}</body></html>`;
 }
 
 async function studioDownloadCurrentOutput(input, result, format, language, button, convertLabel) {
@@ -1073,6 +1131,9 @@ async function studioDownloadCurrentOutput(input, result, format, language, butt
     } else if (outputType === "json" || outputType === "workflow_package" || outputType === "advanced_analytics") {
       blob = new Blob([JSON.stringify({ analysis, language: language?.value || "English" }, null, 2)], { type: "application/json;charset=utf-8" });
       filename = outputType === "workflow_package" ? "programmetrics-workflow-package.json" : outputType === "advanced_analytics" ? "programmetrics-advanced-analytics-export.json" : "programmetrics-studio-package.json";
+    } else if (outputType === "branded_report") {
+      blob = new Blob([reportHtmlFromAnalysis(analysis, "Branded report")], { type: "text/html;charset=utf-8" });
+      filename = "programmetrics-branded-report.html";
     } else if (["html", "pdf"].includes(outputType)) {
       blob = new Blob([reportHtmlFromAnalysis(analysis, outputType === "pdf" ? "PDF-ready report" : "HTML report")], { type: "text/html;charset=utf-8" });
       filename = outputType === "pdf" ? "programmetrics-pdf-ready-report.html" : "programmetrics-report.html";
@@ -1113,6 +1174,18 @@ function renderStudioDashboardPreview(analysis) {
   status.className = "studio-preview-status";
   status.innerHTML = `<span>Unlocked: ${escapeHtml(unlocked.label)}</span><span>Previewing: ${escapeHtml(preview.label)}</span><strong>${locked ? "Preview only - upgrade to export" : "Downloads unlocked for included outputs"}</strong>`;
   shell.appendChild(status);
+
+  const branding = applyBrandingToPreview(getBrandingSettings());
+  if (branding) {
+    const brandPanel = document.createElement("section");
+    brandPanel.className = `studio-brand-preview${branding.previewOnly ? " is-locked" : " is-unlocked"}`;
+    brandPanel.style.setProperty("--brand-primary", branding.primaryColor);
+    brandPanel.style.setProperty("--brand-accent", branding.accentColor);
+    const logo = branding.logoDataUrl ? `<img src="${escapeHtml(branding.logoDataUrl)}" alt="Report logo preview">` : `<div class="studio-brand-textmark">${escapeHtml((branding.title || "P").slice(0, 1).toUpperCase())}</div>`;
+    const meta = [branding.preparedFor ? `Prepared for ${branding.preparedFor}` : "", branding.preparedBy ? `Prepared by ${branding.preparedBy}` : "", branding.contact].filter(Boolean).map(escapeHtml).join(" | ");
+    brandPanel.innerHTML = `<div class="studio-brand-preview-top"><div class="studio-brand-logo">${logo}</div><div><span>${escapeHtml(branding.style)}</span><h4>${escapeHtml(branding.title)}</h4><p>${escapeHtml(branding.subtitle)}</p></div></div><small>${escapeHtml(branding.lockLabel)}</small>${meta ? `<p class="studio-brand-preview-meta">${meta}</p>` : ""}`;
+    shell.appendChild(brandPanel);
+  }
 
   const header = document.createElement("div");
   header.className = "dashboard-preview-header";
@@ -1202,6 +1275,13 @@ function renderStudioDashboardPreview(analysis) {
     const rows = previewRows.map((row) => `<tr>${previewColumns.map((column) => `<td>${escapeHtml(row[column] ?? "")}</td>`).join("")}</tr>`).join("");
     tablePanel.innerHTML = `<h4>Data preview</h4><p>Showing first ${escapeHtml(analysis.preview_limit || previewRows.length)} rows.</p><div class="dashboard-table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>${locked ? `<a class="button mini secondary-mini" href="checkout.html?plan=${Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === preview.access) || "t1l3"}">Unlock download</a>` : ""}`;
     shell.appendChild(tablePanel);
+  }
+
+  if (branding && (branding.footerNote || branding.contact)) {
+    const footerPanel = document.createElement("section");
+    footerPanel.className = "studio-brand-footer-preview";
+    footerPanel.innerHTML = `${branding.footerNote ? `<p>${escapeHtml(branding.footerNote)}</p>` : ""}${branding.contact ? `<small>${escapeHtml(branding.contact)}</small>` : ""}`;
+    shell.appendChild(footerPanel);
   }
 }
 function countValues(rows, column) {
@@ -1300,6 +1380,86 @@ function loadGeneratedStudioExample() {
   }
 }
 
+function refreshActiveStudioPreview(messagePrefix) {
+  const input = document.getElementById("studio-file-converter-input");
+  const result = document.getElementById("studio-converter-result");
+  const panel = document.getElementById("studio-insight-panel");
+  if (!activeStudioUploadedAnalysis || !input?.files?.[0]) {
+    return;
+  }
+  readStudioFileAsAnalysis(input.files[0]).then((analysis) => {
+    activeStudioUploadedAnalysis = analysis;
+    renderStudioDashboardPreview(analysis);
+    renderInsightPanel(panel, analysis);
+    updateStudioDownloadButton();
+    if (result) {
+      result.textContent = `${messagePrefix || (analysis.locked ? "Preview only - upgrade to export." : "Preview refreshed.")} Showing first ${analysis.preview_limit} rows.`;
+    }
+  }).catch((error) => {
+    if (result) result.textContent = error.message;
+  });
+}
+
+function setupStudioBrandingControls() {
+  const panel = document.getElementById("studio-branding-panel");
+  const packageSelect = document.getElementById("studio-package-select");
+  const accessSelect = document.getElementById("studio-access-select");
+  if (!panel) return;
+
+  const controls = [
+    "studio-brand-org",
+    "studio-brand-subtitle",
+    "studio-brand-primary",
+    "studio-brand-accent",
+    "studio-brand-style",
+    "studio-brand-prepared-for",
+    "studio-brand-prepared-by",
+    "studio-brand-footer",
+    "studio-brand-contact",
+  ].map((id) => document.getElementById(id)).filter(Boolean);
+  const logoInput = document.getElementById("studio-brand-logo");
+
+  const syncBrandingPanel = () => {
+    const preview = getStudioAccess();
+    const unlocked = getUnlockedStudioAccess();
+    const show = accessValue(preview) >= studioFeatureRequirements.branded;
+    panel.hidden = !show;
+    panel.classList.toggle("is-locked", show && !canUseBranding(unlocked));
+    panel.classList.toggle("is-unlocked", show && canUseBranding(unlocked));
+  };
+
+  const refresh = () => {
+    syncBrandingPanel();
+    if (activeStudioUploadedAnalysis) {
+      renderStudioDashboardPreview(activeStudioUploadedAnalysis);
+      refreshActiveStudioPreview("Branding preview updated.");
+    }
+  };
+
+  controls.forEach((control) => {
+    control.addEventListener("input", refresh);
+    control.addEventListener("change", refresh);
+  });
+
+  logoInput?.addEventListener("change", () => {
+    const file = logoInput.files && logoInput.files[0];
+    if (!file) {
+      activeBrandLogoDataUrl = "";
+      refresh();
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      activeBrandLogoDataUrl = String(reader.result || "");
+      refresh();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  packageSelect?.addEventListener("change", refresh);
+  accessSelect?.addEventListener("change", refresh);
+  syncBrandingPanel();
+}
 function setupStudioPreviewRefresh() {
   const packageSelect = document.getElementById("studio-package-select");
   const templateSelect = document.getElementById("studio-template-type");
@@ -1311,6 +1471,7 @@ function setupStudioPreviewRefresh() {
     if (!activeStudioUploadedAnalysis || !input?.files?.[0]) return;
     readStudioFileAsAnalysis(input.files[0]).then((analysis) => {
       activeStudioUploadedAnalysis = analysis;
+      renderStudioDashboardPreview(analysis);
       renderInsightPanel(panel, analysis);
       updateStudioDownloadButton();
       if (result) {
@@ -1326,6 +1487,7 @@ function setupStudioPreviewRefresh() {
   });
 }
 setupStudioPackageAccess();
+setupStudioBrandingControls();
 setupStudioPreviewRefresh();
 const studioPricingPlans = {
   t1l1: {
