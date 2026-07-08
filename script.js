@@ -1426,6 +1426,7 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind) {
   const feature = getSelectedStudioFeature();
   const normalizedRows = normalizeRows(rows).slice(0, 2000);
   const columns = normalizedRows.length ? Object.keys(normalizedRows[0]) : [];
+  const originalMissingProfile = calculateMissingProfile(normalizedRows, columns, defaultStudioMissingCodes);
   const missingProfile = calculateMissingProfile(normalizedRows, columns);
   const missingValues = missingProfile.byColumn;
   const numericSummary = numericColumnSummary(normalizedRows, columns);
