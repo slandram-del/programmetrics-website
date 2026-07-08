@@ -481,6 +481,9 @@ function setupFileConverter(inputId, resultId, languageId, formatId, buttonId, a
   }
 }
 
+let activeStudioExampleAnalysis = null;
+let activeStudioUploadedAnalysis = null;
+
 setupFileConverter("file-converter-input", "converter-result", "file-output-language", "file-output-format", "file-convert-button", "file-analyze-button", "file-insight-panel");
 setupFileConverter("studio-file-converter-input", "studio-converter-result", "studio-output-language", "studio-output-format", "studio-convert-button", "studio-analyze-button", "studio-insight-panel");
 const studioPackageSummaries = {
@@ -518,8 +521,8 @@ function setupStudioPackageAccess() {
     if (storedAccess && studioPackageSummaries[storedAccess]) {
       accessSelect.value = storedAccess;
     }
-    accessSelect.disabled = true;
-    accessSelect.setAttribute("aria-disabled", "true");
+    accessSelect.disabled = false;
+    accessSelect.removeAttribute("aria-disabled");
   }
 
   const currentUnlocked = () => {
@@ -571,7 +574,12 @@ function setupStudioPackageAccess() {
     updateStudioDownloadButton();
   };
 
-  accessSelect?.addEventListener("change", applyAccess);
+  accessSelect?.addEventListener("change", () => {
+    if (accessSelect.value && studioPackageSummaries[accessSelect.value]) {
+      sessionStorage.setItem(storageKey, accessSelect.value);
+    }
+    applyAccess();
+  });
   packageSelect?.addEventListener("change", applyAccess);
   document.getElementById("studio-output-format")?.addEventListener("change", updateStudioDownloadButton);
 
@@ -587,9 +595,6 @@ function setupStudioPackageAccess() {
 
   applyAccess();
 }
-
-setupStudioPackageAccess();
-let activeStudioExampleAnalysis = null;
 
 const studioExampleTemplates = {
   general: {
@@ -703,8 +708,6 @@ function getStudioAccess() {
   const selected = studioPackageSummaries[packageSelect?.value] || getUnlockedStudioAccess();
   return selected;
 }
-let activeStudioUploadedAnalysis = null;
-
 const studioFeatureRequirements = {
   upload: 1,
   conversion: 1,
@@ -1297,8 +1300,7 @@ function loadGeneratedStudioExample() {
   }
 }
 
-function setupGeneratedStudioExamples() {
-  const exampleButton = document.getElementById("studio-example-button");
+function setupStudioPreviewRefresh() {
   const packageSelect = document.getElementById("studio-package-select");
   const templateSelect = document.getElementById("studio-template-type");
   const input = document.getElementById("studio-file-converter-input");
@@ -1310,6 +1312,7 @@ function setupGeneratedStudioExamples() {
     readStudioFileAsAnalysis(input.files[0]).then((analysis) => {
       activeStudioUploadedAnalysis = analysis;
       renderInsightPanel(panel, analysis);
+      updateStudioDownloadButton();
       if (result) {
         result.textContent = `${analysis.locked ? "Preview only - upgrade to export. " : "Preview refreshed. "}Showing first ${analysis.preview_limit} rows.`;
       }
@@ -1318,23 +1321,12 @@ function setupGeneratedStudioExamples() {
     });
   };
 
-  if (exampleButton) {
-    exampleButton.addEventListener("click", loadGeneratedStudioExample);
-  }
   [packageSelect, templateSelect].forEach((select) => {
-    if (select) {
-      select.addEventListener("change", () => {
-        if (activeStudioExampleAnalysis) {
-          loadGeneratedStudioExample();
-        } else {
-          refreshUploadedPreview();
-        }
-      });
-    }
+    select?.addEventListener("change", refreshUploadedPreview);
   });
 }
-
-setupGeneratedStudioExamples();
+setupStudioPackageAccess();
+setupStudioPreviewRefresh();
 const studioPricingPlans = {
   t1l1: {
     tier: "Tier 1 Level 1",

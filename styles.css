@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   color-scheme: light;
   --navy: #071827;
   --navy-2: #0f2740;
@@ -1869,19 +1869,6 @@ input.is-locked {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-.studio-example-actions {
-  display: grid;
-  gap: 8px;
-}
-
-.studio-example-actions .button {
-  width: 100%;
-}
-
-.studio-example-actions small {
-  color: var(--muted);
-  line-height: 1.45;
-}
 .studio-pricing-hero .hero-copy {
   max-width: 760px;
 }
@@ -2537,5 +2524,100 @@ input.is-locked {
   .studio-status-card,
   .dashboard-kpi-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Studio preview viewing area upgrade */
+.studio-workspace-grid {
+  max-width: 1320px;
+  grid-template-columns: minmax(420px, 0.9fr) minmax(480px, 1.1fr);
+  align-items: start;
+}
+
+.studio-output-panel {
+  position: sticky;
+  top: 86px;
+  max-height: calc(100vh - 108px);
+  overflow: auto;
+  border-color: #bfdbfe;
+  box-shadow: 0 22px 50px rgba(15, 23, 42, 0.08);
+}
+
+.studio-output-panel h3 {
+  font-size: 1.35rem;
+}
+
+.studio-preview-empty {
+  min-height: 320px;
+  align-content: center;
+  text-align: center;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef6ff 100%);
+}
+
+.studio-preview-empty strong {
+  color: var(--navy);
+  font-size: 1.25rem;
+}
+
+.studio-preview-shell.visible {
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.studio-preview-status,
+.dashboard-preview-header,
+.dashboard-kpi-grid,
+.dashboard-visual-grid,
+.dashboard-preview-panel {
+  max-width: 100%;
+}
+
+.dashboard-kpi-card {
+  min-height: 96px;
+}
+
+.dashboard-preview-panel {
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.dashboard-table-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.dashboard-table-panel h4,
+.dashboard-table-panel p,
+.dashboard-table-panel .button {
+  margin-left: 14px;
+  margin-right: 14px;
+}
+
+.dashboard-table-panel h4 {
+  margin-top: 14px;
+}
+
+.dashboard-table-wrap {
+  max-height: 420px;
+  border-right: 0;
+  border-left: 0;
+  border-radius: 0;
+}
+
+.dashboard-table-wrap thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+@media (max-width: 1100px) {
+  .studio-workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .studio-output-panel {
+    position: static;
+    max-height: none;
   }
 }
