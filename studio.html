@@ -1,260 +1,246 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ProgramMetrics Studio | Self-Service Dashboard Generator</title>
-  <meta name="description" content="Upload Excel or CSV data, validate columns, generate a browser dashboard, preview KPIs and charts, and download standard reports with ProgramMetrics Studio." />
-  <link rel="stylesheet" href="styles-20260610.css" />
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <style>
-    .studio-app{display:grid;gap:24px}.studio-panel{background:#fff;border:1px solid rgba(15,23,42,.12);border-radius:8px;box-shadow:0 12px 32px rgba(15,23,42,.08);padding:24px}.studio-controls{display:grid;grid-template-columns:minmax(220px,1fr) minmax(140px,190px) minmax(180px,260px) minmax(190px,260px);gap:14px;align-items:end}.studio-control label{color:#53627f;display:block;font-weight:800;margin-bottom:8px}.studio-control input,.studio-control select{border:1px solid rgba(83,98,127,.35);border-radius:8px;color:#07111f;font:inherit;padding:12px;width:100%}.plan-row{display:grid;grid-template-columns:minmax(220px,320px) 1fr;gap:16px;margin-bottom:18px;align-items:start}.feature-summary{background:#f6f9ff;border:1px solid rgba(37,99,235,.16);border-radius:8px;padding:14px}.feature-summary h3{font-size:1rem;margin:0 0 8px}.feature-summary ul,.feature-matrix ul{margin:0;padding-left:18px;color:#53627f;font-weight:700}.feature-matrix{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}.feature-card{border:1px solid rgba(83,98,127,.22);border-radius:8px;padding:14px;transition:opacity .2s ease,box-shadow .2s ease,border-color .2s ease}.feature-card h3{font-size:1rem;margin:0 0 8px}.feature-card.active{border-color:#14b8a6;box-shadow:0 12px 30px rgba(20,184,166,.14)}.feature-card.locked{opacity:.34;background:#f8fafc;filter:grayscale(.25)}.tier-tag{display:inline-block;margin-bottom:8px;padding:4px 8px;border-radius:999px;background:#dbeafe;color:#1e40af;font-size:.75rem;font-weight:900}.locked .tier-tag{background:#e2e8f0;color:#53627f}.studio-toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}.studio-toolbar .locked-feature,.button:disabled{color:#64748b;background:#f8fafc;border-color:#cbd5e1;box-shadow:none;opacity:.56;cursor:not-allowed;transform:none}.upgrade-note{display:none;margin:12px 0 0;color:#1e40af;font-weight:800}.upgrade-note.visible{display:block}.studio-status,.empty-state,.chart-note{color:#53627f;font-weight:700}.metric-grid{display:grid;gap:14px;grid-template-columns:repeat(4,minmax(0,1fr))}.metric-card{background:#f6f9ff;border:1px solid rgba(37,99,235,.16);border-radius:8px;padding:18px}.metric-card span{color:#53627f;display:block;font-size:.88rem;font-weight:800}.metric-card strong{color:#07111f;display:block;font-size:2rem;margin-top:6px}.chart-wrap{display:grid;gap:10px}.bar-row{display:grid;grid-template-columns:minmax(120px,220px) 1fr auto;gap:10px;align-items:center}.bar-label{color:#53627f;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bar-track{background:#e8eef9;border-radius:999px;height:16px;overflow:hidden}.bar-fill{background:#1ab4a6;height:100%;min-width:3px}.bar-value{color:#07111f;font-weight:800}.table-wrap{overflow:auto}.data-table{border-collapse:collapse;min-width:720px;width:100%}.data-table th,.data-table td{border-bottom:1px solid rgba(83,98,127,.18);padding:10px;text-align:left;vertical-align:top}.data-table th{color:#07111f;font-weight:900}@media(max-width:1120px){.studio-controls,.plan-row,.feature-matrix{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:980px){.studio-controls,.plan-row,.feature-matrix,.metric-grid,.bar-row{grid-template-columns:1fr}}
-  </style>
-</head>
-<body>
-  <header class="site-header">
-    <a class="brand" href="index.html#top">ProgramMetrics.io</a>
-    <nav aria-label="Primary navigation">
-      <a href="index.html#how-it-works">How It Works</a><a href="studio.html">Studio</a><a href="index.html#pricing">Pricing</a><a href="index.html#examples">Examples</a><a href="index.html#about">About</a><a href="index.html#contact">Contact</a>
-    </nav>
-  </header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <main id="top">
-    <section class="hero">
-      <div class="hero-grid">
-        <div class="hero-copy reveal visible">
-          <p class="badge">Tier 1 Studio</p>
-          <h1>Upload your file. Generate your dashboard. Download your results.</h1>
-          <p class="hero-subtitle">ProgramMetrics Studio runs in the browser for standard Excel and CSV dashboard generation. Files are processed locally in the user's browser, with validation, dashboards, reports, and cleaned data downloads built into the Studio experience.</p>
-          <div class="hero-actions"><a class="button primary" href="#studio-tool">Use Studio</a><a class="button primary" href="#tiers">Compare Tiers</a></div>
-        </div>
-        <figure class="hero-dashboard reveal visible"><img src="images/predictive-dashboard.png?v=20260611" alt="ProgramMetrics Studio dashboard example" /></figure>
+    <title>ProgramMetrics Studio | Upload Files, Clean Data, Generate Reports</title>
+
+    <meta
+      name="description"
+      content="ProgramMetrics Studio is the privacy-first upload-to-report workspace for file conversion, data cleaning, dashboard previews, generated examples, and report exports without stored customer files."
+    />
+
+    <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+
+    <link rel="stylesheet" href="styles-20260610.css?v=20260707-latest" />
+  </head>
+
+  <body>
+    <details class="floating-language" data-language-widget>
+      <summary class="floating-language-button">
+        <span aria-hidden="true">??</span>
+        <span>Language</span>
+      </summary>
+      <div class="floating-language-menu" id="floating-language-menu">
+        <button type="button" data-translate-lang="es">Spanish</button>
+        <button type="button" data-translate-lang="fr">French</button>
+        <button type="button" data-translate-lang="ar">Arabic</button>
+        <button type="button" data-translate-lang="zh-CN">Chinese</button>
+        <button type="button" data-translate-lang="vi">Vietnamese</button>
+        <button type="button" data-translate-lang="en">English</button>
       </div>
-    </section>
+    </details>
+    <div class="google-translate-hidden" id="google_translate_element" aria-hidden="true"></div>
 
-    <section id="studio-tool" class="section studio-app">
-      <div class="section-title reveal visible"><h2>ProgramMetrics Studio</h2><p>Upload your file. If the first rows are notes or metadata, set the row where the real column headers begin.</p></div>
-      <div class="studio-panel reveal visible">
-        <div class="plan-row">
-          <div class="studio-control">
-            <label for="studio-plan">Choose Studio Package</label>
-            <select id="studio-plan">
-              <option value="starter">Starter - $49</option>
-              <option value="professional">Professional - $99</option>
-              <option value="premium">Premium - $199</option>
-            </select>
+    <header class="site-header">
+      <a class="brand" href="index.html#top">ProgramMetrics.io</a>
+      <nav aria-label="Primary navigation">
+        <a href="index.html#how-it-works">How It Works</a>
+        <a href="studio-pricing.html#studio-pricing-guide">Studio Pricing</a>
+        <a href="studio.html">Studio Workspace</a>
+        <a href="index.html#apps">Solutions</a>
+        <a href="index.html#projects">Examples</a>
+        <a href="checkout.html">Checkout</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-grid">
+          <div class="hero-copy reveal">
+            <p class="badge">ProgramMetrics Studio</p>
+            <h1>Upload files. Clean data. Preview dashboard-ready reports.</h1>
+            <p class="hero-subtitle">
+              This is the working Studio. Choose a package level, select a reporting template,
+              upload a real file or view a ProgramMetrics generated example, then preview quality checks,
+              category charts, insight notes, and report/export options.
+            </p>
+            <div class="hero-actions">
+              <a class="button primary" href="#studio-workspace">Open Studio Workspace</a>
+              <a class="button primary" href="studio-pricing.html#studio-pricing-guide">Studio Pricing</a>
+            </div>
           </div>
-          <div class="feature-summary" aria-live="polite">
-            <h3 id="active-plan-title">Starter includes</h3>
-            <ul id="active-plan-features">
-              <li>KPI Summary dashboard</li>
-              <li>Excel or CSV upload</li>
-              <li>Basic column validation</li>
-              <li>Cleaned CSV download</li>
-              <li>Basic Studio summary</li>
-            </ul>
-          </div>
+          <figure class="hero-dashboard reveal">
+            <img src="images/predictive-dashboard.png?v=20260611" alt="ProgramMetrics Studio dashboard example" />
+          </figure>
         </div>
-        <div class="studio-control">
-          <label for="feature-plan">Feature Coverage Dropdown</label>
-          <select id="feature-plan">
-            <option value="starter">Show Starter features</option>
-            <option value="professional">Show Professional features</option>
-            <option value="premium">Show Premium features</option>
-          </select>
+      </section>
+
+      <section id="studio-workspace" class="section studio-workspace">
+        <div class="section-title reveal">
+          <h2>Studio workspace</h2>
+          <p>
+            Real uploads only use the customer's unlocked Studio level. Higher levels stay visible as upgrade previews, and generated examples can show what those higher levels look like without unlocking real-file features. Uploaded files are processed for the session, used to generate the selected preview or download, and are not saved as a ProgramMetrics file store.
+          </p>
         </div>
-        <div class="feature-matrix" id="feature-matrix">
-          <article class="feature-card active" data-tier="starter">
-            <span class="tier-tag">Starter - $49</span>
-            <h3>Basic dashboard package</h3>
-            <ul><li>KPI Summary</li><li>Cleaned CSV</li><li>Basic summary download</li></ul>
+
+        <div class="studio-workspace-grid">
+          <article class="studio-control-panel reveal">
+            <p class="template-label" id="studio-package-label">Selected package</p>
+            <h3>Build a report-ready file</h3>
+            <p>Use unlocked access for real uploads. Use upgrade preview to see higher-tier examples without unlocking those real-file features.</p>
+
+            <div class="studio-package-picker">
+              <label class="language-output" for="studio-access-select">
+                <span>Unlocked access for real uploads</span>
+                <select id="studio-access-select" aria-describedby="active-package-card">
+                  <option value="t1l1" data-access="1">Tier 1 Level 1 - $49</option>
+                  <option value="t1l2" data-access="2">Tier 1 Level 2 - $99</option>
+                  <option value="t1l3" data-access="3">Tier 1 Level 3 - $199</option>
+                  <option value="t2l1" data-access="4">Tier 2 Level 1 - $299</option>
+                  <option value="t2l2" data-access="5">Tier 2 Level 2 - $499</option>
+                  <option value="t2l3" data-access="6">Tier 2 Level 3 - $799</option>
+                  <option value="t3" data-access="7">Tier 3 Workflow System - $1,500</option>
+                  <option value="t4" data-access="8">Tier 4 Advanced Analytics - $3,500</option>
+                </select>
+              </label>
+
+              <label class="language-output" for="studio-package-select">
+                <span>Preview upgrade with example data</span>
+                <select id="studio-package-select">
+                  <option value="t1l1" data-access="1">Tier 1 Level 1 - $49</option>
+                  <option value="t1l2" data-access="2">Tier 1 Level 2 - $99</option>
+                  <option value="t1l3" data-access="3">Tier 1 Level 3 - $199</option>
+                  <option value="t2l1" data-access="4">Tier 2 Level 1 - $299</option>
+                  <option value="t2l2" data-access="5">Tier 2 Level 2 - $499</option>
+                  <option value="t2l3" data-access="6">Tier 2 Level 3 - $799</option>
+                  <option value="t3" data-access="7">Tier 3 Workflow System - $1,500</option>
+                  <option value="t4" data-access="8">Tier 4 Advanced Analytics - $3,500</option>
+                </select>
+              </label>
+              <div class="active-package-card" id="active-package-card" aria-live="polite">
+                Unlocked for real uploads: Tier 1 Level 1. Upgrade previews use generated example data only.
+              </div>
+              <div class="studio-security-rules">
+                <strong>Privacy and access rules</strong>
+                <ul>
+                  <li>Real uploads only use the paid Studio level unlocked by checkout.</li>
+                  <li>Higher tiers can be previewed with generated example data, not real customer uploads.</li>
+                  <li>Uploaded files are processed for the active session and are not kept as a ProgramMetrics file store.</li>
+                  <li>Download needed outputs before leaving the session.</li>
+                </ul>
+              </div>
+              <div class="studio-example-actions">
+                <button class="button mini secondary-mini" id="studio-example-button" type="button">
+                  View generated example
+                </button>
+                <small>Examples can preview any tier and download only with a large ProgramMetrics.io watermark.</small>
+              </div>
+            </div>
+
+            <label class="language-output" for="studio-template-type">
+              <span>Studio template</span>
+              <select id="studio-template-type">
+                <option value="general">General business report</option>
+                <option value="operations">Operations, jobs, inventory, or field work</option>
+                <option value="program">Program, service, participant, or intake data</option>
+                <option value="monthly">Grant, compliance, or monthly reporting</option>
+                <option value="survey">Survey or feedback summary</option>
+                <option value="branded">Branded report layout example - Tier 2 preview</option>
+                <option value="workflow">Workflow system setup example - Tier 3 preview</option>
+                <option value="advanced">Advanced analytics example - Tier 4 preview</option>
+              </select>
+            </label>
+
+            <label class="upload-zone" for="studio-file-converter-input">
+              <span>Choose a file</span>
+              <small>Drag and drop or choose a business file. It is used for this session's preview or download, then it is gone from ProgramMetrics processing.</small>
+              <input id="studio-file-converter-input" type="file" />
+            </label>
+
+            <div class="studio-options-grid">
+              <label class="language-output" for="studio-output-language">
+                <span>Output language</span>
+                <select id="studio-output-language">
+                  <option value="English">English</option>
+                  <option value="Spanish" data-required-access="5">Spanish - Tier 2 Level 2+</option>
+                  <option value="French" data-required-access="5">French - Tier 2 Level 2+</option>
+                  <option value="Arabic" data-required-access="5">Arabic - Tier 2 Level 2+</option>
+                  <option value="Chinese" data-required-access="5">Chinese - Tier 2 Level 2+</option>
+                  <option value="Vietnamese" data-required-access="5">Vietnamese - Tier 2 Level 2+</option>
+                  <option value="Other requested language" data-required-access="5">Other language - Tier 2 Level 2+</option>
+                </select>
+              </label>
+
+              <label class="language-output" for="studio-output-format">
+                <span>Download format</span>
+                <select id="studio-output-format">
+                  <option value="pdf" data-required-access="3">PDF report - Tier 1 Level 3+</option>
+                  <option value="html" data-required-access="3">HTML report - Tier 1 Level 3+</option>
+                  <option value="txt">Text report</option>
+                  <option value="csv">CSV table</option>
+                  <option value="json" data-required-access="4">JSON package - Tier 2+</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="feature-access-panel" aria-live="polite">
+              <h4>Real-file feature access</h4>
+              <div class="feature-access-grid">
+                <div class="feature-access-item" data-required-access="1"><strong>File upload and conversion</strong><span>Tier 1 Level 1+</span></div>
+                <div class="feature-access-item" data-required-access="2"><strong>Duplicate and missing-value checks</strong><span>Tier 1 Level 2+</span></div>
+                <div class="feature-access-item" data-required-access="3"><strong>Cleaned export and basic insights</strong><span>Tier 1 Level 3+</span></div>
+                <div class="feature-access-item" data-required-access="4"><strong>Branded report structure</strong><span>Tier 2 Level 1+</span></div>
+                <div class="feature-access-item" data-required-access="5"><strong>Translated report setup</strong><span>Tier 2 Level 2+</span></div>
+                <div class="feature-access-item" data-required-access="6"><strong>Recurring report setup</strong><span>Tier 2 Level 3+</span></div>
+                <div class="feature-access-item" data-required-access="7"><strong>Workflow rules and integrations</strong><span>Tier 3+</span></div>
+                <div class="feature-access-item" data-required-access="8"><strong>Advanced analytics and automation</strong><span>Tier 4</span></div>
+              </div>
+            </div>
+
+            <div class="converter-actions studio-actions">
+              <button class="button mini converter-button" id="studio-analyze-button" type="button" data-required-access="2">
+                Generate dashboard preview
+              </button>
+              <button class="button mini secondary-mini converter-button" id="studio-convert-button" type="button">
+                Download report/export
+              </button>
+            </div>
+
+            <div class="insight-panel" id="studio-insight-panel" aria-live="polite"></div>
+            <div class="converter-result" id="studio-converter-result" aria-live="polite">
+              Upload a file using the unlocked level, or view a higher-tier generated example with a watermark.
+            </div>
           </article>
-          <article class="feature-card locked" data-tier="professional">
-            <span class="tier-tag">Professional - $99</span>
-            <h3>More templates and exports</h3>
-            <ul><li>Survey, program, and operations templates</li><li>Excel and PNG exports</li><li>Stronger filtering views</li></ul>
-          </article>
-          <article class="feature-card locked" data-tier="premium">
-            <span class="tier-tag">Premium - $199</span>
-            <h3>Advanced standard analytics</h3>
-            <ul><li>Advanced Analytics</li><li>Executive Summary</li><li>Expanded report package</li></ul>
-          </article>
+
+          <aside class="studio-output-panel reveal">
+            <p class="template-label">Dashboard preview</p>
+            <h3>Generated examples and uploaded files preview here</h3>
+            <div class="studio-preview-empty" id="studio-preview-empty">
+              <strong>No preview yet.</strong>
+              <span>Click View generated example or upload a real file. ProgramMetrics will show KPIs, tier-specific features, data quality checks, category charts, and a sample table here without turning the upload into long-term stored customer data.</span>
+            </div>
+            <div class="studio-preview-shell" id="studio-preview-shell" aria-live="polite"></div>
+          </aside>
         </div>
-        <div class="studio-controls">
-          <div class="studio-control"><label for="data-file">Upload Excel or CSV</label><input id="data-file" type="file" accept=".csv,.xlsx,.xls" /></div>
-          <div class="studio-control"><label for="start-row">Header Row</label><input id="start-row" type="number" min="1" step="1" value="1" /></div>
-          <div class="studio-control"><label for="dashboard-type">Dashboard Type</label><select id="dashboard-type"><option value="summary" data-tier="starter">KPI Summary</option></select></div>
-          <div class="studio-control"><label for="sample-dataset">Example Dataset</label><select id="sample-dataset"><option value="kpi" data-tier="starter">KPI summary</option></select></div>
-        </div>
-        <div class="studio-toolbar">
-          <button class="button mini secondary-mini" type="button" id="sample-data">Try Example Data</button>
-          <button class="button mini secondary-mini" type="button" id="download-csv" disabled data-tier="starter">Download CSV</button>
-          <button class="button mini secondary-mini" type="button" id="download-report" disabled data-tier="starter">Download Summary</button>
-          <button class="button mini secondary-mini locked-feature" type="button" id="download-excel" disabled data-tier="professional">Download Excel</button>
-          <button class="button mini secondary-mini locked-feature" type="button" id="download-png" disabled data-tier="professional">Download PNG</button>
-          <button class="button mini secondary-mini locked-feature" type="button" id="download-expanded" disabled data-tier="premium">Download Expanded Report</button>
-        </div>
-        <p class="upgrade-note visible" id="upgrade-note">Upgrade features stay visible but faded so customers can see what the next package unlocks.</p>
-        <p class="studio-status" id="studio-status">Upload your file to generate a dashboard. Header Row tells Studio where the column names start.</p>
-        <p class="policy-note">
-          Paid Studio access includes repeated uploads during the active browser session, so you can revise your file and adjust the Header Row before final downloads. Tier 1 Studio files are processed locally in your browser. Review the
-          <a href="privacy-policy.html">Privacy Policy</a>.
-        </p>
-      </div>
-      <div class="metric-grid reveal visible" id="metric-grid"><article class="metric-card"><span>Rows</span><strong>0</strong></article><article class="metric-card"><span>Columns</span><strong>0</strong></article><article class="metric-card"><span>Numeric Fields</span><strong>0</strong></article><article class="metric-card"><span>Missing Values</span><strong>0</strong></article></div>
-      <div class="studio-panel reveal visible"><h2>Dashboard View</h2><div id="chart" class="chart-wrap"><p class="empty-state">Your chart will appear here after a file is loaded.</p></div></div>
-      <div class="studio-panel reveal visible"><h2>Data Preview</h2><div id="data-preview" class="table-wrap"><p class="empty-state">The first rows of your dataset will appear here.</p></div></div>
-    </section>
+      </section>
+    </main>
 
-    <section id="tiers" class="section pricing">
-      <div class="section-title reveal visible">
-        <h2>Tier 1 Studio packages</h2>
-        <p>Use Studio when a standard dashboard package is enough. Choose Starter, Professional, or Premium based on how much dashboard depth, filtering, template variety, and export support the file needs.</p>
-      </div>
-      <div class="price-grid three-tier">
-        <article class="price-card reveal visible">
-          <h3>Tier 1 Starter</h3>
-          <div class="price">$49</div>
-          <p>Best for a basic dashboard from one clean Excel or CSV file.</p>
-          <ul class="template-list">
-            <li>Standard dashboard template</li>
-            <li>Excel or CSV upload</li>
-            <li>Browser dashboard preview</li>
-            <li>Basic KPI cards, charts, and data table</li>
-            <li>PDF summary, PNG chart exports, and cleaned Excel/CSV download</li>
-            <li>Repeated uploads during the active Studio session</li>
-          </ul>
-        </article>
-        <article class="price-card reveal visible">
-          <h3>Tier 1 Professional</h3>
-          <div class="price">$99</div>
-          <p>Best when the file needs a stronger dashboard view and more ways to explore results.</p>
-          <ul class="template-list">
-            <li>Everything in Starter</li>
-            <li>More advanced dashboard templates</li>
-            <li>Additional chart and visualization options</li>
-            <li>Stronger filtering, sorting, and search views</li>
-            <li>More export options for reports and cleaned data</li>
-            <li>Repeated uploads while refining the file setup</li>
-          </ul>
-        </article>
-        <article class="price-card reveal visible">
-          <h3>Tier 1 Premium</h3>
-          <div class="price">$199</div>
-          <p>Best for customers who want the most complete standard Studio package.</p>
-          <ul class="template-list">
-            <li>Everything in Professional</li>
-            <li>Largest standard template library</li>
-            <li>Advanced analytics and premium dashboard features</li>
-            <li>Additional reporting options</li>
-            <li>Priority processing</li>
-            <li>Repeated uploads while refining the file setup</li>
-          </ul>
-        </article>
-      </div>
-      <div class="price-grid two-tier add-on-grid">
-        <article class="price-card reveal visible featured-price">
-          <h3>Tier 2: AI Dashboard Builder</h3>
-          <div class="price">$299-$999+</div>
-          <p>A guided customization form captures organization name, logo, brand colors, sample data, KPIs, charts, tables, filters, groupings, calculated metrics, layout, report downloads, and exports.</p>
-          <div class="product-actions"><a class="button mini secondary-mini" href="tier-2-dashboard-builder.html">Start Tier 2 Builder</a></div>
-        </article>
-        <article class="price-card reveal visible featured-price">
-          <h3>Interactive HTML Report</h3>
-          <div class="price">Tier 2 add-on</div>
-          <p>Download an offline browser-based report with filters, drill-down charts, expandable sections, summary cards, tables, search, navigation, and branded visuals.</p>
-        </article>
-        <article class="price-card reveal visible">
-          <h3>Tier 3: Enterprise Solutions</h3>
-          <div class="price">Custom quote</div>
-          <p>For custom apps, databases, APIs, authentication, SharePoint, Power BI, Qualtrics, SQL, multi-user systems, ongoing support, and reporting portals.</p>
-        </article>
-      </div>
-      <p class="policy-note">
-        Tier 1 dashboard purchases are generally final once the dashboard is successfully generated and made available for download. Review the
-        <a href="refund-liability-policy.html">Refund & Liability Policy</a> before purchasing.
-      </p>
-    </section>
-  </main>
+    <footer>
+      <p>Copyright 2026 ProgramMetrics.io | ProgramMetrics Studio | Dashboard Generator</p>
+      <nav class="footer-legal" aria-label="Legal links">
+        <a href="privacy-policy.html">Privacy &amp; Security</a>
+        <a href="terms-of-service.html">Terms of Service</a>
+        <a href="refund-liability-policy.html">Refund &amp; Liability Policy</a>
+      </nav>
+    </footer>
 
-  <footer>
-    <p>Copyright 2026 ProgramMetrics.io | ProgramMetrics Studio | Self-Service Dashboard Generator</p>
-    <p class="footer-links">
-      <a href="refund-liability-policy.html">Refund & Liability Policy</a> |
-      <a href="privacy-policy.html">Privacy Policy</a> |
-      <a href="terms-of-service.html">Terms of Service</a>
-    </p>
-  </footer>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function(){
-      const state={rows:[],columns:[],fileName:'dashboard-data',sourceLabel:'No file loaded',sourceType:'empty',rawCsv:null,rawWorkbook:null};
-      const planLevels={starter:1,professional:2,premium:3};
-      const planLabels={starter:'Starter - $49',professional:'Professional - $99',premium:'Premium - $199'};
-      const planFeatures={
-        starter:['KPI Summary dashboard','Excel or CSV upload','Basic column validation','Cleaned CSV download','Basic Studio summary'],
-        professional:['Everything in Starter','Survey, program, and operations templates','Stronger filtering and exploration views','Excel and PNG exports','More polished report package'],
-        premium:['Everything in Professional','Advanced Analytics and Executive Summary templates','Expanded multi-section report','Premium dashboard layout options','Largest standard template library']
-      };
-      const dashboardOptions=[
-        {value:'summary',tier:'starter',label:'KPI Summary'},
-        {value:'survey',tier:'professional',label:'Survey Results'},
-        {value:'program',tier:'professional',label:'Program Evaluation'},
-        {value:'operations',tier:'professional',label:'Operations Tracker'},
-        {value:'advanced',tier:'premium',label:'Advanced Analytics'},
-        {value:'executive',tier:'premium',label:'Executive Summary'}
-      ];
-      const sampleOptions=[
-        {value:'kpi',tier:'starter',label:'KPI summary'},
-        {value:'survey',tier:'professional',label:'Survey results'},
-        {value:'program',tier:'professional',label:'Program evaluation'},
-        {value:'operations',tier:'professional',label:'Operations tracker'}
-      ];
-      const fileInput=document.getElementById('data-file'), startRowInput=document.getElementById('start-row'), dashboardType=document.getElementById('dashboard-type'), sampleDataset=document.getElementById('sample-dataset'), studioPlan=document.getElementById('studio-plan'), featurePlan=document.getElementById('feature-plan'), activePlanTitle=document.getElementById('active-plan-title'), activePlanFeatures=document.getElementById('active-plan-features'), upgradeNote=document.getElementById('upgrade-note'), statusEl=document.getElementById('studio-status'), metricGrid=document.getElementById('metric-grid'), chartEl=document.getElementById('chart'), previewEl=document.getElementById('data-preview'), downloadCsvBtn=document.getElementById('download-csv'), downloadReportBtn=document.getElementById('download-report'), downloadExcelBtn=document.getElementById('download-excel'), downloadPngBtn=document.getElementById('download-png'), downloadExpandedBtn=document.getElementById('download-expanded'), sampleBtn=document.getElementById('sample-data');
-      const sampleDatasets={
-        kpi:{label:'KPI summary example',type:'summary',rows:[{Site:'North',Month:'January',Participants:42,Completed:36,Satisfaction:4.4,Status:'Complete'},{Site:'North',Month:'February',Participants:51,Completed:43,Satisfaction:4.6,Status:'Complete'},{Site:'South',Month:'January',Participants:38,Completed:29,Satisfaction:4.1,Status:'In Progress'},{Site:'South',Month:'February',Participants:46,Completed:40,Satisfaction:4.5,Status:'Complete'},{Site:'East',Month:'January',Participants:31,Completed:24,Satisfaction:3.9,Status:'Needs Review'},{Site:'East',Month:'February',Participants:35,Completed:32,Satisfaction:4.3,Status:'Complete'}]},
-        survey:{label:'Survey results example',type:'survey',rows:[{Department:'Operations',Question:'Overall experience',Responses:34,AverageScore:4.2,Satisfaction:4.2,Status:'Reviewed'},{Department:'Operations',Question:'Ease of use',Responses:34,AverageScore:4.5,Satisfaction:4.5,Status:'Reviewed'},{Department:'Programs',Question:'Overall experience',Responses:28,AverageScore:4.1,Satisfaction:4.1,Status:'Reviewed'},{Department:'Programs',Question:'Ease of use',Responses:28,AverageScore:3.9,Satisfaction:3.9,Status:'Needs Follow-Up'},{Department:'Leadership',Question:'Overall experience',Responses:16,AverageScore:4.7,Satisfaction:4.7,Status:'Reviewed'}]},
-        program:{label:'Program evaluation example',type:'program',rows:[{Program:'Youth Services',Site:'Central',Participants:58,Completed:49,OutcomeSuccess:43,Status:'Complete'},{Program:'Youth Services',Site:'West',Participants:41,Completed:34,OutcomeSuccess:29,Status:'Complete'},{Program:'Workforce Training',Site:'Central',Participants:36,Completed:30,OutcomeSuccess:24,Status:'In Progress'},{Program:'Workforce Training',Site:'East',Participants:29,Completed:24,OutcomeSuccess:21,Status:'Complete'},{Program:'Family Support',Site:'West',Participants:44,Completed:38,OutcomeSuccess:35,Status:'Complete'}]},
-        operations:{label:'Operations tracker example',type:'operations',rows:[{Team:'Intake',Stage:'New Request',TicketCount:18,DaysOpen:2,Status:'Open'},{Team:'Intake',Stage:'Needs Review',TicketCount:9,DaysOpen:5,Status:'Needs Review'},{Team:'Data',Stage:'Validation',TicketCount:14,DaysOpen:3,Status:'In Progress'},{Team:'Reporting',Stage:'Draft Report',TicketCount:7,DaysOpen:6,Status:'In Progress'},{Team:'Reporting',Stage:'Delivered',TicketCount:21,DaysOpen:1,Status:'Complete'}]}
-      };
-
-      applyPlanAccess();
-      sampleBtn.addEventListener('click',function(){const sample=sampleDatasets[sampleDataset.value]||sampleDatasets.kpi;dashboardType.value=sample.type;startRowInput.value='1';state.rawCsv=null;state.rawWorkbook=null;fileInput.value='';loadRows(sample.rows,sampleDataset.value+'-example',sample.label,'sample')});
-      fileInput.addEventListener('change',handleFileUpload);
-      startRowInput.addEventListener('change',reparseActiveFile);
-      studioPlan.addEventListener('change',function(){featurePlan.value=studioPlan.value;applyPlanAccess();renderDashboard();setStatus(planLabels[studioPlan.value]+' selected. Upgrade-only features are visible but locked.')});
-      featurePlan.addEventListener('change',renderFeatureSummary);
-      dashboardType.addEventListener('change',function(){renderDashboard();if(state.rows.length)setStatus('Showing '+selectedDashboardLabel()+' for '+state.sourceLabel+'.')});
-      downloadCsvBtn.addEventListener('click',downloadCsv);downloadReportBtn.addEventListener('click',downloadReport);downloadExcelBtn.addEventListener('click',downloadExcel);downloadPngBtn.addEventListener('click',downloadPng);downloadExpandedBtn.addEventListener('click',downloadExpandedReport);
-
-      function currentPlanLevel(){return planLevels[studioPlan.value]||1}
-      function tierLevel(element){return planLevels[element.dataset.tier||'starter']||1}
-      function applyPlanAccess(){const level=currentPlanLevel();syncPlanOptions(dashboardType,dashboardOptions);syncPlanOptions(sampleDataset,sampleOptions);document.querySelectorAll('.feature-card').forEach(card=>{const locked=tierLevel(card)>level;card.classList.toggle('locked',locked);card.classList.toggle('active',!locked)});document.querySelectorAll('.studio-toolbar [data-tier]').forEach(button=>{const locked=tierLevel(button)>level;button.classList.toggle('locked-feature',locked);button.disabled=locked||!state.rows.length;button.title=locked?'Upgrade to '+requiredPlanLabel(button.dataset.tier)+' to use this feature.':''});upgradeNote.classList.toggle('visible',level<3);renderFeatureSummary()}
-      function syncPlanOptions(select,options){const level=currentPlanLevel(),current=select.value,available=options.filter(option=>planLevels[option.tier]<=level);select.innerHTML=available.map(option=>'<option value="'+escapeHtml(option.value)+'" data-tier="'+escapeHtml(option.tier)+'">'+escapeHtml(option.label)+'</option>').join('');select.value=available.some(option=>option.value===current)?current:available[0].value}
-      function renderFeatureSummary(){const plan=featurePlan.value||studioPlan.value;activePlanTitle.textContent=planLabels[plan]+' includes';activePlanFeatures.innerHTML=(planFeatures[plan]||[]).map(feature=>'<li>'+escapeHtml(feature)+'</li>').join('')}
-      function requiredPlanLabel(tier){return planLabels[tier]||'a higher package'}
-      function headerRowIndex(){return Math.max(0,(parseInt(startRowInput.value,10)||1)-1)}
-      function reparseActiveFile(){if(state.rawCsv){loadRows(parseCsv(state.rawCsv),state.fileName,state.sourceLabel,'upload')}else if(state.rawWorkbook){loadRows(parseWorkbook(state.rawWorkbook),state.fileName,state.sourceLabel,'upload')}}
-      function handleFileUpload(event){const file=event.target.files[0];if(!file)return;state.fileName=file.name.replace(/\.[^.]+$/,'')||'programmetrics-dashboard';state.sourceLabel=file.name;state.rawCsv=null;state.rawWorkbook=null;const ext=file.name.split('.').pop().toLowerCase();fileInput.value='';if(ext==='csv'){const reader=new FileReader();reader.onload=function(){state.rawCsv=reader.result;loadRows(parseCsv(state.rawCsv),state.fileName,file.name,'upload')};reader.readAsText(file);return}if(ext==='xlsx'||ext==='xls'){if(!window.XLSX){setStatus('Excel support could not load. Save the file as CSV and try again.');return}const reader=new FileReader();reader.onload=function(){state.rawWorkbook=XLSX.read(new Uint8Array(reader.result),{type:'array'});loadRows(parseWorkbook(state.rawWorkbook),state.fileName,file.name,'upload')};reader.readAsArrayBuffer(file);return}setStatus('Please upload a CSV, XLSX, or XLS file.')}
-      function parseWorkbook(workbook){const sheet=workbook.Sheets[workbook.SheetNames[0]],matrix=XLSX.utils.sheet_to_json(sheet,{header:1,defval:''});return rowsFromMatrix(matrix)}
-      function parseCsv(text){const matrix=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(Boolean).map(splitCsvLine);return rowsFromMatrix(matrix)}
-      function rowsFromMatrix(matrix){const start=headerRowIndex();if(start>=matrix.length){setStatus('Header Row is beyond the end of the file.');return[]}const headers=(matrix[start]||[]).map((h,i)=>String(h||'').trim()||'Column '+(i+1));return matrix.slice(start+1).filter(row=>row.some(cell=>String(cell||'').trim()!=='')).map(row=>{const item={};headers.forEach((header,index)=>item[header]=row[index]||'');return item})}
-      function splitCsvLine(line){const out=[];let value='',quoted=false;for(let i=0;i<line.length;i++){const char=line[i];if(char==='"'&&quoted&&line[i+1]==='"'){value+='"';i++}else if(char==='"'){quoted=!quoted}else if(char===','&&!quoted){out.push(value.trim());value=''}else{value+=char}}out.push(value.trim());return out}
-      function loadRows(rows,fileName,sourceLabel,sourceType){state.rows=rows.map(cleanRow);state.columns=Array.from(new Set(state.rows.flatMap(row=>Object.keys(row))));state.fileName=fileName;state.sourceLabel=sourceLabel||fileName;state.sourceType=sourceType||'upload';renderDashboard();applyPlanAccess();setStatus(state.rows.length?'Showing '+selectedDashboardLabel()+' for '+state.sourceLabel+' ('+state.rows.length+' rows, header row '+(headerRowIndex()+1)+').':'No usable rows found. Check the Header Row setting.')}
-      function cleanRow(row){const cleaned={};Object.keys(row).forEach(key=>cleaned[String(key).trim()||'Column']=row[key]==null?'':row[key]);return cleaned}
-      function renderDashboard(){const rows=state.rows,columns=state.columns,numericColumns=columns.filter(col=>rows.filter(row=>isNumeric(row[col])).length>=Math.max(1,rows.length*.6)),missingValues=rows.reduce((count,row)=>count+columns.filter(col=>row[col]===''||row[col]==null).length,0);metricGrid.innerHTML=metricCard('Rows',rows.length)+metricCard('Columns',columns.length)+metricCard('Numeric Fields',numericColumns.length)+metricCard('Missing Values',missingValues);renderChart(rows,columns,numericColumns);renderPreview(rows,columns)}
-      function metricCard(label,value){return '<article class="metric-card"><span>'+escapeHtml(label)+'</span><strong>'+escapeHtml(String(value))+'</strong></article>'}
-      function renderChart(rows,columns,numericColumns){if(!rows.length){chartEl.innerHTML='<p class="empty-state">Your chart will appear here after a file is loaded.</p>';return}const config=dashboardConfig(columns,numericColumns),grouped=new Map();rows.forEach(row=>{const label=String(row[config.categoryColumn]||'Blank'),value=config.mode==='count'?1:toNumber(row[config.numericColumn]);grouped.set(label,(grouped.get(label)||0)+value)});const data=Array.from(grouped,entry=>({label:entry[0],value:entry[1]})).sort((a,b)=>b.value-a.value).slice(0,8),max=Math.max(...data.map(item=>item.value),1);chartEl.innerHTML='<h3>'+escapeHtml(config.title)+'</h3><p class="chart-note">'+escapeHtml(config.note)+'</p>'+data.map(item=>{const width=Math.max(3,Math.round(item.value/max*100));return '<div class="bar-row"><div class="bar-label" title="'+escapeHtml(item.label)+'">'+escapeHtml(item.label)+'</div><div class="bar-track"><div class="bar-fill" style="width:'+width+'%"></div></div><div class="bar-value">'+formatNumber(item.value)+'</div></div>'}).join('')}
-      function dashboardConfig(columns,numericColumns){const type=dashboardType.value,siteCol=findColumn(columns,/site|location|program|team|group|department|category/i)||firstTextColumn(columns,numericColumns)||columns[0],statusCol=findColumn(columns,/status|stage|type|category|outcome/i)||siteCol,participantCol=findColumn(numericColumns,/participant|client|served|count|total|volume|number/i)||numericColumns[0],completedCol=findColumn(numericColumns,/complete|completed|outcome|success|closed|served/i)||numericColumns[1]||numericColumns[0],satisfactionCol=findColumn(numericColumns,/satisfaction|score|rating|survey|response|mean|average/i)||numericColumns[2]||numericColumns[0];if(type==='survey')return{title:(satisfactionCol||'Responses')+' by '+siteCol,note:'Professional template: ratings, scores, or response patterns.',categoryColumn:siteCol,numericColumn:satisfactionCol,mode:satisfactionCol?'sum':'count'};if(type==='program')return{title:(completedCol||'Records')+' by '+siteCol,note:'Professional template: completed services, outcomes, or participation.',categoryColumn:siteCol,numericColumn:completedCol,mode:completedCol?'sum':'count'};if(type==='operations')return{title:'Record count by '+statusCol,note:'Professional template: workflow status, categories, and activity volume.',categoryColumn:statusCol,numericColumn:null,mode:'count'};if(type==='advanced')return{title:(participantCol||'Records')+' advanced view by '+siteCol,note:'Premium template: advanced standard analytics and comparison views.',categoryColumn:siteCol,numericColumn:participantCol,mode:participantCol?'sum':'count'};if(type==='executive')return{title:'Executive summary by '+siteCol,note:'Premium template: leadership-ready summary view and expanded reporting package.',categoryColumn:siteCol,numericColumn:completedCol||participantCol,mode:(completedCol||participantCol)?'sum':'count'};return{title:(participantCol||'Records')+' by '+siteCol,note:'Starter template: high-level volume and performance indicators.',categoryColumn:siteCol,numericColumn:participantCol,mode:participantCol?'sum':'count'}}
-      function renderPreview(rows,columns){if(!rows.length){previewEl.innerHTML='<p class="empty-state">The first rows of your dataset will appear here.</p>';return}const visibleColumns=columns.slice(0,8),body=rows.slice(0,10).map(row=>'<tr>'+visibleColumns.map(col=>'<td>'+escapeHtml(String(row[col]==null?'':row[col]))+'</td>').join('')+'</tr>').join('');previewEl.innerHTML='<table class="data-table"><thead><tr>'+visibleColumns.map(col=>'<th>'+escapeHtml(col)+'</th>').join('')+'</tr></thead><tbody>'+body+'</tbody></table>'}
-      function downloadCsv(){const csv=[state.columns.map(csvEscape).join(',')].concat(state.rows.map(row=>state.columns.map(col=>csvEscape(row[col])).join(','))).join('\n');downloadFile(state.fileName+'-dashboard-data.csv',csv,'text/csv')}
-      function downloadReport(){const report='<!doctype html><html><head><meta charset="utf-8"><title>ProgramMetrics Studio Summary</title><style>body{font-family:Arial,sans-serif;line-height:1.5;margin:32px;color:#111827}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;padding:8px;text-align:left}</style></head><body><h1>ProgramMetrics Studio Summary</h1><p>Dataset: '+escapeHtml(state.sourceLabel)+'</p><p>Header row: '+(headerRowIndex()+1)+'</p><p>Dashboard type: '+escapeHtml(selectedDashboardLabel())+'</p><p>Rows: '+state.rows.length+' | Columns: '+state.columns.length+'</p>'+chartEl.innerHTML+previewEl.innerHTML+'</body></html>';downloadFile(state.fileName+'-dashboard-summary.html',report,'text/html')}
-      function downloadExcel(){if(window.XLSX){const worksheet=XLSX.utils.json_to_sheet(state.rows);const workbook=XLSX.utils.book_new();XLSX.utils.book_append_sheet(workbook,worksheet,'Dashboard Data');XLSX.writeFile(workbook,state.fileName+'-dashboard-data.xlsx');return}downloadCsv()}
-      function downloadPng(){downloadFile(state.fileName+'-chart-export.txt','PNG chart export is included in Professional and Premium Studio packages. This static demo marks the entitlement; production checkout would generate the image file.','text/plain')}
-      function downloadExpandedReport(){const report='<!doctype html><html><head><meta charset="utf-8"><title>ProgramMetrics Studio Expanded Report</title><style>body{font-family:Arial,sans-serif;line-height:1.5;margin:32px;color:#111827}section{margin:24px 0}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;padding:8px;text-align:left}</style></head><body><h1>ProgramMetrics Studio Expanded Report</h1><section><h2>Dataset</h2><p>'+escapeHtml(state.sourceLabel)+'</p><p>Dashboard type: '+escapeHtml(selectedDashboardLabel())+'</p><p>Rows: '+state.rows.length+' | Columns: '+state.columns.length+'</p></section><section><h2>Dashboard</h2>'+chartEl.innerHTML+'</section><section><h2>Data Preview</h2>'+previewEl.innerHTML+'</section></body></html>';downloadFile(state.fileName+'-expanded-report.html',report,'text/html')}
-      function downloadFile(name,content,type){const blob=new Blob([content],{type:type}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=name;link.click();URL.revokeObjectURL(link.href)}
-      function selectedDashboardLabel(){return dashboardType.options[dashboardType.selectedIndex].text}function findColumn(columns,pattern){return columns.find(col=>pattern.test(col))}function firstTextColumn(columns,numericColumns){return columns.find(col=>!numericColumns.includes(col))}function isNumeric(value){return value!==''&&value!=null&&!Number.isNaN(Number(String(value).replace(/[$,%]/g,'')))}function toNumber(value){const number=Number(String(value).replace(/[$,%]/g,''));return Number.isFinite(number)?number:0}function formatNumber(value){return Number(value.toFixed?value.toFixed(2):value).toLocaleString()}function csvEscape(value){const text=String(value==null?'':value);return /[",\n]/.test(text)?'"'+text.replace(/"/g,'""')+'"':text}function escapeHtml(value){return String(value).replace(/[&<>"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[char]))}function setStatus(message){statusEl.textContent=message}
-    });
-  </script>
-</body>
+    <script src="script-20260610.js?v=20260707-latest"></script>
+    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+  </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+

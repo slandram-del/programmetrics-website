@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ProgramMetrics Checkout | Fixed Studio Levels</title>
+    <meta name="description" content="Choose a ProgramMetrics Studio level, calculate upgrade differences, and continue to Studio access." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles-20260610.css?v=20260707-latest" />
+  </head>
+  <body>
+    <details class="floating-language" data-language-widget>
+      <summary class="floating-language-button">
+        <span aria-hidden="true">??</span>
+        <span>Language</span>
+      </summary>
+      <div class="floating-language-menu" id="floating-language-menu">
+        <button type="button" data-translate-lang="es">Spanish</button>
+        <button type="button" data-translate-lang="fr">French</button>
+        <button type="button" data-translate-lang="ar">Arabic</button>
+        <button type="button" data-translate-lang="zh-CN">Chinese</button>
+        <button type="button" data-translate-lang="vi">Vietnamese</button>
+        <button type="button" data-translate-lang="en">English</button>
+      </div>
+    </details>
+    <div class="google-translate-hidden" id="google_translate_element" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="index.html#top">ProgramMetrics.io</a>
+      <nav aria-label="Primary navigation">
+        <a href="index.html#how-it-works">How It Works</a>
+        <a href="studio-pricing.html#studio-pricing-guide">Studio Pricing</a>
+        <a href="studio.html">Studio Workspace</a>
+        <a href="index.html#apps">Solutions</a>
+        <a href="index.html#projects">Examples</a>
+        <a href="checkout.html">Checkout</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero checkout-hero">
+        <div class="hero-grid">
+          <div class="hero-copy reveal">
+            <p class="badge">Self-Serve Studio Checkout</p>
+            <h1>Choose a Studio level now. Upgrade later by paying the difference.</h1>
+            <p class="hero-subtitle">ProgramMetrics Studio can support full purchases and step-up upgrades. Customers choose the level they need, then Studio unlocks only that paid access while higher levels remain visible as watermarked examples.</p>
+            <div class="hero-actions">
+              <a class="button primary" href="#checkout-panel">Start Checkout</a>
+              <a class="button primary" href="studio-pricing.html#studio-pricing-guide">Compare Levels</a>
+            </div>
+          </div>
+          <figure class="hero-dashboard reveal">
+            <img src="images/predictive-dashboard.png?v=20260611" alt="ProgramMetrics checkout and dashboard preview" />
+          </figure>
+        </div>
+      </section>
+
+      <section class="section checkout-section" id="checkout-panel">
+        <div class="section-title reveal">
+          <h2>Studio checkout</h2>
+          <p>Select the customer&apos;s current paid level and the level they want next. If they are upgrading, ProgramMetrics calculates the difference instead of charging the full new tier again.</p>
+        </div>
+
+        <div class="checkout-layout reveal">
+          <article class="checkout-card">
+            <p class="template-label">Purchase or upgrade</p>
+            <label class="language-output" for="checkout-current-plan">
+              <span>Current paid level</span>
+              <select id="checkout-current-plan">
+                <option value="none">No current paid level</option>
+                <option value="t1l1">Tier 1 Level 1 - $49</option>
+                <option value="t1l2">Tier 1 Level 2 - $99</option>
+                <option value="t1l3">Tier 1 Level 3 - $199</option>
+                <option value="t2l1">Tier 2 Level 1 - $299</option>
+                <option value="t2l2">Tier 2 Level 2 - $499</option>
+                <option value="t2l3">Tier 2 Level 3 - $799</option>
+                <option value="t3">Tier 3 Workflow System - $1,500</option>
+                <option value="t4">Tier 4 Advanced Analytics - $3,500</option>
+              </select>
+            </label>
+
+            <label class="language-output" for="checkout-desired-plan">
+              <span>New Studio level</span>
+              <select id="checkout-desired-plan">
+                <option value="t1l1">Tier 1 Level 1 - $49</option>
+                <option value="t1l2">Tier 1 Level 2 - $99</option>
+                <option value="t1l3">Tier 1 Level 3 - $199</option>
+                <option value="t2l1">Tier 2 Level 1 - $299</option>
+                <option value="t2l2">Tier 2 Level 2 - $499</option>
+                <option value="t2l3">Tier 2 Level 3 - $799</option>
+                <option value="t3">Tier 3 Workflow System - $1,500</option>
+                <option value="t4">Tier 4 Advanced Analytics - $3,500</option>
+              </select>
+            </label>
+
+            <div class="checkout-summary" aria-live="polite">
+              <div><span>Selected access</span><strong id="checkout-plan-label">Tier 1 Level 1</strong></div>
+              <div><span>Amount due</span><strong id="checkout-amount-due">$49</strong></div>
+              <p id="checkout-upgrade-note">New customer purchase. The full selected level is due.</p>
+            </div>
+
+            <div class="checkout-actions">
+              <a class="button primary" id="checkout-preview-unlock" href="studio.html?access=t1l1&checkout=preview">Preview Studio Access</a>
+              <a class="button primary secondary-mini" id="checkout-stripe-placeholder" href="#stripe-links-needed">Stripe Link Not Added Yet</a>
+            </div>
+            <p class="checkout-fine-print" id="checkout-stripe-status">Preview access stores only the selected level in this browser session. Paste sandbox Payment Links into stripe-links.js to activate real checkout buttons.</p>
+          </article>
+
+          <aside class="checkout-card checkout-explain" id="stripe-links-needed">
+            <p class="template-label">Recommended payment setup</p>
+            <h3>Use Stripe as the payment record, not a customer-file database.</h3>
+            <ul>
+              <li>Create one checkout price for each full Studio level.</li>
+              <li>Create upgrade checkout links for each price difference customers can buy later.</li>
+              <li>After successful checkout, redirect back to Studio with a signed access token.</li>
+              <li>Keep uploaded customer files temporary: process, download, discard.</li>
+            </ul>
+            <p>For launch, ProgramMetrics can use Stripe to remember payment/customer history while Studio avoids long-term customer file storage.</p>
+            <p><strong>Codex side:</strong> paste sandbox Payment Link URLs into <code>stripe-links.js</code>. The checkout button will automatically use the correct full-purchase or upgrade link.</p>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Copyright 2026 ProgramMetrics.io | ProgramMetrics Studio | Dashboard Generator</p>
+      <nav class="footer-legal" aria-label="Legal links">
+        <a href="privacy-policy.html">Privacy &amp; Security</a>
+        <a href="terms-of-service.html">Terms of Service</a>
+        <a href="refund-liability-policy.html">Refund &amp; Liability Policy</a>
+      </nav>
+    </footer>
+
+    <script src="stripe-links.js?v=20260707-latest"></script>
+    <script src="script-20260610.js?v=20260707-latest"></script>
+    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+  </body>
+</html>
+
+
+
+
+
