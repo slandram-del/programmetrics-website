@@ -2809,3 +2809,21 @@ input.is-locked {
     align-items: flex-start;
   }
 }
+
+/* Studio one-step output flow */
+.studio-hidden-level-control {
+  display: none !important;
+}
+
+.studio-output-helper {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.studio-status-card {
+  margin-top: 0;
+}

@@ -1,4 +1,4 @@
-﻿const serviceDetails = {
+const serviceDetails = {
   dashboards: {
     title: "Custom built dashboards",
     text:
@@ -556,7 +556,7 @@ function setupStudioPackageAccess() {
 
     if (packageCard) {
       const lockedPreview = shouldWatermark(preview, unlocked);
-      packageCard.innerHTML = `<div><span>Unlocked</span><strong>${escapeHtml(unlocked.label)}</strong></div><div><span>Previewing</span><strong>${escapeHtml(preview.label)}</strong></div><div><span>Private session processing</span><strong>${lockedPreview ? "Preview only - upgrade to export locked outputs" : "Included outputs ready for download"}</strong></div><small>Use your unlocked access for real uploads. Preview higher-tier outputs with protected previews. Full downloads and exports require the matching Studio level.</small>`;
+      packageCard.innerHTML = `<div><span>Current access</span><strong>${escapeHtml(unlocked.label)}</strong></div><div><span>Output preview</span><strong>${escapeHtml(preview.label)}</strong></div><div><span>Private session processing</span><strong>${lockedPreview ? "Preview only - unlock to download" : "Download available for this output"}</strong></div><small>Choose an output format once. Studio automatically previews the matching level and protects locked downloads.</small>`;
     }
 
     if (packageLabel) {
@@ -582,7 +582,11 @@ function setupStudioPackageAccess() {
     applyAccess();
   });
   packageSelect?.addEventListener("change", applyAccess);
-  document.getElementById("studio-output-format")?.addEventListener("change", updateStudioDownloadButton);
+  document.getElementById("studio-output-format")?.addEventListener("change", () => {
+    syncPreviewToOutputFormat();
+    updateStudioDownloadButton();
+  });
+  syncPreviewToOutputFormat();
 
   packageButtons.forEach((button) => {
     button.addEventListener("click", () => {
@@ -781,6 +785,14 @@ function updateStudioDownloadButton() {
   const unlockedOutput = canDownloadOutput(outputType, unlocked);
   button.textContent = unlockedOutput ? "Download" : "Unlock download";
   button.classList.toggle("is-output-locked", !unlockedOutput);
+  if (unlockedOutput) {
+    button.removeAttribute("data-checkout-url");
+    button.removeAttribute("aria-label");
+  } else {
+    const required = getRequiredLevelForOutput(outputType);
+    button.dataset.checkoutUrl = getCheckoutUrlForOutput(outputType);
+    button.setAttribute("aria-label", `Unlock ${format.options[format.selectedIndex]?.text || "download"}. Requires ${getLevelLabelByAccess(required)}.`);
+  }
 }
 function canUploadRealFile(unlockedLevel) {
   return accessValue(unlockedLevel) >= studioFeatureRequirements.upload;
@@ -804,6 +816,28 @@ function shouldWatermark(selectedPreviewLevel, unlockedLevel) {
 
 function getRequiredLevelForOutput(outputType) {
   return studioOutputRequirements[outputType] || 1;
+}
+
+function getPlanKeyForAccess(requiredAccess) {
+  return Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === accessValue(requiredAccess)) || "t1l1";
+}
+
+function getCheckoutUrlForOutput(outputType) {
+  const required = getRequiredLevelForOutput(outputType);
+  const targetPlan = getPlanKeyForAccess(required);
+  return `checkout.html?plan=${encodeURIComponent(targetPlan)}`;
+}
+
+function syncPreviewToOutputFormat() {
+  const format = document.getElementById("studio-output-format");
+  const packageSelect = document.getElementById("studio-package-select");
+  if (!format || !packageSelect) return;
+  const required = getRequiredLevelForOutput(format.value || "txt");
+  const targetPlan = getPlanKeyForAccess(required);
+  if (studioPackageSummaries[targetPlan] && packageSelect.value !== targetPlan) {
+    packageSelect.value = targetPlan;
+    packageSelect.dispatchEvent(new Event("change"));
+  }
 }
 
 function canUseBranding(unlockedLevel) {
@@ -1104,9 +1138,10 @@ async function studioDownloadCurrentOutput(input, result, format, language, butt
   const unlocked = getUnlockedStudioAccess();
   const required = getRequiredLevelForOutput(outputType);
   if (!canDownloadOutput(outputType, unlocked)) {
-    const targetPlan = Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === required) || "t1l3";
-    result.innerHTML = `Preview only - upgrade to export. <strong>${escapeHtml(format?.options[format.selectedIndex]?.text || outputType)}</strong> requires ${escapeHtml(getLevelLabelByAccess(required))}. <a href="checkout.html?plan=${encodeURIComponent(targetPlan)}">Unlock download</a>`;
+    const checkoutUrl = getCheckoutUrlForOutput(outputType);
+    result.innerHTML = `Preview only - upgrade to export. <strong>${escapeHtml(format?.options[format.selectedIndex]?.text || outputType)}</strong> requires ${escapeHtml(getLevelLabelByAccess(required))}. Opening checkout now.`;
     updateStudioDownloadButton();
+    window.location.href = checkoutUrl;
     return;
   }
   if (button) {

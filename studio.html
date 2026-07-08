@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -15,7 +15,7 @@
     <meta http-equiv="pragma" content="no-cache" />
     <meta http-equiv="expires" content="0" />
 
-    <link rel="stylesheet" href="styles-20260610.css?v=20260708-studio-branding" />
+    <link rel="stylesheet" href="styles-20260610.css?v=20260708-studio-oneflow" />
   </head>
 
   <body>
@@ -80,10 +80,10 @@
           <article class="studio-control-panel reveal">
             <p class="template-label" id="studio-package-label">Studio Workspace</p>
             <h3>Upload, analyze, preview, export.</h3>
-            <p>Use your unlocked access for real uploads. Preview higher-tier outputs with protected previews. Full downloads and exports require the matching Studio level.</p>
+            <p>Upload a file, choose the output you want, and preview the matching Studio result. Locked downloads open the upgrade checkout for that output.</p>
 
             <div class="studio-package-picker">
-              <label class="language-output" for="studio-access-select">
+              <label class="language-output studio-hidden-level-control" for="studio-access-select" hidden>
                 <span>Unlocked access for real uploads</span>
                 <select id="studio-access-select" aria-describedby="active-package-card">
                   <option value="t1l1" data-access="1">Tier 1 Level 1 - $49</option>
@@ -97,7 +97,7 @@
                 </select>
               </label>
 
-              <label class="language-output" for="studio-package-select">
+              <label class="language-output studio-hidden-level-control" for="studio-package-select" hidden>
                 <span>Preview Studio level</span>
                 <select id="studio-package-select">
                   <option value="t1l1" data-access="1">Tier 1 Level 1 - $49</option>
@@ -111,10 +111,10 @@
                 </select>
               </label>
               <div class="active-package-card studio-status-card" id="active-package-card" aria-live="polite">
-                <div><span>Unlocked</span><strong>Tier 1 Level 1 - $49</strong></div>
-                <div><span>Previewing</span><strong>Tier 1 Level 1 - $49</strong></div>
-                <div><span>Private session processing</span><strong>Preview only - upgrade to export locked outputs</strong></div>
-                <small>Use your unlocked access for real uploads. Preview higher-tier outputs with protected previews. Full downloads and exports require the matching Studio level.</small>
+                <div><span>Current access</span><strong>Tier 1 Level 1 - $49</strong></div>
+                <div><span>Output preview</span><strong>Choose an output format</strong></div>
+                <div><span>Private session processing</span><strong>Locked downloads open checkout</strong></div>
+                <small>Choose an output format once. Studio automatically previews the matching level and protects locked downloads.</small>
               </div><div class="studio-security-rules">
                 <strong>Privacy &amp; Session Processing</strong>
                 <ul>
@@ -224,7 +224,7 @@
 
               <label class="language-output" for="studio-output-format">
                 <span>Choose output format</span>
-                <select id="studio-output-format">
+                <select id="studio-output-format" aria-describedby="studio-output-helper">
                   <option value="txt">Text summary - included</option>
                   <option value="csv" data-required-access="3">Cleaned CSV export - requires Tier 1 Level 3+</option>
                   <option value="pdf" data-required-access="3">PDF report - requires Tier 1 Level 3+</option>
@@ -234,6 +234,7 @@
                   <option value="workflow_package" data-required-access="7">Workflow package - requires Tier 3</option>
                   <option value="advanced_analytics" data-required-access="8">Advanced analytics export - requires Tier 4</option>
                 </select>
+                <small id="studio-output-helper" class="studio-output-helper">Pick the output you want. The preview level updates automatically.</small>
               </label>
             </div>
 
@@ -288,7 +289,7 @@
       </nav>
     </footer>
 
-    <script src="script-20260610.js?v=20260708-studio-branding"></script>
+    <script src="script-20260610.js?v=20260708-studio-oneflow"></script>
     <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   </body>
 </html>
