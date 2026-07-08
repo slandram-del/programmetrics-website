@@ -1,4 +1,4 @@
-﻿const serviceDetails = {
+const serviceDetails = {
   dashboards: {
     title: "Custom built dashboards",
     text:
@@ -317,6 +317,7 @@ function setupFileConverter(inputId, resultId, languageId, formatId, buttonId, a
   const updateResult = () => {
     if (inputId === "studio-file-converter-input" && input.files && input.files[0]) {
       activeStudioExampleAnalysis = null;
+      activeStudioUploadedAnalysis = null;
     }
     const file = input.files && input.files[0];
     const selectedLanguage = language ? language.value : "English";
@@ -376,8 +377,8 @@ function setupFileConverter(inputId, resultId, languageId, formatId, buttonId, a
   };
 
   const convertFile = async () => {
-    if (inputId === "studio-file-converter-input" && downloadGeneratedExampleReport()) {
-      result.textContent = "Watermarked generated example report downloaded.";
+    if (inputId === "studio-file-converter-input") {
+      await studioDownloadCurrentOutput(input, result, format, language, button, convertLabel);
       return;
     }
     if (button) {
@@ -406,9 +407,8 @@ function setupFileConverter(inputId, resultId, languageId, formatId, buttonId, a
   };
 
   const analyzeFile = async () => {
-    if (inputId === "studio-file-converter-input" && activeStudioExampleAnalysis) {
-      loadGeneratedStudioExample();
-      result.textContent = "Generated example preview refreshed for the selected template and upgrade preview level.";
+    if (inputId === "studio-file-converter-input") {
+      await analyzeStudioUploadedFile(input, result, analyzeButton, analyzeLabel, insightPanel);
       return;
     }
     if (analyzeButton) {
@@ -547,7 +547,8 @@ function setupStudioPackageAccess() {
     const access = unlocked.access;
 
     if (packageCard) {
-      packageCard.innerHTML = `<strong>Unlocked for real uploads:</strong> ${escapeHtml(unlocked.label)}<br><strong>Upgrade example preview:</strong> ${escapeHtml(preview.label)}<br><small>Locked upgrades can be previewed with generated example data only. Real uploads stay limited to the unlocked checkout level.</small>`;
+      const lockedPreview = shouldWatermark(preview, unlocked);
+      packageCard.innerHTML = `<strong>Unlocked:</strong> ${escapeHtml(unlocked.label)}<br><strong>Previewing:</strong> ${escapeHtml(preview.label)}<br><small>${lockedPreview ? "Preview only - upgrade to export. Uploaded data stays limited, watermarked, and locked for premium sections." : "Outputs included in this unlocked level can be downloaded from this browser session."}</small>`;
     }
 
     if (packageLabel) {
@@ -559,16 +560,10 @@ function setupStudioPackageAccess() {
       const unlockedItem = access >= required;
       item.classList.toggle("is-locked", !unlockedItem);
       item.classList.toggle("is-unlocked", unlockedItem);
-
-      if (item.tagName === "OPTION") {
-        item.disabled = !unlockedItem;
-      } else if (item.matches("button, input, select, textarea")) {
-        item.disabled = !unlockedItem;
-        item.setAttribute("aria-disabled", String(!unlockedItem));
+      if (item.tagName !== "OPTION") {
+        item.dataset.lockMessage = unlockedItem ? "Unlocked" : `Full export requires ${getLevelLabelByAccess(required)}`;
       }
     });
-
-    document.querySelectorAll("#studio-output-language, #studio-output-format").forEach(resetLockedSelect);
   };
 
   accessSelect?.addEventListener("change", applyAccess);
@@ -702,6 +697,470 @@ function getStudioAccess() {
   const selected = studioPackageSummaries[packageSelect?.value] || getUnlockedStudioAccess();
   return selected;
 }
+let activeStudioUploadedAnalysis = null;
+
+const studioFeatureRequirements = {
+  upload: 1,
+  conversion: 1,
+  duplicateChecks: 2,
+  missingReview: 2,
+  cleanupNotes: 2,
+  cleanedExport: 3,
+  report: 3,
+  dashboard: 3,
+  branded: 4,
+  jsonPackage: 4,
+  translatedReport: 5,
+  reusableWorkflow: 5,
+  recurringReport: 6,
+  workflowActivation: 7,
+  advancedAnalytics: 8,
+};
+
+const studioOutputRequirements = {
+  txt: 1,
+  csv: 3,
+  cleaned_csv: 3,
+  pdf: 3,
+  html: 3,
+  json: 4,
+  branded_report: 4,
+  translated_report: 5,
+  reusable_workflow: 5,
+  recurring_report: 6,
+  workflow_activation: 7,
+  advanced_analytics: 8,
+};
+
+function accessValue(level) {
+  if (typeof level === "number") return level;
+  if (typeof level === "string") return studioPackageSummaries[level]?.access || 0;
+  return Number(level?.access || 0);
+}
+
+function getLevelLabelByAccess(requiredAccess) {
+  const entry = Object.values(studioPackageSummaries).find((plan) => plan.access === Number(requiredAccess));
+  return entry ? entry.label : `Tier access ${requiredAccess}`;
+}
+
+function canUploadRealFile(unlockedLevel) {
+  return accessValue(unlockedLevel) >= studioFeatureRequirements.upload;
+}
+
+function canPreviewFeature(feature, selectedPreviewLevel) {
+  return accessValue(selectedPreviewLevel) >= (studioFeatureRequirements[feature] || 1);
+}
+
+function canDownloadOutput(outputType, unlockedLevel) {
+  return accessValue(unlockedLevel) >= getRequiredLevelForOutput(outputType);
+}
+
+function canUseFullRows(unlockedLevel) {
+  return accessValue(unlockedLevel) >= studioFeatureRequirements.cleanedExport;
+}
+
+function shouldWatermark(selectedPreviewLevel, unlockedLevel) {
+  return accessValue(selectedPreviewLevel) > accessValue(unlockedLevel);
+}
+
+function getRequiredLevelForOutput(outputType) {
+  return studioOutputRequirements[outputType] || 1;
+}
+
+function getPreviewLimitRows(unlockedLevel, selectedPreviewLevel) {
+  const unlocked = accessValue(unlockedLevel);
+  const preview = accessValue(selectedPreviewLevel);
+  if (preview > unlocked) return 25;
+  if (unlocked >= studioFeatureRequirements.cleanedExport) return 250;
+  if (unlocked >= studioFeatureRequirements.duplicateChecks) return 50;
+  return 25;
+}
+
+function parseCsvLine(line) {
+  const values = [];
+  let current = "";
+  let quoted = false;
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    const next = line[index + 1];
+    if (char === '"' && quoted && next === '"') {
+      current += '"';
+      index += 1;
+    } else if (char === '"') {
+      quoted = !quoted;
+    } else if (char === "," && !quoted) {
+      values.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  values.push(current.trim());
+  return values;
+}
+
+function rowsFromDelimitedText(text) {
+  const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim().length);
+  if (!lines.length) return [];
+  const headers = parseCsvLine(lines[0]).map((header, index) => header || `Column ${index + 1}`);
+  return lines.slice(1).map((line) => {
+    const values = parseCsvLine(line);
+    return headers.reduce((row, header, index) => {
+      row[header] = values[index] ?? "";
+      return row;
+    }, {});
+  });
+}
+
+function rowsFromJsonText(text) {
+  const parsed = JSON.parse(text);
+  const records = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.data) ? parsed.data : [parsed];
+  return records.map((record) => {
+    if (record && typeof record === "object" && !Array.isArray(record)) return record;
+    return { value: record };
+  });
+}
+
+function rowsFromPlainText(text) {
+  return text.split(/\r?\n/).filter((line) => line.trim()).map((line, index) => ({ line: index + 1, text: line.trim() }));
+}
+
+function normalizeRows(rows) {
+  const columns = Array.from(rows.reduce((set, row) => {
+    Object.keys(row || {}).forEach((key) => set.add(key));
+    return set;
+  }, new Set()));
+  return rows.map((row) => columns.reduce((clean, column) => {
+    clean[column] = row?.[column] ?? "";
+    return clean;
+  }, {}));
+}
+
+function duplicateRowCount(rows) {
+  const seen = new Set();
+  let duplicates = 0;
+  rows.forEach((row) => {
+    const key = JSON.stringify(row);
+    if (seen.has(key)) duplicates += 1;
+    seen.add(key);
+  });
+  return duplicates;
+}
+
+function numericColumnSummary(rows, columns) {
+  return columns.reduce((summary, column) => {
+    const values = rows.map((row) => Number(row[column])).filter((value) => Number.isFinite(value));
+    if (values.length >= Math.max(2, Math.round(rows.length * 0.35))) {
+      const sorted = values.slice().sort((a, b) => a - b);
+      summary[column] = {
+        min: sorted[0],
+        max: sorted[sorted.length - 1],
+        mean: values.reduce((total, value) => total + value, 0) / values.length,
+        median: sorted[Math.floor(sorted.length / 2)],
+      };
+    }
+    return summary;
+  }, {});
+}
+
+function buildStudioAnalysisFromRows(rows, file, sourceKind) {
+  const unlocked = getUnlockedStudioAccess();
+  const preview = getStudioAccess();
+  const normalizedRows = normalizeRows(rows).slice(0, 2000);
+  const columns = normalizedRows.length ? Object.keys(normalizedRows[0]) : [];
+  const missingValues = columns.reduce((counts, column) => {
+    counts[column] = normalizedRows.filter((row) => String(row[column] ?? "").trim() === "").length;
+    return counts;
+  }, {});
+  const numericSummary = numericColumnSummary(normalizedRows, columns);
+  const numericColumns = Object.keys(numericSummary);
+  const categorySummary = {};
+  columns.filter((column) => !numericColumns.includes(column)).slice(0, 4).forEach((column) => {
+    categorySummary[column] = countValues(normalizedRows.slice(0, 250), column);
+  });
+  const missingTotal = Object.values(missingValues).reduce((total, count) => total + Number(count || 0), 0);
+  const duplicates = duplicateRowCount(normalizedRows);
+  const qualityPenalty = Math.min(65, Math.round((missingTotal / Math.max(1, normalizedRows.length * Math.max(1, columns.length))) * 45) + Math.min(20, duplicates * 2));
+  const qualityScore = Math.max(35, 100 - qualityPenalty);
+  const previewLimit = getPreviewLimitRows(unlocked, preview);
+  const locked = shouldWatermark(preview, unlocked);
+  const cleaningSteps = [
+    "Detected fields and table shape from the uploaded file",
+    canPreviewFeature("duplicateChecks", preview) ? "Reviewed duplicate records" : "Duplicate checks are preview-locked until Tier 1 Level 2",
+    canPreviewFeature("missingReview", preview) ? "Counted missing values by field" : "Missing-value review is preview-locked until Tier 1 Level 2",
+    canPreviewFeature("cleanedExport", preview) ? "Prepared cleaned-export preview" : "Cleaned export requires Tier 1 Level 3",
+    canPreviewFeature("branded", preview) ? "Mapped branded report sections" : "Branded report structure requires Tier 2 Level 1",
+    canPreviewFeature("translatedReport", preview) ? "Prepared translated report setup preview" : "Translated report setup requires Tier 2 Level 2",
+    canPreviewFeature("recurringReport", preview) ? "Outlined recurring report setup" : "Recurring report setup requires Tier 2 Level 3",
+    canPreviewFeature("workflowActivation", preview) ? "Mapped workflow activation steps" : "Workflow activation requires Tier 3",
+    canPreviewFeature("advancedAnalytics", preview) ? "Previewed advanced analytics signals" : "Advanced analytics export requires Tier 4",
+  ];
+
+  return {
+    is_example: false,
+    source_kind: sourceKind,
+    source_file: file?.name || "Uploaded file",
+    file_size: file ? formatFileSize(file.size) : "Browser session",
+    rows: normalizedRows.length,
+    columns: columns.length,
+    column_names: columns,
+    detected_fields: columns,
+    duplicate_rows: canPreviewFeature("duplicateChecks", preview) ? duplicates : "Preview locked",
+    missing_values: canPreviewFeature("missingReview", preview) ? missingValues : {},
+    missing_value_count: missingTotal,
+    numeric_summary: canPreviewFeature("advancedAnalytics", preview) ? numericSummary : {},
+    category_summary: categorySummary,
+    preview_rows: normalizedRows.slice(0, previewLimit),
+    preview_limit: previewLimit,
+    quality_score: canPreviewFeature("missingReview", preview) ? qualityScore : "Preview locked",
+    cleaning_steps: cleaningSteps,
+    package_label: preview.label,
+    unlocked_label: unlocked.label,
+    preview_label: preview.label,
+    watermark: locked,
+    locked,
+    answer: locked
+      ? `Previewing ${preview.label} with uploaded data. Preview only - upgrade to export full outputs, reusable reports, workflow activation, or advanced analytics.`
+      : `Unlocked ${unlocked.label} is active. Outputs included in this level can be downloaded from this browser session.`,
+  };
+}
+
+function readStudioFileAsAnalysis(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const text = String(reader.result || "");
+        const extension = file.name.includes(".") ? file.name.split(".").pop().toLowerCase() : "txt";
+        let rows;
+        let sourceKind;
+        if (extension === "json") {
+          rows = rowsFromJsonText(text);
+          sourceKind = "JSON";
+        } else if (["csv", "tsv"].includes(extension)) {
+          rows = rowsFromDelimitedText(extension === "tsv" ? text.replace(/\t/g, ",") : text);
+          sourceKind = extension.toUpperCase();
+        } else {
+          rows = rowsFromPlainText(text);
+          sourceKind = "Text";
+        }
+        resolve(buildStudioAnalysisFromRows(rows, file, sourceKind));
+      } catch (error) {
+        reject(error);
+      }
+    };
+    reader.onerror = () => reject(new Error("The file could not be read in this browser session."));
+    reader.readAsText(file);
+  });
+}
+
+async function analyzeStudioUploadedFile(input, result, analyzeButton, analyzeLabel, insightPanel) {
+  const file = input.files && input.files[0];
+  if (!canUploadRealFile(getUnlockedStudioAccess())) {
+    result.textContent = "Upload requires Tier 1 Level 1 access.";
+    return;
+  }
+  if (!file) {
+    result.textContent = "Choose or drop a file first.";
+    return;
+  }
+  activeStudioExampleAnalysis = null;
+  if (analyzeButton) {
+    analyzeButton.disabled = true;
+    analyzeButton.textContent = "Previewing...";
+  }
+  result.textContent = "Processing this file in the current browser session...";
+  try {
+    activeStudioUploadedAnalysis = await readStudioFileAsAnalysis(file);
+    renderInsightPanel(insightPanel, activeStudioUploadedAnalysis);
+    const limit = activeStudioUploadedAnalysis.preview_limit;
+    result.textContent = `${activeStudioUploadedAnalysis.locked ? "Preview only - upgrade to export. " : "Preview generated. "}Showing first ${limit} rows from this browser session.`;
+  } catch (error) {
+    result.textContent = `${error.message} CSV, JSON, and plain text files can be previewed directly in the browser session.`;
+  } finally {
+    if (analyzeButton) {
+      analyzeButton.disabled = false;
+      analyzeButton.textContent = analyzeLabel;
+    }
+  }
+}
+
+function csvFromRows(rows) {
+  if (!rows.length) return "";
+  const columns = Object.keys(rows[0]);
+  const quote = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+  return [columns.map(quote).join(",")].concat(rows.map((row) => columns.map((column) => quote(row[column])).join(","))).join("\n");
+}
+
+function reportHtmlFromAnalysis(analysis, formatLabel) {
+  const columns = (analysis.preview_rows?.length ? Object.keys(analysis.preview_rows[0]) : []).slice(0, 8);
+  const head = columns.map((column) => `<th>${escapeHtml(column)}</th>`).join("");
+  const body = (analysis.preview_rows || []).map((row) => `<tr>${columns.map((column) => `<td>${escapeHtml(row[column])}</td>`).join("")}</tr>`).join("");
+  const watermark = analysis.watermark ? "body:before{content:'ProgramMetrics Preview';position:fixed;top:42%;left:-10%;right:-10%;transform:rotate(-28deg);font-size:82px;font-weight:900;color:rgba(37,99,235,.16);z-index:9999;pointer-events:none;white-space:nowrap}" : "";
+  return `<!doctype html><html><head><meta charset="utf-8"><title>ProgramMetrics Studio ${escapeHtml(formatLabel)}</title><style>body{font-family:Arial,sans-serif;margin:36px;color:#071525;background:#f8fafc;line-height:1.5;position:relative}${watermark}.card,section{background:#fff;border:1px solid #dbe4ef;border-radius:8px;padding:18px;margin:14px 0}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.kpis strong{display:block;color:#2563eb;font-size:28px}table{width:100%;border-collapse:collapse;background:#fff}th,td{border:1px solid #dbe4ef;padding:8px;text-align:left;font-size:13px}th{background:#eef6ff}</style></head><body><h1>ProgramMetrics Studio ${escapeHtml(formatLabel)}</h1><p><strong>Unlocked:</strong> ${escapeHtml(analysis.unlocked_label)} | <strong>Previewing:</strong> ${escapeHtml(analysis.preview_label)}</p><p>${escapeHtml(analysis.answer)}</p><div class="kpis"><div class="card"><strong>${escapeHtml(analysis.rows)}</strong>Rows</div><div class="card"><strong>${escapeHtml(analysis.columns)}</strong>Columns</div><div class="card"><strong>${escapeHtml(analysis.duplicate_rows)}</strong>Duplicates</div><div class="card"><strong>${escapeHtml(analysis.quality_score)}</strong>Quality score</div></div><section><h2>Session preview rows</h2><p>Showing first ${escapeHtml(analysis.preview_limit)} rows.</p><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></section></body></html>`;
+}
+
+async function studioDownloadCurrentOutput(input, result, format, language, button, convertLabel) {
+  const outputType = format ? format.value : "txt";
+  const unlocked = getUnlockedStudioAccess();
+  const required = getRequiredLevelForOutput(outputType);
+  if (!canDownloadOutput(outputType, unlocked)) {
+    result.innerHTML = `Preview only - upgrade to export. <strong>${escapeHtml(format?.options[format.selectedIndex]?.text || outputType)}</strong> requires ${escapeHtml(getLevelLabelByAccess(required))}.`;
+    return;
+  }
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Preparing...";
+  }
+  try {
+    if (!activeStudioUploadedAnalysis) {
+      const file = input.files && input.files[0];
+      if (!file) {
+        result.textContent = "Choose a file and generate a preview first.";
+        return;
+      }
+      activeStudioUploadedAnalysis = await readStudioFileAsAnalysis(file);
+    }
+    const analysis = activeStudioUploadedAnalysis;
+    let blob;
+    let filename;
+    if (outputType === "csv") {
+      blob = new Blob([csvFromRows(analysis.preview_rows || [])], { type: "text/csv;charset=utf-8" });
+      filename = "programmetrics-cleaned-preview.csv";
+    } else if (outputType === "json") {
+      blob = new Blob([JSON.stringify({ analysis, language: language?.value || "English" }, null, 2)], { type: "application/json;charset=utf-8" });
+      filename = "programmetrics-studio-package.json";
+    } else if (["html", "pdf"].includes(outputType)) {
+      blob = new Blob([reportHtmlFromAnalysis(analysis, outputType === "pdf" ? "PDF-ready report" : "HTML report")], { type: "text/html;charset=utf-8" });
+      filename = outputType === "pdf" ? "programmetrics-pdf-ready-report.html" : "programmetrics-report.html";
+    } else {
+      const text = `${analysis.source_file}\nUnlocked: ${analysis.unlocked_label}\nPreviewing: ${analysis.preview_label}\nRows: ${analysis.rows}\nColumns: ${analysis.columns}\nQuality score: ${analysis.quality_score}\n\n${analysis.cleaning_steps.join("\n")}`;
+      blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      filename = "programmetrics-session-summary.txt";
+    }
+    downloadBlob(blob, filename);
+    result.textContent = `Unlocked download prepared: ${filename}. Download any outputs before ending your session.`;
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = convertLabel;
+    }
+  }
+}
+
+function renderStudioDashboardPreview(analysis) {
+  const shell = document.getElementById("studio-preview-shell");
+  const empty = document.getElementById("studio-preview-empty");
+  if (!shell || !analysis) return;
+  if (empty) empty.style.display = "none";
+
+  const unlocked = getUnlockedStudioAccess();
+  const preview = getStudioAccess();
+  const locked = shouldWatermark(preview, unlocked) || Boolean(analysis.watermark);
+  const missingEntries = Object.entries(analysis.missing_values || {}).filter(([, count]) => Number(count) > 0);
+  const categoryEntries = Object.entries(analysis.category_summary || {});
+  const previewRows = analysis.preview_rows || [];
+  const previewColumns = previewRows.length ? Object.keys(previewRows[0]).slice(0, 6) : [];
+
+  shell.replaceChildren();
+  shell.classList.add("visible");
+  shell.classList.toggle("is-watermarked", locked);
+
+  const status = document.createElement("div");
+  status.className = "studio-preview-status";
+  status.innerHTML = `<span>Unlocked: ${escapeHtml(unlocked.label)}</span><span>Previewing: ${escapeHtml(preview.label)}</span><strong>${locked ? "Preview only - upgrade to export" : "Downloads unlocked for included outputs"}</strong>`;
+  shell.appendChild(status);
+
+  const header = document.createElement("div");
+  header.className = "dashboard-preview-header";
+  header.innerHTML = `<span>Dashboard-ready preview</span><strong>${escapeHtml(analysis.source_file || "Uploaded file")}</strong><small>${escapeHtml(analysis.file_size || "Current browser session")} | Showing first ${escapeHtml(analysis.preview_limit || previewRows.length || 0)} rows</small>`;
+  shell.appendChild(header);
+
+  const stats = document.createElement("div");
+  stats.className = "dashboard-kpi-grid";
+  [
+    ["Rows", analysis.rows ?? 0],
+    ["Columns", analysis.columns ?? 0],
+    ["Missing Values", canPreviewFeature("missingReview", preview) ? analysis.missing_value_count ?? 0 : "Locked"],
+    ["Quality Score", canPreviewFeature("missingReview", preview) ? analysis.quality_score ?? "-" : "Locked"],
+  ].forEach(([label, value]) => {
+    const card = document.createElement("div");
+    card.className = "dashboard-kpi-card";
+    card.innerHTML = `<strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span>`;
+    stats.appendChild(card);
+  });
+  shell.appendChild(stats);
+
+  const fieldsPanel = document.createElement("section");
+  fieldsPanel.className = "dashboard-preview-panel";
+  fieldsPanel.innerHTML = `<h4>Detected fields</h4><p>${(analysis.detected_fields || analysis.column_names || []).slice(0, 12).map(escapeHtml).join(", ") || "No fields detected yet."}</p>`;
+  shell.appendChild(fieldsPanel);
+
+  const answerPanel = document.createElement("section");
+  answerPanel.className = "dashboard-preview-panel";
+  answerPanel.innerHTML = `<h4>What this dashboard tells me</h4><p>${escapeHtml(analysis.answer || "ProgramMetrics analyzed the file and prepared a dashboard-ready summary.")}</p>`;
+  shell.appendChild(answerPanel);
+
+  const visualGrid = document.createElement("div");
+  visualGrid.className = "dashboard-visual-grid";
+  const categoryPanel = document.createElement("section");
+  categoryPanel.className = "dashboard-preview-panel";
+  categoryPanel.innerHTML = "<h4>Basic chart preview</h4>";
+  if (categoryEntries.length) {
+    const [column, counts] = categoryEntries[0];
+    const maxCount = Math.max(...Object.values(counts).map(Number), 1);
+    categoryPanel.innerHTML += `<p class="dashboard-chart-label">${escapeHtml(column)}</p>`;
+    Object.entries(counts).slice(0, 6).forEach(([name, count]) => {
+      categoryPanel.innerHTML += `<div class="dashboard-bar-row"><span>${escapeHtml(name)}</span><div><i style="width:${Math.max(8, Math.round((Number(count) / maxCount) * 100))}%"></i></div><b>${escapeHtml(count)}</b></div>`;
+    });
+  } else {
+    categoryPanel.innerHTML += "<p>No categorical chart fields were detected yet.</p>";
+  }
+  visualGrid.appendChild(categoryPanel);
+
+  const missingPanel = document.createElement("section");
+  missingPanel.className = `dashboard-preview-panel${canPreviewFeature("missingReview", preview) ? "" : " locked-preview-panel"}`;
+  missingPanel.innerHTML = `<h4>Missing-value review</h4>${canPreviewFeature("missingReview", preview) ? "" : `<p>Full missing-value review requires ${escapeHtml(getLevelLabelByAccess(2))}.</p><a class="button mini secondary-mini" href="checkout.html?plan=t1l2">Unlock download</a>`}`;
+  if (canPreviewFeature("missingReview", preview) && missingEntries.length) {
+    const maxMissing = Math.max(...missingEntries.map(([, count]) => Number(count)), 1);
+    missingEntries.slice(0, 6).forEach(([column, count]) => {
+      missingPanel.innerHTML += `<div class="dashboard-bar-row missing-bar"><span>${escapeHtml(column)}</span><div><i style="width:${Math.max(8, Math.round((Number(count) / maxMissing) * 100))}%"></i></div><b>${escapeHtml(count)}</b></div>`;
+    });
+  } else if (canPreviewFeature("missingReview", preview)) {
+    missingPanel.innerHTML += "<p>No missing values were detected in table-ready fields.</p>";
+  }
+  visualGrid.appendChild(missingPanel);
+  shell.appendChild(visualGrid);
+
+  const premiumPanels = [
+    ["branded", "Branded report structure", 4, "Reusable report framing, cover sections, and client-ready layout."],
+    ["translatedReport", "Translated report setup", 5, "Language-ready labels, summary sections, and reusable export workflow."],
+    ["recurringReport", "Recurring report setup", 6, "Recurring quality rules, cadence notes, and repeatable report sections."],
+    ["workflowActivation", "Workflow system preview", 7, "Workflow triggers, ownership steps, and activation/export map."],
+    ["advancedAnalytics", "Advanced analytics preview", 8, "Signals, segments, and advanced export planning."],
+  ];
+  premiumPanels.forEach(([feature, title, required, text]) => {
+    if (!canPreviewFeature(feature, preview) && accessValue(preview) < required - 1) return;
+    const panel = document.createElement("section");
+    panel.className = `dashboard-preview-panel${canPreviewFeature(feature, preview) ? "" : " locked-preview-panel"}`;
+    panel.innerHTML = `<h4>${escapeHtml(title)}</h4><p>${escapeHtml(text)}</p>${canPreviewFeature(feature, preview) ? `<small>${locked ? "ProgramMetrics Preview watermark applies until this level is unlocked." : "Unlocked for this level."}</small>` : `<a class="button mini secondary-mini" href="checkout.html?plan=${Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === required) || "t2l1"}">Unlock download</a>`}`;
+    shell.appendChild(panel);
+  });
+
+  const cleaningPanel = document.createElement("section");
+  cleaningPanel.className = "dashboard-preview-panel";
+  cleaningPanel.innerHTML = `<h4>Automatic cleaning checks</h4><ul>${(analysis.cleaning_steps || []).map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ul>`;
+  shell.appendChild(cleaningPanel);
+
+  if (previewRows.length && previewColumns.length) {
+    const tablePanel = document.createElement("section");
+    tablePanel.className = `dashboard-preview-panel dashboard-table-panel${locked ? " locked-preview-panel" : ""}`;
+    const head = previewColumns.map((column) => `<th>${escapeHtml(column)}</th>`).join("");
+    const rows = previewRows.map((row) => `<tr>${previewColumns.map((column) => `<td>${escapeHtml(row[column] ?? "")}</td>`).join("")}</tr>`).join("");
+    tablePanel.innerHTML = `<h4>Data preview</h4><p>Showing first ${escapeHtml(analysis.preview_limit || previewRows.length)} rows.</p><div class="dashboard-table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>${locked ? `<a class="button mini secondary-mini" href="checkout.html?plan=${Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === preview.access) || "t1l3"}">Unlock download</a>` : ""}`;
+    shell.appendChild(tablePanel);
+  }
+}
 function countValues(rows, column) {
   return rows.reduce((counts, row) => {
     const value = String(row[column] || "Missing");
@@ -802,6 +1261,23 @@ function setupGeneratedStudioExamples() {
   const exampleButton = document.getElementById("studio-example-button");
   const packageSelect = document.getElementById("studio-package-select");
   const templateSelect = document.getElementById("studio-template-type");
+  const input = document.getElementById("studio-file-converter-input");
+  const result = document.getElementById("studio-converter-result");
+  const panel = document.getElementById("studio-insight-panel");
+
+  const refreshUploadedPreview = () => {
+    if (!activeStudioUploadedAnalysis || !input?.files?.[0]) return;
+    readStudioFileAsAnalysis(input.files[0]).then((analysis) => {
+      activeStudioUploadedAnalysis = analysis;
+      renderInsightPanel(panel, analysis);
+      if (result) {
+        result.textContent = `${analysis.locked ? "Preview only - upgrade to export. " : "Preview refreshed. "}Showing first ${analysis.preview_limit} rows.`;
+      }
+    }).catch((error) => {
+      if (result) result.textContent = error.message;
+    });
+  };
+
   if (exampleButton) {
     exampleButton.addEventListener("click", loadGeneratedStudioExample);
   }
@@ -810,6 +1286,8 @@ function setupGeneratedStudioExamples() {
       select.addEventListener("change", () => {
         if (activeStudioExampleAnalysis) {
           loadGeneratedStudioExample();
+        } else {
+          refreshUploadedPreview();
         }
       });
     }

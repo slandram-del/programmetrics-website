@@ -2356,3 +2356,79 @@ input.is-locked {
   }
 }
 
+
+.studio-preview-status {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  color: var(--navy);
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  border-radius: 8px;
+  font-size: 0.92rem;
+}
+
+.studio-preview-status span,
+.studio-preview-status strong {
+  display: block;
+}
+
+.studio-preview-status strong {
+  color: #115e59;
+}
+
+.studio-preview-shell.is-watermarked {
+  position: relative;
+}
+
+.studio-preview-shell.is-watermarked::before {
+  content: "ProgramMetrics Preview";
+  position: sticky;
+  top: 84px;
+  z-index: 5;
+  display: block;
+  margin: 0 0 -44px;
+  padding: 10px 14px;
+  color: rgba(37, 99, 235, 0.86);
+  background: rgba(239, 246, 255, 0.92);
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 8px;
+  font-weight: 900;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  pointer-events: none;
+}
+
+.locked-preview-panel {
+  position: relative;
+  overflow: hidden;
+  border-style: dashed;
+  background: #f8fafc;
+}
+
+.locked-preview-panel p,
+.locked-preview-panel li,
+.locked-preview-panel .dashboard-bar-row,
+.locked-preview-panel .dashboard-table-wrap {
+  user-select: none;
+}
+
+.locked-preview-panel .dashboard-table-wrap {
+  max-height: 260px;
+  filter: blur(0.4px);
+}
+
+.locked-preview-panel::after {
+  content: "Preview only - upgrade to export";
+  display: block;
+  margin-top: 10px;
+  color: #1d4ed8;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.dashboard-preview-header small {
+  color: #cbd5e1;
+  font-weight: 800;
+}

@@ -15,7 +15,7 @@
     <meta http-equiv="pragma" content="no-cache" />
     <meta http-equiv="expires" content="0" />
 
-    <link rel="stylesheet" href="styles-20260610.css?v=20260707-latest" />
+    <link rel="stylesheet" href="styles-20260610.css?v=20260708-studio-access" />
   </head>
 
   <body>
@@ -55,9 +55,7 @@
             <p class="badge">ProgramMetrics Studio</p>
             <h1>Upload files. Clean data. Preview dashboard-ready reports.</h1>
             <p class="hero-subtitle">
-              This is the working Studio. Choose a package level, select a reporting template,
-              upload a real file or view a ProgramMetrics generated example, then preview quality checks,
-              category charts, insight notes, and report/export options.
+              This is the working Studio. Upload a real file, choose the Studio level you want to preview, and see quality checks, charts, insight notes, and locked report/export options before upgrading.
             </p>
             <div class="hero-actions">
               <a class="button primary" href="#studio-workspace">Open Studio Workspace</a>
@@ -74,7 +72,7 @@
         <div class="section-title reveal">
           <h2>Studio workspace</h2>
           <p>
-            Real uploads only use the customer's unlocked Studio level. Higher levels stay visible as upgrade previews, and generated examples can show what those higher levels look like without unlocking real-file features. Uploaded files are processed for the session, used to generate the selected preview or download, and are not saved as a ProgramMetrics file store.
+            Uploaded files can power in-session previews across Studio tiers. Downloads, full exports, reusable reports, workflow activation, and advanced analytics output stay locked until the required paid tier and level are unlocked.
           </p>
         </div>
 
@@ -82,7 +80,7 @@
           <article class="studio-control-panel reveal">
             <p class="template-label" id="studio-package-label">Selected package</p>
             <h3>Build a report-ready file</h3>
-            <p>Use unlocked access for real uploads. Use upgrade preview to see higher-tier examples without unlocking those real-file features.</p>
+            <p>Preview higher Studio levels with the uploaded file, then unlock the required level to download usable outputs.</p>
 
             <div class="studio-package-picker">
               <label class="language-output" for="studio-access-select">
@@ -100,7 +98,7 @@
               </label>
 
               <label class="language-output" for="studio-package-select">
-                <span>Preview upgrade with example data</span>
+                <span>Preview Studio level</span>
                 <select id="studio-package-select">
                   <option value="t1l1" data-access="1">Tier 1 Level 1 - $49</option>
                   <option value="t1l2" data-access="2">Tier 1 Level 2 - $99</option>
@@ -113,22 +111,23 @@
                 </select>
               </label>
               <div class="active-package-card" id="active-package-card" aria-live="polite">
-                Unlocked for real uploads: Tier 1 Level 1. Upgrade previews use generated example data only.
+                Unlocked: Tier 1 Level 1 - $49. Previewing: Tier 1 Level 1 - $49.
               </div>
               <div class="studio-security-rules">
-                <strong>Privacy and access rules</strong>
+                <strong>Privacy &amp; Session Processing</strong>
                 <ul>
-                  <li>Real uploads only use the paid Studio level unlocked by checkout.</li>
-                  <li>Higher tiers can be previewed with generated example data, not real customer uploads.</li>
-                  <li>Uploaded files are processed for the active session and are not kept as a ProgramMetrics file store.</li>
-                  <li>Download needed outputs before leaving the session.</li>
+                  <li>Your uploaded file is processed only for your current browser session.</li>
+                  <li>Files are not stored as customer projects or long-term ProgramMetrics data.</li>
+                  <li>Previews can use your uploaded data with feature limits based on your Studio level.</li>
+                  <li>Downloads, exports, and premium processing are available according to your unlocked Studio level.</li>
+                  <li>Download any outputs before ending your session.</li>
                 </ul>
               </div>
               <div class="studio-example-actions">
                 <button class="button mini secondary-mini" id="studio-example-button" type="button">
                   View generated example
                 </button>
-                <small>Examples can preview any tier and download only with a large ProgramMetrics.io watermark.</small>
+                <small>Generated examples are still available, but uploaded files now power tier previews in-session.</small>
               </div>
             </div>
 
@@ -148,7 +147,7 @@
 
             <label class="upload-zone" for="studio-file-converter-input">
               <span>Choose a file</span>
-              <small>Drag and drop or choose a business file. It is used for this session's preview or download, then it is gone from ProgramMetrics processing.</small>
+              <small>Drag and drop or choose a CSV, JSON, or text file for browser-session preview. Exports unlock only at the required paid level.</small>
               <input id="studio-file-converter-input" type="file" />
             </label>
 
@@ -193,7 +192,7 @@
             </div>
 
             <div class="converter-actions studio-actions">
-              <button class="button mini converter-button" id="studio-analyze-button" type="button" data-required-access="2">
+              <button class="button mini converter-button" id="studio-analyze-button" type="button">
                 Generate dashboard preview
               </button>
               <button class="button mini secondary-mini converter-button" id="studio-convert-button" type="button">
@@ -203,16 +202,16 @@
 
             <div class="insight-panel" id="studio-insight-panel" aria-live="polite"></div>
             <div class="converter-result" id="studio-converter-result" aria-live="polite">
-              Upload a file using the unlocked level, or view a higher-tier generated example with a watermark.
+              Upload a file to preview Studio with your real data. Locked previews are watermarked and limited until upgraded.
             </div>
           </article>
 
           <aside class="studio-output-panel reveal">
             <p class="template-label">Dashboard preview</p>
-            <h3>Generated examples and uploaded files preview here</h3>
+            <h3>Uploaded-file previews appear here</h3>
             <div class="studio-preview-empty" id="studio-preview-empty">
               <strong>No preview yet.</strong>
-              <span>Click View generated example or upload a real file. ProgramMetrics will show KPIs, tier-specific features, data quality checks, category charts, and a sample table here without turning the upload into long-term stored customer data.</span>
+              <span>Upload a real file, choose a preview level, and ProgramMetrics will show KPIs, tier-specific features, quality checks, charts, and a limited sample table without storing the upload as long-term customer data.</span>
             </div>
             <div class="studio-preview-shell" id="studio-preview-shell" aria-live="polite"></div>
           </aside>
@@ -229,7 +228,7 @@
       </nav>
     </footer>
 
-    <script src="script-20260610.js?v=20260707-latest"></script>
+    <script src="script-20260610.js?v=20260708-studio-access"></script>
     <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   </body>
 </html>
