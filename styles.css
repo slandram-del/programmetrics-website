@@ -2827,3 +2827,105 @@ input.is-locked {
 .studio-status-card {
   margin-top: 0;
 }
+
+/* Studio feature-card flow */
+.studio-hidden-output-format {
+  display: none !important;
+}
+
+.feature-access-panel > p {
+  margin: -4px 0 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.feature-access-item {
+  appearance: none;
+  border: 1px solid var(--border);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.feature-access-item::after {
+  display: none !important;
+  content: none !important;
+}
+
+.feature-access-item:hover,
+.feature-access-item:focus-visible {
+  border-color: #5eead4;
+  box-shadow: 0 12px 28px rgba(20, 184, 166, 0.14);
+  outline: none;
+}
+
+.feature-access-item.is-selected {
+  border-color: #14b8a6;
+  background: #f0fdfa;
+  box-shadow: 0 16px 34px rgba(20, 184, 166, 0.16);
+}
+
+.feature-access-item.is-locked:not(.is-selected) {
+  opacity: 0.82;
+}
+
+.feature-status-badge {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #eef6ff;
+  color: #1d4ed8 !important;
+  font-weight: 900;
+  font-size: 0.78rem !important;
+}
+
+.feature-access-item.is-unlocked .feature-status-badge {
+  background: #ccfbf1;
+  color: #0f766e !important;
+}
+
+.feature-access-item.is-selected.is-locked .feature-status-badge {
+  background: #fef3c7;
+  color: #92400e !important;
+}
+
+.studio-selected-feature {
+  display: grid;
+  gap: 7px;
+  padding: 16px;
+  border: 1px solid #dbe4ef;
+  border-left: 6px solid #14b8a6;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.studio-selected-feature.is-locked {
+  border-left-color: #2563eb;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.studio-selected-feature span {
+  color: #0f766e;
+  font-weight: 900;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+.studio-selected-feature h4,
+.studio-selected-feature p {
+  margin: 0;
+}
+
+.studio-selected-feature h4 {
+  color: var(--navy);
+  font-size: 1.12rem;
+}
+
+.studio-selected-feature p,
+.studio-selected-feature small {
+  color: var(--muted);
+  line-height: 1.45;
+}

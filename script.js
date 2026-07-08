@@ -1,4 +1,4 @@
-const serviceDetails = {
+﻿const serviceDetails = {
   dashboards: {
     title: "Custom built dashboards",
     text:
@@ -186,7 +186,7 @@ function renderStudioDashboardPreview(analysis) {
 
   const header = document.createElement("div");
   header.className = "dashboard-preview-header";
-  header.innerHTML = `<span>Dashboard-ready preview</span><strong>${escapeHtml(analysis.source_file || "Uploaded file")}</strong>`;
+  header.innerHTML = `<span>Preview with your real file</span><strong>${escapeHtml(analysis.source_file || "Uploaded file")}</strong>`;
   shell.appendChild(header);
 
   const stats = document.createElement("div");
@@ -484,9 +484,20 @@ function setupFileConverter(inputId, resultId, languageId, formatId, buttonId, a
 let activeStudioExampleAnalysis = null;
 let activeStudioUploadedAnalysis = null;
 let activeBrandLogoDataUrl = "";
+let activeStudioFeatureKey = "conversion";
 
 setupFileConverter("file-converter-input", "converter-result", "file-output-language", "file-output-format", "file-convert-button", "file-analyze-button", "file-insight-panel");
 setupFileConverter("studio-file-converter-input", "studio-converter-result", "studio-output-language", "studio-output-format", "studio-convert-button", "studio-analyze-button", "studio-insight-panel");
+const studioFeatureCards = {
+  conversion: { title: "File upload and conversion", outputType: "txt", previewPlan: "t1l1", requiredAccess: 1, actionLabel: "Download summary", lockedAction: "Upgrade to export", lockedCopy: "Upload and preview are available. Upgrade only if you want a reusable export." },
+  duplicateChecks: { title: "Duplicate and missing-value checks", outputType: "duplicate_review", previewPlan: "t1l2", requiredAccess: 2, actionLabel: "Export review", lockedAction: "Upgrade to export", lockedCopy: "Your file preview is limited. Upgrade to export the full duplicate and missing-value review." },
+  dashboard: { title: "Cleaned export and dashboard summary", outputType: "dashboard_summary", previewPlan: "t1l3", requiredAccess: 3, actionLabel: "Export dashboard", lockedAction: "Upgrade to export", lockedCopy: "Your file preview is limited. Upgrade to export the cleaned file and dashboard summary." },
+  branded: { title: "Branded report structure", outputType: "branded_report", previewPlan: "t2l1", requiredAccess: 4, actionLabel: "Generate report", lockedAction: "Unlock this report", lockedCopy: "Your file preview is limited. Upgrade to export the full branded report." },
+  reusableWorkflow: { title: "Reusable report workflow", outputType: "reusable_workflow", previewPlan: "t2l2", requiredAccess: 5, actionLabel: "Export workflow", lockedAction: "Upgrade to export", lockedCopy: "Preview the setup now. Upgrade to export a reusable reporting workflow." },
+  recurringReport: { title: "Advanced quality review", outputType: "quality_review", previewPlan: "t2l3", requiredAccess: 6, actionLabel: "Export quality review", lockedAction: "Upgrade to export", lockedCopy: "Your file preview is limited. Upgrade to export the full quality review." },
+  workflowActivation: { title: "Workflow system preview", outputType: "workflow_package", previewPlan: "t3", requiredAccess: 7, actionLabel: "Export workflow package", lockedAction: "Upgrade to export", lockedCopy: "Preview the workflow logic now. Upgrade to export or activate the workflow package." },
+  advancedAnalytics: { title: "Advanced analytics preview", outputType: "advanced_analytics", previewPlan: "t4", requiredAccess: 8, actionLabel: "Export analytics", lockedAction: "Upgrade to export", lockedCopy: "Preview analytics from your file. Upgrade to export the full advanced analytics package." },
+};
 const studioPackageSummaries = {
   t1l1: { access: 1, label: "Tier 1 Level 1 - $49", summary: "Unlocks upload, basic conversion, browser preview, and standard downloads." },
   t1l2: { access: 2, label: "Tier 1 Level 2 - $99", summary: "Adds duplicate detection, missing-value checks, and cleanup notes." },
@@ -560,7 +571,7 @@ function setupStudioPackageAccess() {
     }
 
     if (packageLabel) {
-      packageLabel.textContent = `Unlocked: ${unlocked.label}`;
+      packageLabel.textContent = "Studio Workspace";
     }
 
     gatedItems.forEach((item) => {
@@ -733,6 +744,8 @@ const studioFeatureRequirements = {
 
 const studioOutputRequirements = {
   txt: 1,
+  duplicate_review: 2,
+  dashboard_summary: 3,
   csv: 3,
   cleaned_csv: 3,
   pdf: 3,
@@ -741,6 +754,7 @@ const studioOutputRequirements = {
   branded_report: 4,
   translated_report: 5,
   reusable_workflow: 5,
+  quality_review: 6,
   recurring_report: 6,
   workflow_activation: 7,
   workflow_package: 7,
@@ -774,6 +788,10 @@ async function runStudioStatusSteps(steps) {
     setStudioAnalysisStatus(step);
     await waitForStudioStatus();
   }
+}
+
+function getSelectedStudioFeature() {
+  return studioFeatureCards[activeStudioFeatureKey] || studioFeatureCards.conversion;
 }
 
 function updateStudioDownloadButton() {
@@ -882,7 +900,7 @@ function applyBrandingToPreview(brandingSettings) {
     ...branding,
     title: branding.reportName || "ProgramMetrics Studio Report",
     subtitle: branding.subtitle || "Dashboard preview from your uploaded file",
-    lockLabel: "Branding preview \u2014 export requires Tier 2 Level 1+",
+    lockLabel: "Branding preview \u2014 upgrade required to export",
   };
 }
 
@@ -992,6 +1010,7 @@ function numericColumnSummary(rows, columns) {
 function buildStudioAnalysisFromRows(rows, file, sourceKind) {
   const unlocked = getUnlockedStudioAccess();
   const preview = getStudioAccess();
+  const feature = getSelectedStudioFeature();
   const normalizedRows = normalizeRows(rows).slice(0, 2000);
   const columns = normalizedRows.length ? Object.keys(normalizedRows[0]) : [];
   const missingValues = columns.reduce((counts, column) => {
@@ -1012,14 +1031,14 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind) {
   const locked = shouldWatermark(preview, unlocked);
   const cleaningSteps = [
     "Detected fields and table shape from the uploaded file",
-    canPreviewFeature("duplicateChecks", preview) ? "Reviewed duplicate records" : "Duplicate checks are preview-locked until Tier 1 Level 2",
-    canPreviewFeature("missingReview", preview) ? "Counted missing values by field" : "Missing-value review is preview-locked until Tier 1 Level 2",
-    canPreviewFeature("cleanedExport", preview) ? "Prepared cleaned-export preview" : "Cleaned export requires Tier 1 Level 3",
-    canPreviewFeature("branded", preview) ? "Mapped branded report sections" : "Branded report structure requires Tier 2 Level 1",
-    canPreviewFeature("translatedReport", preview) ? "Prepared translated report setup preview" : "Translated report setup requires Tier 2 Level 2",
-    canPreviewFeature("recurringReport", preview) ? "Outlined recurring report setup" : "Recurring report setup requires Tier 2 Level 3",
-    canPreviewFeature("workflowActivation", preview) ? "Mapped workflow activation steps" : "Workflow activation requires Tier 3",
-    canPreviewFeature("advancedAnalytics", preview) ? "Previewed advanced analytics signals" : "Advanced analytics export requires Tier 4",
+    canPreviewFeature("duplicateChecks", preview) ? "Reviewed duplicate records" : "Duplicate checks are available in limited preview",
+    canPreviewFeature("missingReview", preview) ? "Counted missing values by field" : "Missing-value review is available in limited preview",
+    canPreviewFeature("cleanedExport", preview) ? "Prepared cleaned-export preview" : "Cleaned export can be previewed before purchase",
+    canPreviewFeature("branded", preview) ? "Mapped branded report sections" : "Branded report structure can be previewed before purchase",
+    canPreviewFeature("translatedReport", preview) ? "Prepared translated report setup preview" : "Translated report setup can be previewed before purchase",
+    canPreviewFeature("recurringReport", preview) ? "Outlined recurring report setup" : "Recurring report setup can be previewed before purchase",
+    canPreviewFeature("workflowActivation", preview) ? "Mapped workflow activation steps" : "Workflow setup can be previewed before purchase",
+    canPreviewFeature("advancedAnalytics", preview) ? "Previewed advanced analytics signals" : "Advanced analytics can be previewed before purchase",
   ];
 
   return {
@@ -1046,8 +1065,8 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind) {
     watermark: locked,
     locked,
     answer: locked
-      ? `Previewing ${preview.label} with uploaded data. Preview only - upgrade to export full outputs, reusable reports, workflow activation, or advanced analytics.`
-      : `Unlocked ${unlocked.label} is active. Outputs included in this level can be downloaded from this browser session.`,
+      ? `Previewing ${feature.title} with your uploaded data. This preview is limited and watermarked until you upgrade to export.`
+      : `${feature.title} is ready to export from this browser session.`,
   };
 }
 
@@ -1083,7 +1102,7 @@ function readStudioFileAsAnalysis(file) {
 async function analyzeStudioUploadedFile(input, result, analyzeButton, analyzeLabel, insightPanel) {
   const file = input.files && input.files[0];
   if (!canUploadRealFile(getUnlockedStudioAccess())) {
-    result.textContent = "Upload requires Tier 1 Level 1 access.";
+    result.textContent = "Upload is available in Studio. Choose a file to begin.";
     return;
   }
   if (!file) {
@@ -1130,7 +1149,7 @@ function reportHtmlFromAnalysis(analysis, formatLabel) {
   const brandedHeader = exportBranding ? brandingReportHeaderHtml(branding) : `<h1>ProgramMetrics Studio ${escapeHtml(formatLabel)}</h1>`;
   const brandedFooter = exportBranding && (branding.footerNote || branding.contact) ? `<footer>${branding.footerNote ? `<p>${escapeHtml(branding.footerNote)}</p>` : ""}${branding.contact ? `<small>${escapeHtml(branding.contact)}</small>` : ""}</footer>` : "";
   const watermark = analysis.watermark ? "body:before{content:'ProgramMetrics Preview';position:fixed;top:42%;left:-10%;right:-10%;transform:rotate(-28deg);font-size:82px;font-weight:900;color:rgba(37,99,235,.16);z-index:9999;pointer-events:none;white-space:nowrap}" : "";
-  return `<!doctype html><html><head><meta charset="utf-8"><title>ProgramMetrics Studio ${escapeHtml(formatLabel)}</title><style>body{font-family:Arial,sans-serif;margin:36px;color:#071525;background:#f8fafc;line-height:1.5;position:relative}${watermark}.card,section{background:#fff;border:1px solid #dbe4ef;border-radius:8px;padding:18px;margin:14px 0}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.kpis strong{display:block;color:#2563eb;font-size:28px}.brand-report-header{background:#fff;border:1px solid #dbe4ef;border-top:8px solid #2563eb;border-radius:8px;padding:24px;margin-bottom:18px}.brand-report-header>div{display:flex;gap:16px;align-items:center}.brand-report-header img{width:72px;height:72px;object-fit:contain;border:1px solid #dbe4ef;border-radius:8px}.brand-report-header p{margin:0;color:#0f766e;font-weight:700;text-transform:uppercase;font-size:12px}.brand-report-header h1{margin:4px 0;color:#071525}.brand-report-header h2{margin:0;color:#475569;font-size:18px;font-weight:600}.brand-report-header small,footer{color:#64748b}table{width:100%;border-collapse:collapse;background:#fff}th,td{border:1px solid #dbe4ef;padding:8px;text-align:left;font-size:13px}th{background:#eef6ff}@media(max-width:800px){.kpis{grid-template-columns:1fr}.brand-report-header>div{display:block}}</style></head><body>${brandedHeader}<p><strong>Unlocked:</strong> ${escapeHtml(analysis.unlocked_label)} | <strong>Previewing:</strong> ${escapeHtml(analysis.preview_label)}</p><p>${escapeHtml(analysis.answer)}</p><div class="kpis"><div class="card"><strong>${escapeHtml(analysis.rows)}</strong>Rows</div><div class="card"><strong>${escapeHtml(analysis.columns)}</strong>Columns</div><div class="card"><strong>${escapeHtml(analysis.duplicate_rows)}</strong>Duplicates</div><div class="card"><strong>${escapeHtml(analysis.quality_score)}</strong>Quality score</div></div><section><h2>Session preview rows</h2><p>Showing first ${escapeHtml(analysis.preview_limit)} rows.</p><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></section>${brandedFooter}</body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>ProgramMetrics Studio ${escapeHtml(formatLabel)}</title><style>body{font-family:Arial,sans-serif;margin:36px;color:#071525;background:#f8fafc;line-height:1.5;position:relative}${watermark}.card,section{background:#fff;border:1px solid #dbe4ef;border-radius:8px;padding:18px;margin:14px 0}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.kpis strong{display:block;color:#2563eb;font-size:28px}.brand-report-header{background:#fff;border:1px solid #dbe4ef;border-top:8px solid #2563eb;border-radius:8px;padding:24px;margin-bottom:18px}.brand-report-header>div{display:flex;gap:16px;align-items:center}.brand-report-header img{width:72px;height:72px;object-fit:contain;border:1px solid #dbe4ef;border-radius:8px}.brand-report-header p{margin:0;color:#0f766e;font-weight:700;text-transform:uppercase;font-size:12px}.brand-report-header h1{margin:4px 0;color:#071525}.brand-report-header h2{margin:0;color:#475569;font-size:18px;font-weight:600}.brand-report-header small,footer{color:#64748b}table{width:100%;border-collapse:collapse;background:#fff}th,td{border:1px solid #dbe4ef;padding:8px;text-align:left;font-size:13px}th{background:#eef6ff}@media(max-width:800px){.kpis{grid-template-columns:1fr}.brand-report-header>div{display:block}}</style></head><body>${brandedHeader}<p><strong>Selected output:</strong> ${escapeHtml(getSelectedStudioFeature().title)}</p><p>${escapeHtml(analysis.answer)}</p><div class="kpis"><div class="card"><strong>${escapeHtml(analysis.rows)}</strong>Rows</div><div class="card"><strong>${escapeHtml(analysis.columns)}</strong>Columns</div><div class="card"><strong>${escapeHtml(analysis.duplicate_rows)}</strong>Duplicates</div><div class="card"><strong>${escapeHtml(analysis.quality_score)}</strong>Quality score</div></div><section><h2>Session preview rows</h2><p>Showing first ${escapeHtml(analysis.preview_limit)} rows.</p><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></section>${brandedFooter}</body></html>`;
 }
 
 async function studioDownloadCurrentOutput(input, result, format, language, button, convertLabel) {
@@ -1163,17 +1182,17 @@ async function studioDownloadCurrentOutput(input, result, format, language, butt
     if (outputType === "csv") {
       blob = new Blob([csvFromRows(analysis.preview_rows || [])], { type: "text/csv;charset=utf-8" });
       filename = "programmetrics-cleaned-preview.csv";
-    } else if (outputType === "json" || outputType === "workflow_package" || outputType === "advanced_analytics") {
+    } else if (outputType === "json" || outputType === "reusable_workflow" || outputType === "workflow_package" || outputType === "advanced_analytics") {
       blob = new Blob([JSON.stringify({ analysis, language: language?.value || "English" }, null, 2)], { type: "application/json;charset=utf-8" });
-      filename = outputType === "workflow_package" ? "programmetrics-workflow-package.json" : outputType === "advanced_analytics" ? "programmetrics-advanced-analytics-export.json" : "programmetrics-studio-package.json";
-    } else if (outputType === "branded_report") {
-      blob = new Blob([reportHtmlFromAnalysis(analysis, "Branded report")], { type: "text/html;charset=utf-8" });
-      filename = "programmetrics-branded-report.html";
+      filename = outputType === "reusable_workflow" ? "programmetrics-reusable-report-workflow.json" : outputType === "workflow_package" ? "programmetrics-workflow-package.json" : outputType === "advanced_analytics" ? "programmetrics-advanced-analytics-export.json" : "programmetrics-studio-package.json";
+    } else if (outputType === "dashboard_summary" || outputType === "quality_review" || outputType === "branded_report") {
+      blob = new Blob([reportHtmlFromAnalysis(analysis, getSelectedStudioFeature().title)], { type: "text/html;charset=utf-8" });
+      filename = outputType === "dashboard_summary" ? "programmetrics-dashboard-summary.html" : outputType === "quality_review" ? "programmetrics-quality-review.html" : "programmetrics-branded-report.html";
     } else if (["html", "pdf"].includes(outputType)) {
       blob = new Blob([reportHtmlFromAnalysis(analysis, outputType === "pdf" ? "PDF-ready report" : "HTML report")], { type: "text/html;charset=utf-8" });
       filename = outputType === "pdf" ? "programmetrics-pdf-ready-report.html" : "programmetrics-report.html";
     } else {
-      const text = `${analysis.source_file}\nUnlocked: ${analysis.unlocked_label}\nPreviewing: ${analysis.preview_label}\nRows: ${analysis.rows}\nColumns: ${analysis.columns}\nQuality score: ${analysis.quality_score}\n\n${analysis.cleaning_steps.join("\n")}`;
+      const text = `${analysis.source_file}\nSelected output: ${getSelectedStudioFeature().title}\nRows: ${analysis.rows}\nColumns: ${analysis.columns}\nQuality score: ${analysis.quality_score}\n\n${analysis.cleaning_steps.join("\n")}`;
       blob = new Blob([text], { type: "text/plain;charset=utf-8" });
       filename = "programmetrics-session-summary.txt";
     }
@@ -1205,10 +1224,11 @@ function renderStudioDashboardPreview(analysis) {
   shell.classList.add("visible");
   shell.classList.toggle("is-watermarked", locked);
 
-  const status = document.createElement("div");
-  status.className = "studio-preview-status";
-  status.innerHTML = `<span>Unlocked: ${escapeHtml(unlocked.label)}</span><span>Previewing: ${escapeHtml(preview.label)}</span><strong>${locked ? "Preview only - upgrade to export" : "Downloads unlocked for included outputs"}</strong>`;
-  shell.appendChild(status);
+  const feature = getSelectedStudioFeature();
+  const featureHeader = document.createElement("section");
+  featureHeader.className = `studio-selected-feature${locked ? " is-locked" : " is-unlocked"}`;
+  featureHeader.innerHTML = `<span>Previewing: ${escapeHtml(feature.title)}</span><h4>${escapeHtml(analysis.source_file || "Uploaded file")}</h4><p>${escapeHtml(locked ? feature.lockedCopy : "This output is available to export from your uploaded file.")}</p><small>${escapeHtml(locked ? "ProgramMetrics Preview watermark and limited rows are applied." : "Ready to export when you are finished reviewing.")}</small>`;
+  shell.appendChild(featureHeader);
 
   const branding = applyBrandingToPreview(getBrandingSettings());
   if (branding) {
@@ -1224,7 +1244,7 @@ function renderStudioDashboardPreview(analysis) {
 
   const header = document.createElement("div");
   header.className = "dashboard-preview-header";
-  header.innerHTML = `<span>Dashboard-ready preview</span><strong>${escapeHtml(analysis.source_file || "Uploaded file")}</strong><small>${escapeHtml(analysis.file_size || "Current browser session")} | Showing first ${escapeHtml(analysis.preview_limit || previewRows.length || 0)} rows</small>`;
+  header.innerHTML = `<span>Preview with your real file</span><strong>${escapeHtml(analysis.source_file || "Uploaded file")}</strong><small>${escapeHtml(analysis.file_size || "Current browser session")} | Showing first ${escapeHtml(analysis.preview_limit || previewRows.length || 0)} rows</small>`;
   shell.appendChild(header);
 
   const stats = document.createElement("div");
@@ -1271,7 +1291,7 @@ function renderStudioDashboardPreview(analysis) {
 
   const missingPanel = document.createElement("section");
   missingPanel.className = `dashboard-preview-panel${canPreviewFeature("missingReview", preview) ? "" : " locked-preview-panel"}`;
-  missingPanel.innerHTML = `<h4>Missing-value review</h4>${canPreviewFeature("missingReview", preview) ? "" : `<p>Full missing-value review requires ${escapeHtml(getLevelLabelByAccess(2))}.</p><a class="button mini secondary-mini" href="checkout.html?plan=t1l2">Unlock download</a>`}`;
+  missingPanel.innerHTML = `<h4>Missing-value review</h4>${canPreviewFeature("missingReview", preview) ? "" : `<p>Upgrade to export the full missing-value review.</p><a class="button mini secondary-mini" href="checkout.html?plan=t1l2">Upgrade to export</a>`}`;
   if (canPreviewFeature("missingReview", preview) && missingEntries.length) {
     const maxMissing = Math.max(...missingEntries.map(([, count]) => Number(count)), 1);
     missingEntries.slice(0, 6).forEach(([column, count]) => {
@@ -1294,7 +1314,7 @@ function renderStudioDashboardPreview(analysis) {
     if (!canPreviewFeature(feature, preview) && accessValue(preview) < required - 1) return;
     const panel = document.createElement("section");
     panel.className = `dashboard-preview-panel${canPreviewFeature(feature, preview) ? "" : " locked-preview-panel"}`;
-    panel.innerHTML = `<h4>${escapeHtml(title)}</h4><p>${escapeHtml(text)}</p>${canPreviewFeature(feature, preview) ? `<small>${locked ? "ProgramMetrics Preview watermark applies until this level is unlocked." : "Unlocked for this level."}</small>` : `<a class="button mini secondary-mini" href="checkout.html?plan=${Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === required) || "t2l1"}">Unlock download</a>`}`;
+    panel.innerHTML = `<h4>${escapeHtml(title)}</h4><p>${escapeHtml(text)}</p>${canPreviewFeature(feature, preview) ? `<small>${locked ? "ProgramMetrics Preview watermark applies until export is unlocked." : "Available for export."}</small>` : `<a class="button mini secondary-mini" href="checkout.html?plan=${Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === required) || "t2l1"}">Upgrade to export</a>`}`;
     shell.appendChild(panel);
   });
 
@@ -1308,7 +1328,7 @@ function renderStudioDashboardPreview(analysis) {
     tablePanel.className = `dashboard-preview-panel dashboard-table-panel${locked ? " locked-preview-panel" : ""}`;
     const head = previewColumns.map((column) => `<th>${escapeHtml(column)}</th>`).join("");
     const rows = previewRows.map((row) => `<tr>${previewColumns.map((column) => `<td>${escapeHtml(row[column] ?? "")}</td>`).join("")}</tr>`).join("");
-    tablePanel.innerHTML = `<h4>Data preview</h4><p>Showing first ${escapeHtml(analysis.preview_limit || previewRows.length)} rows.</p><div class="dashboard-table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>${locked ? `<a class="button mini secondary-mini" href="checkout.html?plan=${Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === preview.access) || "t1l3"}">Unlock download</a>` : ""}`;
+    tablePanel.innerHTML = `<h4>Data preview</h4><p>Showing first ${escapeHtml(analysis.preview_limit || previewRows.length)} rows.</p><div class="dashboard-table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>${locked ? `<a class="button mini secondary-mini" href="checkout.html?plan=${Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === preview.access) || "t1l3"}">Upgrade to export</a>` : ""}`;
     shell.appendChild(tablePanel);
   }
 
@@ -1415,6 +1435,42 @@ function loadGeneratedStudioExample() {
   }
 }
 
+function updateStudioFeatureCards() {
+  const unlocked = getUnlockedStudioAccess();
+  document.querySelectorAll(".feature-access-item[data-feature-key]").forEach((card) => {
+    const feature = studioFeatureCards[card.dataset.featureKey] || studioFeatureCards.conversion;
+    const available = canDownloadOutput(feature.outputType, unlocked);
+    const selected = feature === getSelectedStudioFeature();
+    const badge = card.querySelector(".feature-status-badge");
+    card.classList.toggle("is-selected", selected);
+    card.classList.toggle("is-unlocked", available);
+    card.classList.toggle("is-locked", !available);
+    card.setAttribute("aria-pressed", selected ? "true" : "false");
+    if (badge) badge.textContent = available ? "Available" : selected ? "Preview only" : "Upgrade to export";
+  });
+}
+
+function selectStudioFeature(featureKey, refreshPreview = true) {
+  if (!studioFeatureCards[featureKey]) return;
+  activeStudioFeatureKey = featureKey;
+  const feature = getSelectedStudioFeature();
+  const format = document.getElementById("studio-output-format");
+  const packageSelect = document.getElementById("studio-package-select");
+  if (format) format.value = feature.outputType;
+  if (packageSelect && feature.previewPlan) packageSelect.value = feature.previewPlan;
+  updateStudioFeatureCards();
+  updateStudioDownloadButton();
+  if (refreshPreview && activeStudioUploadedAnalysis) {
+    refreshActiveStudioPreview(`Previewing: ${feature.title}.`);
+  }
+}
+
+function setupStudioFeatureCards() {
+  document.querySelectorAll(".feature-access-item[data-feature-key]").forEach((card) => {
+    card.addEventListener("click", () => selectStudioFeature(card.dataset.featureKey));
+  });
+  selectStudioFeature(activeStudioFeatureKey, false);
+}
 function refreshActiveStudioPreview(messagePrefix) {
   const input = document.getElementById("studio-file-converter-input");
   const result = document.getElementById("studio-converter-result");
@@ -1522,6 +1578,7 @@ function setupStudioPreviewRefresh() {
   });
 }
 setupStudioPackageAccess();
+setupStudioFeatureCards();
 setupStudioBrandingControls();
 setupStudioPreviewRefresh();
 const studioPricingPlans = {

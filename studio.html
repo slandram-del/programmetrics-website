@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -15,7 +15,7 @@
     <meta http-equiv="pragma" content="no-cache" />
     <meta http-equiv="expires" content="0" />
 
-    <link rel="stylesheet" href="styles-20260610.css?v=20260708-studio-oneflow" />
+    <link rel="stylesheet" href="styles-20260610.css?v=20260708-studio-cards" />
   </head>
 
   <body>
@@ -79,8 +79,8 @@
         <div class="studio-workspace-grid">
           <article class="studio-control-panel reveal">
             <p class="template-label" id="studio-package-label">Studio Workspace</p>
-            <h3>Upload, analyze, preview, export.</h3>
-            <p>Upload a file, choose the output you want, and preview the matching Studio result. Locked downloads open the upgrade checkout for that output.</p>
+            <h3>Preview with your real file.</h3>
+            <p>Upload a file, choose what you want to create, and preview the result. Locked outputs can be previewed before purchase. Upgrade only when you are ready to export.</p>
 
             <div class="studio-package-picker">
               <label class="language-output studio-hidden-level-control" for="studio-access-select" hidden>
@@ -109,35 +109,29 @@
                   <option value="t3" data-access="7">Tier 3 Workflow System - $1,500</option>
                   <option value="t4" data-access="8">Tier 4 Advanced Analytics - $3,500</option>
                 </select>
-              </label>
-              <div class="active-package-card studio-status-card" id="active-package-card" aria-live="polite">
-                <div><span>Current access</span><strong>Tier 1 Level 1 - $49</strong></div>
-                <div><span>Output preview</span><strong>Choose an output format</strong></div>
-                <div><span>Private session processing</span><strong>Locked downloads open checkout</strong></div>
-                <small>Choose an output format once. Studio automatically previews the matching level and protects locked downloads.</small>
-              </div><div class="studio-security-rules">
-                <strong>Privacy &amp; Session Processing</strong>
+              </label><div class="studio-security-rules">
+                <strong>Privacy &amp; browser session</strong>
                 <ul>
                   <li>Your uploaded file is processed only for your current browser session.</li>
                   <li>Files are not stored as customer projects or long-term ProgramMetrics data.</li>
-                  <li>Previews can use your uploaded data with feature limits based on your Studio level.</li>
-                  <li>Downloads, exports, and premium processing are available according to your unlocked Studio level.</li>
+                  <li>Previews can use your uploaded data with feature limits based on your current access.</li>
+                  <li>Downloads and exports are available when the selected output is unlocked.</li>
                   <li>Download any outputs before ending your session.</li>
                 </ul>
               </div>
             </div>
 
             <label class="language-output" for="studio-template-type">
-              <span>Studio template</span>
+              <span>Report type</span>
               <select id="studio-template-type">
                 <option value="general">General business report</option>
                 <option value="operations">Operations, jobs, inventory, or field work</option>
                 <option value="program">Program, service, participant, or intake data</option>
                 <option value="monthly">Grant, compliance, or monthly reporting</option>
                 <option value="survey">Survey or feedback summary</option>
-                <option value="branded">Branded report layout - Tier 2 preview</option>
-                <option value="workflow">Workflow system setup - Tier 3 preview</option>
-                <option value="advanced">Advanced analytics - Tier 4 preview</option>
+                <option value="branded">Branded report layout</option>
+                <option value="workflow">Workflow system setup</option>
+                <option value="advanced">Advanced analytics</option>
               </select>
             </label>
 
@@ -146,7 +140,7 @@
                 <p class="template-label">Report Branding</p>
                 <h4>Customize your report</h4>
                 <p>Add branding details that ProgramMetrics can apply to dashboards, reports, and downloadable outputs.</p>
-                <span class="branding-preview-label">Branding preview &mdash; export requires Tier 2 Level 1+</span>
+                <span class="branding-preview-label">Branding preview &mdash; upgrade required to export</span>
               </div>
               <div class="studio-branding-grid">
                 <label>
@@ -213,48 +207,52 @@
                 <span>Output language</span>
                 <select id="studio-output-language">
                   <option value="English">English</option>
-                  <option value="Spanish" data-required-access="5">Spanish - Tier 2 Level 2+</option>
-                  <option value="French" data-required-access="5">French - Tier 2 Level 2+</option>
-                  <option value="Arabic" data-required-access="5">Arabic - Tier 2 Level 2+</option>
-                  <option value="Chinese" data-required-access="5">Chinese - Tier 2 Level 2+</option>
-                  <option value="Vietnamese" data-required-access="5">Vietnamese - Tier 2 Level 2+</option>
-                  <option value="Other requested language" data-required-access="5">Other language - Tier 2 Level 2+</option>
+                  <option value="Spanish" data-required-access="5">Spanish - upgrade required</option>
+                  <option value="French" data-required-access="5">French - upgrade required</option>
+                  <option value="Arabic" data-required-access="5">Arabic - upgrade required</option>
+                  <option value="Chinese" data-required-access="5">Chinese - upgrade required</option>
+                  <option value="Vietnamese" data-required-access="5">Vietnamese - upgrade required</option>
+                  <option value="Other requested language" data-required-access="5">Other language - upgrade required</option>
                 </select>
               </label>
 
-              <label class="language-output" for="studio-output-format">
-                <span>Choose output format</span>
+              <label class="language-output studio-hidden-output-format" for="studio-output-format" hidden>
+                <span>Output format</span>
                 <select id="studio-output-format" aria-describedby="studio-output-helper">
-                  <option value="txt">Text summary - included</option>
+                  <option value="txt">File upload and conversion</option>
+                  <option value="duplicate_review" data-required-access="2">Duplicate and missing-value checks</option>
+                  <option value="dashboard_summary" data-required-access="3">Cleaned export and dashboard summary</option>
                   <option value="csv" data-required-access="3">Cleaned CSV export - requires Tier 1 Level 3+</option>
                   <option value="pdf" data-required-access="3">PDF report - requires Tier 1 Level 3+</option>
                   <option value="html" data-required-access="3">HTML report - requires Tier 1 Level 3+</option>
                   <option value="json" data-required-access="4">JSON package - requires Tier 2+</option>
-                  <option value="branded_report" data-required-access="4">Branded report - requires Tier 2 Level 1+</option>
-                  <option value="workflow_package" data-required-access="7">Workflow package - requires Tier 3</option>
-                  <option value="advanced_analytics" data-required-access="8">Advanced analytics export - requires Tier 4</option>
+                  <option value="branded_report" data-required-access="4">Branded report structure</option>
+                  <option value="reusable_workflow" data-required-access="5">Reusable report workflow</option>
+                  <option value="quality_review" data-required-access="6">Advanced quality review</option>
+                  <option value="workflow_package" data-required-access="7">Workflow system preview</option>
+                  <option value="advanced_analytics" data-required-access="8">Advanced analytics preview</option>
                 </select>
-                <small id="studio-output-helper" class="studio-output-helper">Pick the output you want. The preview level updates automatically.</small>
+                <small id="studio-output-helper" class="studio-output-helper">Feature cards choose the output for this preview.</small>
               </label>
             </div>
 
             <div class="feature-access-panel" aria-live="polite">
-              <h4>Real-file feature access</h4>
+              <h4>Choose what you want to create</h4><p>Preview with your real file. Locked outputs can be previewed before purchase.</p>
               <div class="feature-access-grid">
-                <div class="feature-access-item" data-required-access="1"><strong>File upload and conversion</strong><p>Prepare your file for preview and standard output.</p><span>Unlocked at Tier 1 Level 1+</span></div>
-                <div class="feature-access-item" data-required-access="2"><strong>Duplicate and missing-value checks</strong><p>Find records that need review before reporting.</p><span>Unlocked at Tier 1 Level 2+</span></div>
-                <div class="feature-access-item" data-required-access="3"><strong>Cleaned export and dashboard summary</strong><p>Download cleaned data and a basic insight summary.</p><span>Unlocked at Tier 1 Level 3+</span></div>
-                <div class="feature-access-item" data-required-access="4"><strong>Branded report structure</strong><p>Create a professional report layout from your file.</p><span>Unlocked at Tier 2 Level 1+</span></div>
-                <div class="feature-access-item" data-required-access="5"><strong>Reusable report workflow</strong><p>Save a repeatable reporting setup for similar files.</p><span>Unlocked at Tier 2 Level 2+</span></div>
-                <div class="feature-access-item" data-required-access="6"><strong>Advanced quality review</strong><p>Add richer data checks and recurring report setup.</p><span>Unlocked at Tier 2 Level 3+</span></div>
-                <div class="feature-access-item" data-required-access="7"><strong>Workflow system preview</strong><p>Preview rules, fields, and workflow logic.</p><span>Unlocked at Tier 3+</span></div>
-                <div class="feature-access-item" data-required-access="8"><strong>Advanced analytics preview</strong><p>Preview predictive insights and multi-file analytics.</p><span>Unlocked at Tier 4+</span></div>
+                <button class="feature-access-item is-selected" type="button" data-feature-key="conversion" data-output-type="txt" data-preview-plan="t1l1" data-required-access="1" data-action-label="Download summary"><strong>File upload and conversion</strong><p>Prepare your file for preview and standard output.</p><span class="feature-status-badge">Available</span></button>
+                <button class="feature-access-item" type="button" data-feature-key="duplicateChecks" data-output-type="duplicate_review" data-preview-plan="t1l2" data-required-access="2" data-action-label="Export review"><strong>Duplicate and missing-value checks</strong><p>Find records that need review before reporting.</p><span class="feature-status-badge">Preview only</span></button>
+                <button class="feature-access-item" type="button" data-feature-key="dashboard" data-output-type="dashboard_summary" data-preview-plan="t1l3" data-required-access="3" data-action-label="Export dashboard"><strong>Cleaned export and dashboard summary</strong><p>Download cleaned data and a basic insight summary.</p><span class="feature-status-badge">Upgrade to export</span></button>
+                <button class="feature-access-item" type="button" data-feature-key="branded" data-output-type="branded_report" data-preview-plan="t2l1" data-required-access="4" data-action-label="Generate report"><strong>Branded report structure</strong><p>Create a professional report layout from your file.</p><span class="feature-status-badge">Upgrade to export</span></button>
+                <button class="feature-access-item" type="button" data-feature-key="reusableWorkflow" data-output-type="reusable_workflow" data-preview-plan="t2l2" data-required-access="5" data-action-label="Export workflow"><strong>Reusable report workflow</strong><p>Save a repeatable reporting setup for similar files.</p><span class="feature-status-badge">Upgrade to export</span></button>
+                <button class="feature-access-item" type="button" data-feature-key="recurringReport" data-output-type="quality_review" data-preview-plan="t2l3" data-required-access="6" data-action-label="Export quality review"><strong>Advanced quality review</strong><p>Add richer data checks and recurring report setup.</p><span class="feature-status-badge">Upgrade to export</span></button>
+                <button class="feature-access-item" type="button" data-feature-key="workflowActivation" data-output-type="workflow_package" data-preview-plan="t3" data-required-access="7" data-action-label="Export workflow package"><strong>Workflow system preview</strong><p>Preview rules, fields, and workflow logic.</p><span class="feature-status-badge">Upgrade to export</span></button>
+                <button class="feature-access-item" type="button" data-feature-key="advancedAnalytics" data-output-type="advanced_analytics" data-preview-plan="t4" data-required-access="8" data-action-label="Export analytics"><strong>Advanced analytics preview</strong><p>Preview predictive insights and multi-file analytics.</p><span class="feature-status-badge">Upgrade to export</span></button>
               </div>
             </div>
 
             <div class="converter-actions studio-actions">
               <button class="button mini converter-button" id="studio-analyze-button" type="button">
-                Generate dashboard preview
+                Generate preview
               </button>
               <button class="button mini secondary-mini converter-button" id="studio-convert-button" type="button">
                 Download
@@ -263,7 +261,7 @@
 
             <div class="insight-panel" id="studio-insight-panel" aria-live="polite"></div>
             <div class="converter-result" id="studio-converter-result" aria-live="polite">
-              Upload a file to preview Studio with your real data. Locked previews are watermarked and limited until upgraded.
+              Upload a file, choose a feature card, and preview the result with your real data. Locked previews are watermarked and limited until upgraded.
             </div>
           </article>
 
@@ -289,7 +287,7 @@
       </nav>
     </footer>
 
-    <script src="script-20260610.js?v=20260708-studio-oneflow"></script>
+    <script src="script-20260610.js?v=20260708-studio-cards"></script>
     <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   </body>
 </html>
