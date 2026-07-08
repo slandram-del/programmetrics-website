@@ -3679,3 +3679,171 @@ input.is-locked {
   font-weight: 1000;
   pointer-events: none;
 }
+
+/* Thin interactive preview toolbar and working export controls */
+.studio-fullscreen-preview {
+  grid-template-rows: 64px 1fr;
+}
+
+.studio-fullscreen-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: auto minmax(150px, 1.2fr) minmax(150px, 0.9fr) auto minmax(500px, auto);
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  max-height: 72px;
+  padding: 8px 12px;
+  overflow: hidden;
+}
+
+.studio-fullscreen-brand {
+  color: var(--navy);
+  font-weight: 1000;
+  white-space: nowrap;
+}
+
+.studio-fullscreen-file,
+.studio-fullscreen-output,
+.studio-fullscreen-status {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1px solid #dbe4ef;
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.studio-fullscreen-status.is-locked {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.studio-fullscreen-status.is-unlocked {
+  border-color: #99f6e4;
+  background: #ecfeff;
+  color: #0f766e;
+}
+
+.studio-fullscreen-actions {
+  justify-content: end;
+  flex-wrap: nowrap;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.studio-fullscreen-actions button,
+.studio-fullscreen-actions .button {
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.studio-fullscreen-actions .studio-export-menu {
+  display: flex;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.studio-fullscreen-actions .studio-export-menu select {
+  width: 178px;
+  min-height: 38px;
+  padding: 7px 8px;
+  font-size: 0.8rem;
+}
+
+.studio-fullscreen-actions .studio-export-menu .studio-export-action {
+  max-width: 110px;
+}
+
+.studio-fullscreen-body {
+  padding: 10px 16px 20px;
+}
+
+.studio-fullscreen-body .studio-selected-feature {
+  display: none;
+}
+
+.studio-fullscreen-body .dashboard-canvas {
+  min-height: calc(100vh - 94px);
+  margin-top: 0;
+}
+
+.studio-export-menu[data-export-locked="true"] select {
+  color: #64748b;
+  background: #f8fafc;
+}
+
+.studio-export-menu[data-export-locked="true"] .studio-export-action {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.missing-code-chips button {
+  padding: 7px 10px;
+  border: 1px solid #99f6e4;
+  border-radius: 999px;
+  background: #ecfeff;
+  color: #0f766e;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.missing-column-picker {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+  color: var(--navy);
+  font-weight: 900;
+}
+
+.missing-column-picker select {
+  min-height: 120px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  padding: 8px;
+  font: inherit;
+}
+
+.missing-code-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.missing-code-summary div {
+  padding: 14px;
+  border: 1px solid #dbe4ef;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+@media (max-width: 1180px) {
+  .studio-fullscreen-preview {
+    grid-template-rows: auto 1fr;
+  }
+
+  .studio-fullscreen-toolbar {
+    grid-template-columns: 1fr 1fr;
+    max-height: none;
+  }
+
+  .studio-fullscreen-actions {
+    grid-column: 1 / -1;
+    justify-content: start;
+    flex-wrap: wrap;
+  }
+}

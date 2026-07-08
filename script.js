@@ -251,6 +251,25 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   missingPanel.dataset.dashboardTab = "missing";
   visualGrid.appendChild(missingPanel);
 
+  const missingPercentPanel = document.createElement("section");
+  missingPercentPanel.className = `dashboard-preview-panel dashboard-tile${canPreviewFeature("missingReview", preview) ? "" : " locked-preview-panel"}`;
+  missingPercentPanel.dataset.dashboardTab = "missing";
+  missingPercentPanel.innerHTML = "<h4>Top Fields by Missing Percentage</h4>";
+  if (missingPercentEntries.length) {
+    missingPercentEntries.slice(0, locked ? 5 : 10).forEach(([column, percent]) => {
+      missingPercentPanel.innerHTML += `<div class="dashboard-bar-row missing-bar"><span>${escapeHtml(column)}</span><div><i style="width:${pct(percent)}"></i></div><b>${escapeHtml(percent)}%</b></div>`;
+    });
+  } else {
+    missingPercentPanel.innerHTML += "<p>No fields have coded missing values.</p>";
+  }
+  visualGrid.appendChild(missingPercentPanel);
+
+  const sampleMissingPanel = document.createElement("section");
+  sampleMissingPanel.className = "dashboard-preview-panel dashboard-tile-wide";
+  sampleMissingPanel.dataset.dashboardTab = "missing";
+  sampleMissingPanel.innerHTML = `<h4>Sample Rows with Missing Values</h4><p>These examples show why missing rows and missing cells are different.</p>${detailList((missingProfile.sampleRows || []).slice(0, locked ? 4 : 8).map((row) => `Row ${row.row}: ${row.missingFields} missing cells - ${row.preview}`))}`;
+  visualGrid.appendChild(sampleMissingPanel);
+
   const heatmapPanel = document.createElement("section");
   heatmapPanel.className = "dashboard-preview-panel dashboard-tile";
   heatmapPanel.dataset.dashboardTab = "visuals";
@@ -924,28 +943,36 @@ function applyBrandingToPreview(brandingSettings) {
 }
 
 function studioExportOptionsHtml(locked = false) {
-  const disabled = locked ? " disabled" : "";
-  return `<div class="studio-export-menu">
+  const lock = locked ? "Locked - " : "";
+  return `<div class="studio-export-menu" data-export-locked="${locked ? "true" : "false"}">
     <label>
       <span>Export Package</span>
-      <select class="studio-export-kind"${disabled}>
-        <option value="zip">ZIP Package: Everything</option>
-        <option value="html">Interactive Dashboard HTML</option>
-        <option value="pdf">Executive Summary PDF-ready HTML</option>
-        <option value="docx">Word Executive Report DOCX</option>
-        <option value="pptx">PowerPoint Presentation PPTX</option>
-        <option value="xlsx">Excel Workbook XLSX</option>
-        <option value="csv">Cleaned Data CSV</option>
-        <option value="missing_csv">Missing Value Report CSV</option>
-        <option value="duplicate_csv">Duplicate Review CSV</option>
-        <option value="dictionary_xlsx">Field Dictionary XLSX</option>
-        <option value="png">Executive Infographic SVG</option>
-        <option value="json">JSON Metadata</option>
-        <option value="summary">Processing Summary</option>
+      <select class="studio-export-kind">
+        <option value="zip">${lock}ZIP Package: Everything</option>
+        <option value="html">${lock}Interactive Dashboard HTML</option>
+        <option value="pdf">${lock}Executive Summary PDF-ready HTML</option>
+        <option value="docx">${lock}Word Executive Report DOCX</option>
+        <option value="pptx">${lock}PowerPoint Presentation PPTX</option>
+        <option value="xlsx">${lock}Excel Workbook XLSX</option>
+        <option value="csv">${lock}Cleaned Data CSV</option>
+        <option value="missing_csv">${lock}Missing Value Report CSV</option>
+        <option value="duplicate_csv">${lock}Duplicate Review CSV</option>
+        <option value="dictionary_xlsx">${lock}Field Dictionary XLSX</option>
+        <option value="png">${lock}Executive Infographic SVG</option>
+        <option value="json">${lock}JSON Metadata</option>
+        <option value="summary">${lock}Processing Summary</option>
       </select>
     </label>
-    <button class="button mini studio-export-action"${disabled} type="button">${locked ? "Upgrade to export full dashboard" : "Export package"}</button>
+    <button class="button mini studio-export-action" type="button">${locked ? "Export locked" : "Export package"}</button>
   </div>`;
+}
+
+function studioUpgradeButtonHtml(outputType = getSelectedStudioFeature().outputType) {
+  return `<a class="button mini secondary-mini studio-upgrade-action" href="${escapeHtml(getCheckoutUrlForOutput(outputType))}">Upgrade</a>`;
+}
+
+function showStudioMessage(title, message, actionHtml = "") {
+  showStudioDetailPanel(title, `<p>${escapeHtml(message)}</p>${actionHtml}`);
 }
 
 function setupStudioExportMenus(root = document) {
@@ -954,7 +981,13 @@ function setupStudioExportMenus(root = document) {
     const select = menu.querySelector(".studio-export-kind");
     if (!button || !select || button.dataset.bound === "true") return;
     button.dataset.bound = "true";
-    button.addEventListener("click", () => downloadStudioExport(select.value));
+    button.addEventListener("click", () => {
+      if (menu.dataset.exportLocked === "true") {
+        showStudioMessage("Export locked", "This export is locked. You can preview this dashboard, but full downloads require upgrade.", studioUpgradeButtonHtml());
+        return;
+      }
+      downloadStudioExport(select.value);
+    });
   });
 }
 
@@ -1213,7 +1246,8 @@ function quantile(sorted, q) {
 function numericColumnSummary(rows, columns) {
   return columns.reduce((summary, column) => {
     const values = rows.map((row) => Number(row[column])).filter((value) => Number.isFinite(value));
-    if (values.length >= Math.max(2, Math.round(rows.length * 0.25))) {
+    const nonMissingCount = rows.filter((row) => !isStudioMissingValue(row[column])).length;
+    if (values.length >= Math.max(3, Math.round(nonMissingCount * 0.7))) {
       const sorted = values.slice().sort((a, b) => a - b);
       const mean = values.reduce((total, value) => total + value, 0) / values.length;
       const variance = values.reduce((total, value) => total + Math.pow(value - mean, 2), 0) / Math.max(1, values.length - 1);
@@ -1249,15 +1283,18 @@ function parseStudioDateValue(value) {
 function summarizeDateColumns(rows, columns) {
   const summaries = [];
   columns.forEach((column) => {
-    const dated = rows.map((row) => parseStudioDateValue(row[column])).filter(Boolean);
-    if (dated.length < Math.max(3, Math.round(rows.length * 0.18))) return;
+    const nonMissing = rows.map((row) => row[column]).filter((value) => !isStudioMissingValue(value));
+    const dated = nonMissing.map((value) => parseStudioDateValue(value)).filter(Boolean);
+    if (dated.length < Math.max(3, Math.round(nonMissing.length * 0.6))) return;
     const sorted = dated.slice().sort((a, b) => a - b);
+    const spanDays = Math.max(1, Math.round((sorted[sorted.length - 1] - sorted[0]) / 86400000));
+    const bucketMode = spanDays > 1500 ? "year" : spanDays > 540 ? "quarter" : "month";
     const buckets = dated.reduce((counts, date) => {
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      const key = bucketMode === "year" ? `${date.getFullYear()}` : bucketMode === "quarter" ? `${date.getFullYear()} Q${Math.floor(date.getMonth() / 3) + 1}` : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       counts[key] = (counts[key] || 0) + 1;
       return counts;
     }, {});
-    summaries.push({ column, count: dated.length, start: sorted[0], end: sorted[sorted.length - 1], buckets });
+    summaries.push({ column, count: dated.length, start: sorted[0], end: sorted[sorted.length - 1], buckets, bucketMode, missing: rows.length - dated.length });
   });
   return summaries.sort((a, b) => b.count - a.count);
 }
@@ -1390,6 +1427,9 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind) {
   const numericColumns = Object.keys(numericSummary);
   const dateSummary = summarizeDateColumns(normalizedRows, columns);
   const categorySummary = topCategorySummary(normalizedRows.slice(0, 500), columns, numericColumns, dateSummary);
+  const dateColumns = new Set(dateSummary.map((item) => item.column));
+  const categoricalColumns = Object.keys(categorySummary);
+  const fieldTypeCounts = { date: dateSummary.length, numeric: numericColumns.length, categorical: categoricalColumns.length, other: Math.max(0, columns.length - dateSummary.length - numericColumns.length - categoricalColumns.length) };
   const missingTotal = missingProfile.missingCells;
   const duplicates = duplicateRowCount(normalizedRows);
   const totalCells = Math.max(1, normalizedRows.length * Math.max(1, columns.length));
@@ -1430,6 +1470,7 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind) {
     detected_fields: columns,
     duplicate_rows: canPreviewFeature("duplicateChecks", preview) ? duplicates : "Preview locked",
     missing_values: canPreviewFeature("missingReview", preview) ? missingValues : {},
+    original_missing_profile: originalMissingProfile,
     missing_profile: missingProfile,
     missing_rows: missingProfile.missingRows,
     missing_value_count: missingTotal,
@@ -1616,7 +1657,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   const pct = (value) => `${Math.max(4, Math.min(100, Math.round(Number(value) || 0)))}%`;
   const selectedPlan = Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === preview.access) || "t1l3";
   const upgradeButton = locked ? `<a class="button mini secondary-mini" href="checkout.html?plan=${selectedPlan}">Upgrade to export full dashboard</a>` : "";
-  const exportControls = locked ? upgradeButton : studioExportOptionsHtml(false);
+  const exportControls = locked ? `${studioExportOptionsHtml(true)}${studioUpgradeButtonHtml(feature.outputType)}` : studioExportOptionsHtml(false);
 
   shell.replaceChildren();
   shell.classList.add("visible");
@@ -1734,6 +1775,25 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   missingPanel.dataset.dashboardTab = "missing";
   visualGrid.appendChild(missingPanel);
 
+  const missingPercentPanel = document.createElement("section");
+  missingPercentPanel.className = `dashboard-preview-panel dashboard-tile${canPreviewFeature("missingReview", preview) ? "" : " locked-preview-panel"}`;
+  missingPercentPanel.dataset.dashboardTab = "missing";
+  missingPercentPanel.innerHTML = "<h4>Top Fields by Missing Percentage</h4>";
+  if (missingPercentEntries.length) {
+    missingPercentEntries.slice(0, locked ? 5 : 10).forEach(([column, percent]) => {
+      missingPercentPanel.innerHTML += `<div class="dashboard-bar-row missing-bar"><span>${escapeHtml(column)}</span><div><i style="width:${pct(percent)}"></i></div><b>${escapeHtml(percent)}%</b></div>`;
+    });
+  } else {
+    missingPercentPanel.innerHTML += "<p>No fields have coded missing values.</p>";
+  }
+  visualGrid.appendChild(missingPercentPanel);
+
+  const sampleMissingPanel = document.createElement("section");
+  sampleMissingPanel.className = "dashboard-preview-panel dashboard-tile-wide";
+  sampleMissingPanel.dataset.dashboardTab = "missing";
+  sampleMissingPanel.innerHTML = `<h4>Sample Rows with Missing Values</h4><p>These examples show why missing rows and missing cells are different.</p>${detailList((missingProfile.sampleRows || []).slice(0, locked ? 4 : 8).map((row) => `Row ${row.row}: ${row.missingFields} missing cells - ${row.preview}`))}`;
+  visualGrid.appendChild(sampleMissingPanel);
+
   const heatmapPanel = document.createElement("section");
   heatmapPanel.className = "dashboard-preview-panel dashboard-tile";
   heatmapPanel.dataset.dashboardTab = "visuals";
@@ -1766,6 +1826,14 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   actionsPanel.innerHTML = `<h4>Recommended Cleaning Actions</h4><ul>${(analysis.cleaning_steps || []).slice(0, locked ? 5 : 8).map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ul>${exportControls}`;
   actionsPanel.dataset.dashboardTab = "executive";
   visualGrid.appendChild(actionsPanel);
+  const fieldTypePanel = document.createElement("section");
+  fieldTypePanel.className = "dashboard-preview-panel dashboard-tile";
+  fieldTypePanel.dataset.dashboardTab = "stats";
+  const typeCounts = analysis.field_type_counts || {};
+  const typeRows = [["Date", typeCounts.date || 0], ["Numeric", typeCounts.numeric || 0], ["Categorical", typeCounts.categorical || 0], ["Text / ID / other", typeCounts.other || 0]];
+  const typeMax = Math.max(...typeRows.map(([, count]) => Number(count)), 1);
+  fieldTypePanel.innerHTML = `<h4>Field Type Breakdown</h4>${typeRows.map(([label, count]) => `<div class="dashboard-bar-row quality-bar"><span>${escapeHtml(label)}</span><div><i style="width:${pct((Number(count) / typeMax) * 100)}"></i></div><b>${escapeHtml(count)}</b></div>`).join("")}`;
+  visualGrid.appendChild(fieldTypePanel);
   canvas.appendChild(visualGrid);
 
   const executivePanel = document.createElement("section");
@@ -1784,7 +1852,8 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   const missingCodingPanel = document.createElement("section");
   missingCodingPanel.className = `dashboard-preview-panel dashboard-tile-wide${locked ? " locked-preview-panel" : ""}`;
   missingCodingPanel.dataset.dashboardTab = "missing";
-  missingCodingPanel.innerHTML = `<h4>Missing Value Coding</h4><p>Select which values should be treated as missing. Changes apply to the current browser session only.</p><div class="missing-code-chips">${activeStudioMissingCodes.map((code) => `<span>${escapeHtml(code === "" ? "empty string" : code)}</span>`).join("")}</div><div class="missing-code-controls"><input id="studio-missing-code-input" type="text" placeholder="Add custom missing code" /><button class="button mini secondary-mini" type="button" id="studio-add-missing-code">Add code</button><button class="button mini" type="button" id="studio-reset-missing-codes">Reset defaults</button></div><div class="missing-code-summary"><b>${escapeHtml(missingProfile.missingCells || 0)}</b><span>Current missing cells</span><b>${escapeHtml(missingProfile.missingRows || 0)}</b><span>Rows affected</span><b>${escapeHtml(missingProfile.missingColumns || 0)}</b><span>Affected fields</span></div><p>${escapeHtml(locked ? "Unlock to export the full missing-value coding report." : "Download a missing-value report from the Exports tab.")}</p>`;
+  const newlyCodedCells = Math.max(0, (missingProfile.missingCells || 0) - (originalMissingProfile.missingCells || 0));
+  missingCodingPanel.innerHTML = `<h4>Missing Value Coding</h4><p>Missing rows are records with at least one missing value. Missing cells are every blank or coded missing field in the file. One row can contain many missing cells.</p><div class="missing-code-chips">${activeStudioMissingCodes.map((code) => `<button type="button" data-code="${escapeHtml(code)}" title="Remove this missing code">${escapeHtml(code === "" ? "empty string" : code)} <span aria-hidden="true">x</span></button>`).join("")}</div><div class="missing-code-controls"><input id="studio-missing-code-input" type="text" placeholder="Add custom missing code" /><button class="button mini secondary-mini" type="button" id="studio-add-missing-code">Add code</button><button class="button mini" type="button" id="studio-reset-missing-codes">Reset defaults</button></div><label class="missing-column-picker"><span>Apply to selected columns</span><select id="studio-missing-column-select" multiple>${(analysis.column_names || []).slice(0, 80).map((column) => `<option selected>${escapeHtml(column)}</option>`).join("")}</select><small>Column selection is previewed in-session. Global coding remains the default for exports.</small></label><div class="missing-code-summary"><div><b>${escapeHtml(originalMissingProfile.missingRows || 0)}</b><span>Original missing rows</span></div><div><b>${escapeHtml(originalMissingProfile.missingCells || 0)}</b><span>Original missing cells</span></div><div><b>${escapeHtml(missingProfile.missingRows || 0)}</b><span>Recoded missing rows</span></div><div><b>${escapeHtml(missingProfile.missingCells || 0)}</b><span>Recoded missing cells</span></div><div><b>${escapeHtml(newlyCodedCells)}</b><span>Newly coded cells</span></div><div><b>${escapeHtml(missingProfile.missingColumns || 0)}</b><span>Affected columns</span></div></div><p>${escapeHtml(locked ? "Unlock to export the full missing-value coding report." : "Download a missing-value report from the Exports tab.")}</p>`;
   canvas.appendChild(missingCodingPanel);
   const addMissingCode = missingCodingPanel.querySelector("#studio-add-missing-code");
   const resetMissingCodes = missingCodingPanel.querySelector("#studio-reset-missing-codes");
@@ -2002,7 +2071,7 @@ function openStudioFullScreenPreview() {
   modal.setAttribute("role", "dialog");
   modal.setAttribute("aria-modal", "true");
   const fullscreenLocked = !canDownloadOutput(getSelectedStudioFeature().outputType, getUnlockedStudioAccess());
-  modal.innerHTML = `<div class="studio-fullscreen-toolbar"><div class="studio-fullscreen-title"><strong>ProgramMetrics Studio Dashboard</strong><span>${escapeHtml(analysis.source_file || "Uploaded file")} | ${escapeHtml(getSelectedStudioFeature().title)} | ${fullscreenLocked ? "Preview only - export locked" : "Export unlocked"}</span></div><div class="studio-fullscreen-actions"><button type="button" data-action="fit">Fit</button><button type="button" data-action="zoom-out">-</button><button type="button" data-action="zoom-in">+</button>${studioExportOptionsHtml(fullscreenLocked)}<button type="button" data-action="close">Close</button></div></div><div class="studio-fullscreen-body"><div class="studio-preview-shell visible"></div></div>`;
+  modal.innerHTML = `<div class="studio-fullscreen-toolbar"><div class="studio-fullscreen-brand">ProgramMetrics Studio</div><div class="studio-fullscreen-file" title="${escapeHtml(analysis.source_file || "Uploaded file")}">${escapeHtml(analysis.source_file || "Uploaded file")}</div><div class="studio-fullscreen-output">${escapeHtml(getSelectedStudioFeature().title)}</div><div class="studio-fullscreen-status ${fullscreenLocked ? "is-locked" : "is-unlocked"}">${fullscreenLocked ? "Preview only - export locked" : "Export unlocked"}</div><div class="studio-fullscreen-actions"><button type="button" data-action="fit">Fit</button><button type="button" data-action="zoom-out">-</button><button type="button" data-action="zoom-in">+</button>${studioExportOptionsHtml(fullscreenLocked)}${studioUpgradeButtonHtml(getSelectedStudioFeature().outputType)}<button type="button" data-action="close">Close</button></div></div><div class="studio-fullscreen-body"><div class="studio-preview-shell visible"></div></div>`;
   document.body.appendChild(modal);
   const shell = modal.querySelector(".studio-preview-shell");
   renderStudioDashboardPreview(analysis, shell);
