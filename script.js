@@ -466,7 +466,12 @@ function setupFileConverter(inputId, resultId, languageId, formatId, buttonId, a
     }
   };
 
-  input.addEventListener("change", updateResult);
+  input.addEventListener("change", () => {
+    updateResult();
+    if (inputId === "studio-file-converter-input" && input.files && input.files[0]) {
+      analyzeFile();
+    }
+  });
 
   if (language) {
     language.addEventListener("change", updateResult);
@@ -1652,6 +1657,8 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   const dateSummary = analysis.date_summary || [];
   const quality = analysis.quality_breakdown || {};
   const missingProfile = analysis.missing_profile || {};
+  const originalMissingProfile = analysis.original_missing_profile || missingProfile;
+  const missingPercentEntries = Object.entries(missingProfile.byColumn || {}).filter(([, count]) => Number(count) > 0).map(([column, count]) => [column, analysis.rows ? Math.round((Number(count) / analysis.rows) * 1000) / 10 : 0]).sort((a, b) => Number(b[1]) - Number(a[1]));
   const numericEntries = Object.entries(analysis.numeric_summary || {});
   const insightCards = analysis.insights || buildInsightCards(analysis);
   const pct = (value) => `${Math.max(4, Math.min(100, Math.round(Number(value) || 0)))}%`;
