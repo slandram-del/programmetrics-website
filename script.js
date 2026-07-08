@@ -233,6 +233,46 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   }
   categoryPanel.dataset.dashboardTab = "visuals";
   visualGrid.appendChild(categoryPanel);
+  if (analysis.recipe === "surveyReferral") {
+    const surveyFields = getSurveyVisualFields(analysis);
+    const surveyKpiPanel = document.createElement("section");
+    surveyKpiPanel.className = "dashboard-preview-panel dashboard-tile-wide survey-dashboard-tile";
+    surveyKpiPanel.dataset.dashboardTab = "visuals";
+    const usableRecords = Math.max(0, (analysis.rows || 0) - (missingProfile.missingRows || 0));
+    const significantFindings = [surveyFields.organization, surveyFields.reason, surveyFields.date, missingEntries.length ? "Missing response patterns" : ""].filter(Boolean).length;
+    surveyKpiPanel.innerHTML = `<h4>Survey / Referral Dashboard</h4><div class="survey-kpi-row"><div><strong>${escapeHtml(analysis.rows || 0)}</strong><span>Response count</span></div><div><strong>${escapeHtml(usableRecords)}</strong><span>Usable records</span></div><div><strong>${escapeHtml(significantFindings)}</strong><span>Significant findings</span></div><div><strong>${escapeHtml(dateSummary.length ? formatStudioDate(dateSummary[0].start) : "Not detected")}</strong><span>Earliest date</span></div></div><p>ProgramMetrics detected survey-style fields and prioritized response counts, readable question labels, referral or denial trends, organization comparison, and missing response quality checks.</p>`;
+    visualGrid.appendChild(surveyKpiPanel);
+
+    if (surveyFields.organization) {
+      const counts = Object.entries(countValues(normalizedRowsForRender(analysis), surveyFields.organization)).filter(([name]) => name !== "Missing").sort((a, b) => Number(b[1]) - Number(a[1])).slice(0, locked ? 5 : 10);
+      const maxOrg = Math.max(...counts.map(([, count]) => Number(count)), 1);
+      const orgPanel = document.createElement("section");
+      orgPanel.className = "dashboard-preview-panel dashboard-tile";
+      orgPanel.dataset.dashboardTab = "visuals";
+      orgPanel.innerHTML = `<h4>Shelter / Organization Comparison</h4><p class="dashboard-chart-label">${escapeHtml(studioDisplayName(analysis, surveyFields.organization))}</p>${counts.map(([name, count]) => `<div class="dashboard-bar-row"><span>${escapeHtml(name)}</span><div><i style="width:${pct((Number(count) / maxOrg) * 100)}"></i></div><b>${escapeHtml(count)}</b></div>`).join("")}`;
+      visualGrid.appendChild(orgPanel);
+    }
+
+    if (surveyFields.reason) {
+      const counts = Object.entries(countValues(normalizedRowsForRender(analysis), surveyFields.reason)).filter(([name]) => name !== "Missing").sort((a, b) => Number(b[1]) - Number(a[1])).slice(0, locked ? 5 : 8);
+      const total = counts.reduce((sum, [, count]) => sum + Number(count), 0) || 1;
+      const reasonPanel = document.createElement("section");
+      reasonPanel.className = "dashboard-preview-panel dashboard-tile";
+      reasonPanel.dataset.dashboardTab = "visuals";
+      reasonPanel.innerHTML = `<h4>Referral / Denial Reason Distribution</h4><div class="dashboard-donut-list">${counts.map(([name, count]) => `<span><i style="--share:${Math.max(8, Math.round((Number(count) / total) * 100))}%"></i><b>${escapeHtml(name)}</b><em>${escapeHtml(count)}</em></span>`).join("")}</div>`;
+      visualGrid.appendChild(reasonPanel);
+    }
+
+    if (surveyFields.age && analysis.numeric_summary?.[surveyFields.age]?.histogram) {
+      const bins = analysis.numeric_summary[surveyFields.age].histogram;
+      const maxAge = Math.max(...bins.map((bin) => bin.count), 1);
+      const agePanel = document.createElement("section");
+      agePanel.className = "dashboard-preview-panel dashboard-tile";
+      agePanel.dataset.dashboardTab = "visuals";
+      agePanel.innerHTML = `<h4>Youth Age Distribution</h4><div class="dashboard-trend-bars histogram-bars">${bins.map((bin) => `<div><i style="height:${pct((bin.count / maxAge) * 100)}"></i><span>${escapeHtml(bin.label)}</span><b>${escapeHtml(bin.count)}</b></div>`).join("")}</div>`;
+      visualGrid.appendChild(agePanel);
+    }
+  }
 
   const missingPanel = document.createElement("section");
   missingPanel.className = "dashboard-preview-panel";
@@ -257,7 +297,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   missingPercentPanel.innerHTML = "<h4>Top Fields by Missing Percentage</h4>";
   if (missingPercentEntries.length) {
     missingPercentEntries.slice(0, locked ? 5 : 10).forEach(([column, percent]) => {
-      missingPercentPanel.innerHTML += `<div class="dashboard-bar-row missing-bar"><span>${escapeHtml(column)}</span><div><i style="width:${pct(percent)}"></i></div><b>${escapeHtml(percent)}%</b></div>`;
+      missingPercentPanel.innerHTML += `<div class="dashboard-bar-row missing-bar"><span>${escapeHtml(studioDisplayName(analysis, column))}</span><div><i style="width:${pct(percent)}"></i></div><b>${escapeHtml(percent)}%</b></div>`;
     });
   } else {
     missingPercentPanel.innerHTML += "<p>No fields have coded missing values.</p>";
@@ -273,7 +313,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   const heatmapPanel = document.createElement("section");
   heatmapPanel.className = "dashboard-preview-panel dashboard-tile";
   heatmapPanel.dataset.dashboardTab = "visuals";
-  heatmapPanel.innerHTML = `<h4>Field Completeness Heatmap</h4><div class="field-heatmap">${Object.entries(missingProfile.byColumn || {}).slice(0, 48).map(([column, count]) => { const complete = analysis.rows ? Math.round(100 - (Number(count) / analysis.rows) * 100) : 100; return `<span title="${escapeHtml(column)}: ${complete}% complete" style="--complete:${complete}%">${escapeHtml(column.slice(0, 14))}</span>`; }).join("")}</div>`;
+  heatmapPanel.innerHTML = `<h4>Field Completeness Heatmap</h4><div class="field-heatmap">${Object.entries(missingProfile.byColumn || {}).slice(0, 48).map(([column, count]) => { const complete = analysis.rows ? Math.round(100 - (Number(count) / analysis.rows) * 100) : 100; return `<span title="${escapeHtml(studioDisplayName(analysis, column))}: ${complete}% complete" style="--complete:${complete}%">${escapeHtml(studioDisplayName(analysis, column).slice(0, 14))}</span>`; }).join("")}</div>`;
   visualGrid.appendChild(heatmapPanel);
   shell.appendChild(visualGrid);
 
@@ -345,6 +385,10 @@ function setupFileConverter(inputId, resultId, languageId, formatId, buttonId, a
     if (inputId === "studio-file-converter-input" && input.files && input.files[0]) {
       activeStudioExampleAnalysis = null;
       activeStudioUploadedAnalysis = null;
+      activeStudioRawImport = null;
+      activeStudioDataSetup = null;
+      const setupPanel = document.getElementById("studio-data-setup-panel");
+      if (setupPanel) setupPanel.hidden = true;
     }
     const file = input.files && input.files[0];
     const selectedLanguage = language ? language.value : "English";
@@ -515,6 +559,8 @@ function setupFileConverter(inputId, resultId, languageId, formatId, buttonId, a
 
 let activeStudioExampleAnalysis = null;
 let activeStudioUploadedAnalysis = null;
+let activeStudioRawImport = null;
+let activeStudioDataSetup = null;
 let activeBrandLogoDataUrl = "";
 let activeStudioFeatureKey = "conversion";
 const defaultStudioMissingCodes = ["", " ", "NA", "N/A", "n/a", "null", "NULL", "unknown", "Unknown", "blank", "Blank", "not reported", "Not Reported", "missing", "Missing", "--", "-"];
@@ -1205,6 +1251,217 @@ function rowsFromDelimitedText(text) {
   });
 }
 
+
+function parseDelimitedMatrix(text, delimiter = ",") {
+  return text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim().length).map((line) => delimiter === "\t" ? line.split("\t").map((value) => value.trim()) : parseCsvLine(line));
+}
+
+function cleanStudioFieldLabel(value, fallback) {
+  const text = String(value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return text || fallback;
+}
+
+function uniqueStudioName(name, used) {
+  const base = cleanStudioFieldLabel(name, "Field");
+  let candidate = base;
+  let index = 2;
+  while (used.has(candidate)) {
+    candidate = `${base} ${index}`;
+    index += 1;
+  }
+  used.add(candidate);
+  return candidate;
+}
+
+function rowLooksLikeImportMetadata(row) {
+  const cells = (row || []).map((value) => String(value || "").trim()).filter(Boolean);
+  if (!cells.length) return false;
+  const metadataHits = cells.filter((value) => /^(importid|recipient|external|startdate|enddate|status|duration|recordeddate|responseid|locationlatitude|locationlongitude)$/i.test(value) || /^\$?\{.+\}$/.test(value)).length;
+  return metadataHits / cells.length > 0.45;
+}
+
+function rowLooksLikeCodes(row) {
+  const cells = (row || []).map((value) => String(value || "").trim()).filter(Boolean);
+  if (!cells.length) return false;
+  const codeHits = cells.filter((value) => /^(q\d+|[a-z]+_?\d+|startdate|enddate|status|duration|responseid|recipient)/i.test(value) || /#\d+_\d+/.test(value)).length;
+  return codeHits / cells.length > 0.35;
+}
+
+function rowLooksLikeLabels(row) {
+  const cells = (row || []).map((value) => String(value || "").trim()).filter(Boolean);
+  if (!cells.length) return false;
+  const longCells = cells.filter((value) => value.length > 18 || /\?|shelter|organization|referral|denial|reason|youth|client|participant|program|date/i.test(value)).length;
+  return longCells / cells.length > 0.25;
+}
+
+function detectStudioDataSetup(matrix) {
+  const firstRows = matrix.slice(0, 8);
+  let codeRow = firstRows.findIndex(rowLooksLikeCodes) + 1;
+  let labelRow = firstRows.findIndex((row, index) => index + 1 !== codeRow && rowLooksLikeLabels(row)) + 1;
+  let metadataRow = firstRows.findIndex(rowLooksLikeImportMetadata) + 1;
+  if (!codeRow) codeRow = 1;
+  if (!labelRow && matrix.length > 1) labelRow = 2;
+  if (!metadataRow && matrix.length > 2 && rowLooksLikeImportMetadata(matrix[2])) metadataRow = 3;
+  let dataStartsAt = Math.max(codeRow, labelRow || 0, metadataRow || 0) + 1;
+  if (codeRow === 1 && labelRow === 2 && (!metadataRow || metadataRow === 3)) dataStartsAt = 4;
+  const labelSignals = matrix[labelRow - 1] || [];
+  const surveyLike = Boolean(labelRow && labelSignals.some((value) => /shelter|organization|referral|denial|reason|youth|client|participant|program|question|survey/i.test(String(value || "")))) || firstRows.some(rowLooksLikeImportMetadata);
+  return {
+    codeRow,
+    labelRow: labelRow || codeRow,
+    dataStartsAt: Math.min(Math.max(dataStartsAt, 2), Math.max(matrix.length, 2)),
+    omitRows: metadataRow ? [metadataRow] : [],
+    useLabels: surveyLike,
+    combineDates: true,
+    surveyLike,
+    message: surveyLike ? "ProgramMetrics detected survey metadata rows. Review before generating visuals." : "ProgramMetrics detected the likely header and first data row. Review before generating visuals.",
+    chartExcludeFields: [],
+  };
+}
+
+function getStudioSetupOrDefault(matrix) {
+  const detected = detectStudioDataSetup(matrix);
+  return Object.assign({}, detected, activeStudioDataSetup || {});
+}
+
+function parseOmittedRows(value) {
+  return String(value || "").split(",").map((item) => Number(item.trim())).filter((item) => Number.isFinite(item) && item > 0);
+}
+
+function getDatePartRole(name) {
+  const text = String(name || "").toLowerCase();
+  if (/\bmonth\b|#1_1|_month|month$/.test(text)) return "month";
+  if (/\bday\b|#2_1|_day|day$/.test(text)) return "day";
+  if (/\byear\b|#3_1|_year|year$/.test(text)) return "year";
+  return "";
+}
+
+function dateGroupName(parts) {
+  const joined = parts.map((part) => `${part.code} ${part.label}`).join(" ");
+  if (/referral|denial/i.test(joined)) return "Referral / Denial Date";
+  if (/start/i.test(joined)) return "Start Date";
+  if (/end/i.test(joined)) return "End Date";
+  return "Combined Date";
+}
+
+function buildRowsFromStudioSetup(matrix, setup) {
+  const codeRow = matrix[Math.max(0, Number(setup.codeRow || 1) - 1)] || [];
+  const labelRow = matrix[Math.max(0, Number(setup.labelRow || setup.codeRow || 1) - 1)] || [];
+  const width = Math.max(codeRow.length, labelRow.length, ...matrix.map((row) => row.length));
+  const used = new Set();
+  const fields = Array.from({ length: width }, (_, index) => {
+    const code = cleanStudioFieldLabel(codeRow[index], `Column ${index + 1}`);
+    const label = cleanStudioFieldLabel(labelRow[index], code);
+    const display = uniqueStudioName(setup.useLabels ? label : code, used);
+    return { index, code, label, display, role: getDatePartRole(`${code} ${label}`) };
+  });
+  const omit = new Set(parseOmittedRows(setup.omitRows || []).concat([Number(setup.codeRow), Number(setup.labelRow)]).filter((row) => row > 0));
+  const dataStart = Math.max(1, Number(setup.dataStartsAt || 2));
+  const rows = [];
+  matrix.forEach((rawRow, rawIndex) => {
+    const oneBased = rawIndex + 1;
+    if (oneBased < dataStart || omit.has(oneBased)) return;
+    const row = {};
+    fields.forEach((field) => {
+      row[field.display] = rawRow[field.index] ?? "";
+    });
+    if (Object.values(row).some((value) => String(value ?? "").trim())) rows.push(row);
+  });
+  const datePartColumns = [];
+  const dateCombinationFields = [];
+  if (setup.combineDates) {
+    for (let index = 0; index < fields.length - 2; index += 1) {
+      const group = fields.slice(index, index + 3);
+      const roles = group.map((field) => field.role).join("|");
+      if (roles === "month|day|year") {
+        const name = uniqueStudioName(dateGroupName(group), new Set(Object.keys(rows[0] || {})));
+        rows.forEach((row) => {
+          const month = Number(row[group[0].display]);
+          const day = Number(row[group[1].display]);
+          const year = Number(row[group[2].display]);
+          row[name] = Number.isFinite(month) && Number.isFinite(day) && Number.isFinite(year) ? `${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}/${year}` : "";
+        });
+        group.forEach((field) => datePartColumns.push(field.display));
+        dateCombinationFields.push({ name, parts: group.map((field) => field.display) });
+      }
+    }
+  }
+  const labelMap = fields.reduce((map, field) => {
+    map[field.display] = field.label;
+    return map;
+  }, {});
+  dateCombinationFields.forEach((field) => { labelMap[field.name] = field.name; });
+  return { rows, labelMap, fields, datePartColumns, dateCombinationFields };
+}
+
+function studioDisplayName(analysis, column) {
+  return (analysis?.label_map && analysis.label_map[column]) || column;
+}
+
+function inferStudioRecipe(rows, columns, labelMap) {
+  const joined = columns.concat(Object.values(labelMap || {})).join(" ").toLowerCase();
+  if (/survey|question|response|recipient|referral|denial|shelter|organization|youth|participant|client|program/.test(joined)) return "surveyReferral";
+  return "business";
+}
+
+
+function getStudioDataSetupPanel() {
+  let panel = document.getElementById("studio-data-setup-panel");
+  if (!panel) {
+    const upload = document.querySelector(".upload-zone");
+    panel = document.createElement("section");
+    panel.id = "studio-data-setup-panel";
+    panel.className = "studio-data-setup-panel";
+    panel.hidden = true;
+    upload?.insertAdjacentElement("afterend", panel);
+  }
+  return panel;
+}
+
+function renderStudioDataSetupPanel(matrix, setup) {
+  const panel = getStudioDataSetupPanel();
+  if (!panel || !matrix?.length) return;
+  const maxCols = Math.min(8, Math.max(...matrix.slice(0, 10).map((row) => row.length), 1));
+  const rowsHtml = matrix.slice(0, 10).map((row, index) => `<tr><th>${index + 1}</th>${Array.from({ length: maxCols }, (_, columnIndex) => `<td>${escapeHtml(row[columnIndex] ?? "")}</td>`).join("")}</tr>`).join("");
+  panel.hidden = false;
+  panel.innerHTML = `<div class="studio-data-setup-heading"><div><p class="template-label">Data Setup</p><h4>Review import rows before analysis</h4><p>${escapeHtml(setup.message || "Review before generating visuals.")}</p></div><button class="button mini secondary-mini" type="button" id="studio-regenerate-setup">Regenerate visuals</button></div><div class="studio-setup-controls"><label><span>Variable code row</span><input id="studio-setup-code-row" type="number" min="1" value="${escapeHtml(setup.codeRow || 1)}" /></label><label><span>Variable label row</span><input id="studio-setup-label-row" type="number" min="1" value="${escapeHtml(setup.labelRow || 2)}" /></label><label><span>Data starts at row</span><input id="studio-setup-data-row" type="number" min="1" value="${escapeHtml(setup.dataStartsAt || 2)}" /></label><label><span>Rows to omit</span><input id="studio-setup-omit-rows" type="text" value="${escapeHtml((setup.omitRows || []).join(", "))}" placeholder="3, 5" /></label><label><span>Field names in visuals</span><select id="studio-setup-name-mode"><option value="labels" ${setup.useLabels ? "selected" : ""}>Use full labels</option><option value="codes" ${!setup.useLabels ? "selected" : ""}>Use short variable names</option></select></label><label class="studio-setup-check"><input id="studio-setup-combine-dates" type="checkbox" ${setup.combineDates ? "checked" : ""} /><span>Combine month/day/year columns into one date field</span></label></div><div class="studio-setup-table-wrap"><table><thead><tr><th>Row</th>${Array.from({ length: maxCols }, (_, index) => `<th>Column ${index + 1}</th>`).join("")}</tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
+  panel.querySelector("#studio-regenerate-setup")?.addEventListener("click", regenerateStudioFromSetupControls);
+}
+
+function collectStudioDataSetupControls() {
+  const current = activeStudioDataSetup || {};
+  return Object.assign({}, current, {
+    codeRow: Number(document.getElementById("studio-setup-code-row")?.value || current.codeRow || 1),
+    labelRow: Number(document.getElementById("studio-setup-label-row")?.value || current.labelRow || current.codeRow || 1),
+    dataStartsAt: Number(document.getElementById("studio-setup-data-row")?.value || current.dataStartsAt || 2),
+    omitRows: parseOmittedRows(document.getElementById("studio-setup-omit-rows")?.value || current.omitRows || ""),
+    useLabels: (document.getElementById("studio-setup-name-mode")?.value || (current.useLabels ? "labels" : "codes")) === "labels",
+    combineDates: Boolean(document.getElementById("studio-setup-combine-dates")?.checked),
+  });
+}
+
+function regenerateStudioFromSetupControls() {
+  if (!activeStudioRawImport?.matrix) return;
+  activeStudioDataSetup = collectStudioDataSetupControls();
+  const prepared = buildRowsFromStudioSetup(activeStudioRawImport.matrix, activeStudioDataSetup);
+  renderStudioDataSetupPanel(activeStudioRawImport.matrix, activeStudioDataSetup);
+  activeStudioUploadedAnalysis = buildStudioAnalysisFromRows(prepared.rows, { name: activeStudioRawImport.fileName, size: activeStudioRawImport.fileSize || 0 }, activeStudioRawImport.sourceKind, Object.assign({}, prepared, { setup: activeStudioDataSetup }));
+  renderStudioDashboardPreview(activeStudioUploadedAnalysis);
+  renderInsightPanel(document.getElementById("studio-insight-panel"), activeStudioUploadedAnalysis);
+  updateStudioDownloadButton();
+  const result = document.getElementById("studio-converter-result");
+  if (result) result.textContent = `Data setup applied. Missing values and visuals now use data starting at row ${activeStudioDataSetup.dataStartsAt}.`;
+}
+function getSurveyVisualFields(analysis) {
+  const columns = analysis.column_names || [];
+  const find = (patterns) => columns.find((column) => patterns.some((pattern) => pattern.test(`${column} ${studioDisplayName(analysis, column)}`)));
+  return {
+    organization: find([/shelter/i, /organization/i, /site/i, /location/i]),
+    reason: find([/reason/i, /referral.*type/i, /denial.*type/i]),
+    age: find([/age/i, /youth.*age/i]),
+    date: (analysis.date_summary || [])[0]?.column,
+  };
+}
 function rowsFromJsonText(text) {
   const parsed = JSON.parse(text);
   const records = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.data) ? parsed.data : [parsed];
@@ -1321,8 +1578,9 @@ function formatStudioDate(date) {
   return date ? date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "not detected";
 }
 
-function buildDashboardNarrative({ rows, columns, missingEntries, missingTotal, duplicates, dateSummary, categorySummary, qualityScore, feature }) {
+function buildDashboardNarrative({ rows, columns, missingEntries, missingTotal, duplicates, dateSummary, categorySummary, qualityScore, feature, recipe }) {
   const parts = [`This file contains ${rows.length} records across ${columns.length} fields.`];
+  if (recipe === "surveyReferral") parts.push("The data appears to track survey, referral, denial, program, or participant responses, so ProgramMetrics is prioritizing response counts, organization comparisons, referral reasons, date trends, and missing response quality checks.");
   if (dateSummary.length) {
     const primary = dateSummary[0];
     parts.push(`${primary.column} ranges from ${formatStudioDate(primary.start)} to ${formatStudioDate(primary.end)}, so a trend view is more useful than individual date bars.`);
@@ -1389,7 +1647,7 @@ function calculateMissingProfile(rows, columns, codes = activeStudioMissingCodes
     });
     if (rowMissing > 0) {
       missingRows += 1;
-      if (sampleRows.length < 8) sampleRows.push({ row: index + 1, missingFields: rowMissing, preview: columns.slice(0, 4).map((column) => `${column}: ${row[column] ?? ""}`).join(" | ") });
+      if (sampleRows.length < 8) sampleRows.push({ row: index + 1, missingFields: rowMissing, preview: columns.slice(0, 4).map((column) => `${studioDisplayName({ label_map: {} }, column)}: ${row[column] ?? ""}`).join(" | ") });
     }
   });
   const totalCells = Math.max(1, rows.length * Math.max(1, columns.length));
@@ -1401,7 +1659,7 @@ function buildInsightCards(analysis) {
   const dateSummary = analysis.date_summary || [];
   const missing = analysis.missing_profile || {};
   const insights = [`This file contains ${analysis.rows || 0} records across ${analysis.columns || 0} fields.`];
-  if (dateSummary.length) insights.push(`${dateSummary[0].column} spans ${formatStudioDate(dateSummary[0].start)} to ${formatStudioDate(dateSummary[0].end)}, so monthly trend analysis is recommended.`);
+  if (dateSummary.length) insights.push(`${studioDisplayName(analysis, dateSummary[0].column)} spans ${formatStudioDate(dateSummary[0].start)} to ${formatStudioDate(dateSummary[0].end)}, so monthly trend analysis is recommended.`);
   if (Number(analysis.duplicate_rows) > 0) insights.push(`${analysis.duplicate_rows} possible duplicate records were detected and should be reviewed.`);
   if (Number(missing.missingCells) > 0) insights.push(`${missing.missingColumns || 0} fields contain coded blanks, covering ${missing.missingCells || 0} missing cells across ${missing.missingRows || 0} rows.`);
   insights.push(Number(analysis.quality_score) >= 85 ? "This file is ready for dashboard preview after a light review." : "This file is ready for preview, but should be cleaned before final reporting.");
@@ -1412,7 +1670,7 @@ function missingDetailHtml(analysis) {
   const profile = analysis.missing_profile || {};
   const entries = profile.entries || [];
   const rows = profile.sampleRows || [];
-  return `<p>Missing rows are records that contain at least one blank or coded missing value. Missing cells are the total number of blank or coded missing fields across the dataset. A file can have many missing cells concentrated in the same rows.</p><div class="missing-detail-grid"><b>${escapeHtml(profile.missingRows || 0)}</b><span>Missing rows</span><b>${escapeHtml(profile.missingCells || 0)}</b><span>Missing cells</span><b>${escapeHtml(profile.missingColumns || 0)}</b><span>Fields with blanks</span><b>${escapeHtml(profile.missingPercent || 0)}%</b><span>Missing percent</span></div><h4>Top missing columns</h4>${detailList(entries.slice(0, 10).map(([column, count]) => `${column}: ${count} missing cells (${analysis.rows ? Math.round((Number(count) / analysis.rows) * 1000) / 10 : 0}%)`))}<h4>Sample rows with missing values</h4>${detailList(rows.map((row) => `Row ${row.row}: ${row.missingFields} missing fields - ${row.preview}`))}<p>Recommendation: review high-missing fields, decide which codes should count as missing, and clean or filter fields before final export.</p>`;
+  return `<p>Missing rows are records that contain at least one blank or coded missing value. Missing cells are the total number of blank or coded missing fields across the dataset. A file can have many missing cells concentrated in the same rows.</p><div class="missing-detail-grid"><b>${escapeHtml(profile.missingRows || 0)}</b><span>Missing rows</span><b>${escapeHtml(profile.missingCells || 0)}</b><span>Missing cells</span><b>${escapeHtml(profile.missingColumns || 0)}</b><span>Fields with blanks</span><b>${escapeHtml(profile.missingPercent || 0)}%</b><span>Missing percent</span></div><h4>Top missing columns</h4>${detailList(entries.slice(0, 10).map(([column, count]) => `${studioDisplayName(analysis, column)}: ${count} missing cells (${analysis.rows ? Math.round((Number(count) / analysis.rows) * 1000) / 10 : 0}%)`))}<h4>Sample rows with missing values</h4>${detailList(rows.map((row) => `Row ${row.row}: ${row.missingFields} missing fields - ${row.preview}`))}<p>Recommendation: review high-missing fields, decide which codes should count as missing, and clean or filter fields before final export.</p>`;
 }
 
 function qualityDetailHtml(analysis) {
@@ -1420,22 +1678,25 @@ function qualityDetailHtml(analysis) {
   const items = [["Completeness", quality.completenessScore], ["Duplicate score", quality.duplicateScore], ["Date consistency", quality.dateConsistencyScore], ["Formatting", quality.formattingScore], ["Field usability", quality.requiredCoverageScore], ["Numeric validity", quality.numericValidityScore], ["Categorical usability", quality.categoricalUsabilityScore], ["Outlier check", quality.outlierScore]];
   return `<div class="quality-detail-score"><strong>${escapeHtml(analysis.quality_score || "-")}</strong><span>Overall quality score</span></div><p>Your quality score reflects completeness, duplicates, date consistency, formatting, field usability, numeric validity, categorical usability, and unusual-value checks.</p>${items.map(([label, value]) => `<div class="dashboard-bar-row quality-bar"><span>${escapeHtml(label)}</span><div><i style="width:${Math.max(4, Math.min(100, Number(value) || 0))}%"></i></div><b>${escapeHtml(value ?? "-")}</b></div>`).join("")}`;
 }
-function buildStudioAnalysisFromRows(rows, file, sourceKind) {
+function buildStudioAnalysisFromRows(rows, file, sourceKind, setupMetadata = {}) {
   const unlocked = getUnlockedStudioAccess();
   const preview = getStudioAccess();
   const feature = getSelectedStudioFeature();
   const normalizedRows = normalizeRows(rows).slice(0, 2000);
   const columns = normalizedRows.length ? Object.keys(normalizedRows[0]) : [];
+  const labelMap = setupMetadata.labelMap || {};
+  const visualColumns = columns.filter((column) => !(setupMetadata.datePartColumns || []).includes(column));
+  const recipe = inferStudioRecipe(normalizedRows, columns, labelMap);
   const originalMissingProfile = calculateMissingProfile(normalizedRows, columns, defaultStudioMissingCodes);
   const missingProfile = calculateMissingProfile(normalizedRows, columns);
   const missingValues = missingProfile.byColumn;
-  const numericSummary = numericColumnSummary(normalizedRows, columns);
+  const numericSummary = numericColumnSummary(normalizedRows, visualColumns);
   const numericColumns = Object.keys(numericSummary);
-  const dateSummary = summarizeDateColumns(normalizedRows, columns);
-  const categorySummary = topCategorySummary(normalizedRows.slice(0, 500), columns, numericColumns, dateSummary);
+  const dateSummary = summarizeDateColumns(normalizedRows, visualColumns);
+  const categorySummary = topCategorySummary(normalizedRows.slice(0, 500), visualColumns, numericColumns, dateSummary);
   const dateColumns = new Set(dateSummary.map((item) => item.column));
   const categoricalColumns = Object.keys(categorySummary);
-  const fieldTypeCounts = { date: dateSummary.length, numeric: numericColumns.length, categorical: categoricalColumns.length, other: Math.max(0, columns.length - dateSummary.length - numericColumns.length - categoricalColumns.length) };
+  const fieldTypeCounts = { date: dateSummary.length, numeric: numericColumns.length, categorical: categoricalColumns.length, other: Math.max(0, visualColumns.length - dateSummary.length - numericColumns.length - categoricalColumns.length) };
   const missingTotal = missingProfile.missingCells;
   const duplicates = duplicateRowCount(normalizedRows);
   const totalCells = Math.max(1, normalizedRows.length * Math.max(1, columns.length));
@@ -1452,7 +1713,7 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind) {
   const previewLimit = getPreviewLimitRows(unlocked, preview);
   const locked = shouldWatermark(preview, unlocked);
   const missingEntries = missingProfile.entries;
-  const narrative = buildDashboardNarrative({ rows: normalizedRows, columns, missingEntries, missingTotal, duplicates, dateSummary, categorySummary, qualityScore, feature });
+  const narrative = buildDashboardNarrative({ rows: normalizedRows, columns, missingEntries, missingTotal, duplicates, dateSummary, categorySummary, qualityScore, feature, recipe });
   const cleaningSteps = [
     "Detected fields and table shape from the uploaded file",
     canPreviewFeature("duplicateChecks", preview) ? "Reviewed duplicate records" : "Duplicate checks are available in limited preview",
@@ -1473,7 +1734,7 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind) {
     rows: normalizedRows.length,
     columns: columns.length,
     column_names: columns,
-    detected_fields: columns,
+    detected_fields: visualColumns,
     duplicate_rows: canPreviewFeature("duplicateChecks", preview) ? duplicates : "Preview locked",
     missing_values: canPreviewFeature("missingReview", preview) ? missingValues : {},
     original_missing_profile: originalMissingProfile,
@@ -1483,6 +1744,12 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind) {
     missing_columns_count: missingProfile.missingColumns,
     missing_percent: missingProfile.missingPercent,
     missing_codes: activeStudioMissingCodes.slice(),
+    label_map: labelMap,
+    data_setup: setupMetadata.setup || null,
+    setup_message: setupMetadata.setup?.message || "",
+    recipe,
+    date_part_columns: setupMetadata.datePartColumns || [],
+    date_combination_fields: setupMetadata.dateCombinationFields || [],
     numeric_summary: numericSummary,
     category_summary: categorySummary,
     date_summary: dateSummary,
@@ -1514,13 +1781,23 @@ function readStudioFileAsAnalysis(file) {
         if (extension === "json") {
           rows = rowsFromJsonText(text);
           sourceKind = "JSON";
-        } else if (["csv", "tsv"].includes(extension)) {
-          rows = rowsFromDelimitedText(extension === "tsv" ? text.replace(/\t/g, ",") : text);
-          sourceKind = extension.toUpperCase();
-        } else {
-          rows = rowsFromPlainText(text);
-          sourceKind = "Text";
+          activeStudioRawImport = null;
+          resolve(buildStudioAnalysisFromRows(rows, file, sourceKind));
+          return;
         }
+        if (["csv", "tsv"].includes(extension)) {
+          sourceKind = extension.toUpperCase();
+          const matrix = parseDelimitedMatrix(text, extension === "tsv" ? "\t" : ",");
+          activeStudioRawImport = { matrix, sourceKind, fileName: file.name, fileSize: file.size };
+          if (!activeStudioDataSetup) activeStudioDataSetup = detectStudioDataSetup(matrix);
+          const prepared = buildRowsFromStudioSetup(matrix, activeStudioDataSetup);
+          renderStudioDataSetupPanel(matrix, activeStudioDataSetup);
+          resolve(buildStudioAnalysisFromRows(prepared.rows, file, sourceKind, Object.assign({}, prepared, { setup: activeStudioDataSetup })));
+          return;
+        }
+        sourceKind = "Text";
+        rows = rowsFromPlainText(text);
+        activeStudioRawImport = null;
         resolve(buildStudioAnalysisFromRows(rows, file, sourceKind));
       } catch (error) {
         reject(error);
@@ -1530,7 +1807,6 @@ function readStudioFileAsAnalysis(file) {
     reader.readAsText(file);
   });
 }
-
 async function analyzeStudioUploadedFile(input, result, analyzeButton, analyzeLabel, insightPanel) {
   const file = input.files && input.files[0];
   if (!canUploadRealFile(getUnlockedStudioAccess())) {
@@ -1548,8 +1824,9 @@ async function analyzeStudioUploadedFile(input, result, analyzeButton, analyzeLa
   }
   result.textContent = "Processing this file in the current browser session...";
   try {
-    await runStudioStatusSteps(["Reading file", "Detecting columns", "Checking missing values", "Checking duplicates", "Building preview"]);
+    await runStudioStatusSteps(["Reading file", "Detecting survey setup", "Detecting columns", "Checking missing values", "Checking duplicates", "Building preview"]);
     activeStudioUploadedAnalysis = await readStudioFileAsAnalysis(file);
+    renderStudioDashboardPreview(activeStudioUploadedAnalysis);
     renderInsightPanel(insightPanel, activeStudioUploadedAnalysis);
     const limit = activeStudioUploadedAnalysis.preview_limit;
     setStudioAnalysisStatus("Ready to preview", true);
@@ -1674,8 +1951,9 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
 
   const featureHeader = document.createElement("section");
   featureHeader.className = `studio-selected-feature${locked ? " is-locked" : " is-unlocked"}`;
-  featureHeader.innerHTML = `<span>Previewing: ${escapeHtml(feature.title)}</span><h4>${escapeHtml(analysis.source_file || "Uploaded file")}</h4><p>${escapeHtml(locked ? feature.lockedCopy : "This dashboard is ready to export from your uploaded file.")}</p><small>${escapeHtml(locked ? "ProgramMetrics Preview watermark and limited rows are applied." : "Click a KPI card to inspect the details before export.")}</small>${exportControls}`;
+  featureHeader.innerHTML = `<span>Previewing: ${escapeHtml(feature.title)}</span><h4>${escapeHtml(analysis.source_file || "Uploaded file")}</h4><p>${escapeHtml(locked ? feature.lockedCopy : "This dashboard is ready to export from your uploaded file.")}</p><small>${escapeHtml(locked ? "ProgramMetrics Preview watermark and limited rows are applied." : "Click a KPI card to inspect the details before export.")}</small><button class="button mini secondary-mini" type="button" id="studio-adjust-data-setup">Adjust data setup</button>${exportControls}`;
   shell.appendChild(featureHeader);
+  featureHeader.querySelector("#studio-adjust-data-setup")?.addEventListener("click", () => document.getElementById("studio-data-setup-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }));
   setupStudioExportMenus(featureHeader);
 
   const canvas = document.createElement("div");
@@ -1684,7 +1962,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
 
   const header = document.createElement("div");
   header.className = "dashboard-preview-header";
-  const dateText = dateSummary.length ? `${dateSummary[0].column}: ${formatStudioDate(dateSummary[0].start)} to ${formatStudioDate(dateSummary[0].end)}` : "No date range detected";
+  const dateText = dateSummary.length ? `${studioDisplayName(analysis, dateSummary[0].column)}: ${formatStudioDate(dateSummary[0].start)} to ${formatStudioDate(dateSummary[0].end)}` : "No date range detected";
   header.innerHTML = `<span>Preview with your real file</span><strong>${escapeHtml(feature.title)}</strong><small>${escapeHtml(analysis.file_size || "Current browser session")} | ${escapeHtml(dateText)}</small>`;
   header.dataset.dashboardTab = "overview";
   canvas.appendChild(header);
@@ -1693,7 +1971,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   stats.className = "dashboard-kpi-grid";
   [
     { label: "Total records", value: analysis.rows ?? 0, title: "Rows and Records", detail: detailList([`${analysis.rows || 0} records were detected in this preview.`, "Rows usually represent people, events, transactions, services, or form submissions.", locked ? `Locked previews show only the first ${analysis.preview_limit} rows.` : "Exports can include the available cleaned output for this selected feature."]) },
-    { label: "Total fields", value: analysis.columns ?? 0, title: "Field Summary", detail: `<p>${escapeHtml(analysis.columns || 0)} fields were detected.</p>${detailList((analysis.detected_fields || []).slice(0, 16).map((field) => `Detected field: ${field}`))}` },
+    { label: "Total fields", value: analysis.columns ?? 0, title: "Field Summary", detail: `<p>${escapeHtml(analysis.columns || 0)} fields were detected.</p>${detailList((analysis.detected_fields || []).slice(0, 16).map((field) => `Detected field: ${studioDisplayName(analysis, field)}`))}` },
     { label: "Missing rows", value: missingProfile.missingRows ?? 0, title: "Missing Rows", detail: missingDetailHtml(analysis) },
     { label: "Missing cells", value: missingProfile.missingCells ?? 0, title: "Missing Cells", detail: missingDetailHtml(analysis) },
     { label: "Fields with blanks", value: missingProfile.missingColumns ?? 0, title: "Fields with Blanks", detail: missingDetailHtml(analysis) },
@@ -1707,7 +1985,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
     card.addEventListener("click", () => showStudioDetailPanel(item.title, item.detail));
     stats.appendChild(card);
   });
-  dateSummary.length && [ { label: "Date Range", value: `${formatStudioDate(dateSummary[0].start)} - ${formatStudioDate(dateSummary[0].end)}`, title: "Date Range Detail", detail: detailList([`Earliest date: ${formatStudioDate(dateSummary[0].start)}`, `Latest date: ${formatStudioDate(dateSummary[0].end)}`, `Detected date field: ${dateSummary[0].column}`, "Records are grouped by month so the chart stays readable."]) } ].forEach((item) => {
+  dateSummary.length && [ { label: "Date Range", value: `${formatStudioDate(dateSummary[0].start)} - ${formatStudioDate(dateSummary[0].end)}`, title: "Date Range Detail", detail: detailList([`Earliest date: ${formatStudioDate(dateSummary[0].start)}`, `Latest date: ${formatStudioDate(dateSummary[0].end)}`, `Detected date field: ${studioDisplayName(analysis, dateSummary[0].column)}`, "Records are grouped by month so the chart stays readable."]) } ].forEach((item) => {
     const card = document.createElement("button");
     card.type = "button";
     card.className = "dashboard-kpi-card is-clickable";
@@ -1736,7 +2014,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   visualGrid.className = "dashboard-visual-grid dashboard-visual-grid-wide";
   const overviewPanel = document.createElement("section");
   overviewPanel.className = "dashboard-preview-panel dashboard-tile";
-  overviewPanel.innerHTML = `<h4>Data Overview</h4><div class="dashboard-mini-list"><span>Source</span><b>${escapeHtml(analysis.source_kind || "Uploaded file")}</b><span>Detected fields</span><b>${escapeHtml((analysis.detected_fields || []).slice(0, 5).join(", ") || "None")}</b><span>Suggested view</span><b>${dateSummary.length ? "Trend and category dashboard" : "Category and quality dashboard"}</b></div>`;
+  overviewPanel.innerHTML = `<h4>Data Overview</h4><div class="dashboard-mini-list"><span>Source</span><b>${escapeHtml(analysis.source_kind || "Uploaded file")}</b><span>Detected fields</span><b>${escapeHtml((analysis.detected_fields || []).slice(0, 5).map((field) => studioDisplayName(analysis, field)).join(", ") || "None")}</b><span>Suggested view</span><b>${dateSummary.length ? "Trend and category dashboard" : "Category and quality dashboard"}</b></div>`;
   overviewPanel.dataset.dashboardTab = "overview";
   visualGrid.appendChild(overviewPanel);
 
@@ -1746,7 +2024,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
     const primary = dateSummary[0];
     const entries = Object.entries(primary.buckets).sort(([a], [b]) => a.localeCompare(b)).slice(-12);
     const max = Math.max(...entries.map(([, count]) => Number(count)), 1);
-    trendPanel.innerHTML = `<h4>Records by Start Month</h4><p class="dashboard-chart-label">${escapeHtml(primary.column)}</p><div class="dashboard-trend-bars">${entries.map(([label, count]) => `<div><i style="height:${pct((Number(count) / max) * 100)}"></i><span>${escapeHtml(label.slice(2))}</span><b>${escapeHtml(count)}</b></div>`).join("")}</div>`;
+    trendPanel.innerHTML = `<h4>Records by Start Month</h4><p class="dashboard-chart-label">${escapeHtml(studioDisplayName(analysis, primary.column))}</p><div class="dashboard-trend-bars">${entries.map(([label, count]) => `<div><i style="height:${pct((Number(count) / max) * 100)}"></i><span>${escapeHtml(label.slice(2))}</span><b>${escapeHtml(count)}</b></div>`).join("")}</div>`;
   } else {
     trendPanel.innerHTML = `<h4>Records Over Time</h4><p>No reliable date field was detected. Add or standardize a date field to unlock trend views.</p>`;
   }
@@ -1759,7 +2037,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   if (categoryEntries.length) {
     const [column, counts] = categoryEntries[0];
     const maxCount = Math.max(...Object.values(counts).map(Number), 1);
-    categoryPanel.innerHTML += `<p class="dashboard-chart-label">${escapeHtml(column)}</p>`;
+    categoryPanel.innerHTML += `<p class="dashboard-chart-label">${escapeHtml(studioDisplayName(analysis, column))}</p>`;
     Object.entries(counts).slice(0, locked ? 5 : 8).forEach(([name, count]) => {
       categoryPanel.innerHTML += `<div class="dashboard-bar-row"><span>${escapeHtml(name)}</span><div><i style="width:${pct((Number(count) / maxCount) * 100)}"></i></div><b>${escapeHtml(count)}</b></div>`;
     });
@@ -1768,6 +2046,46 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   }
   categoryPanel.dataset.dashboardTab = "visuals";
   visualGrid.appendChild(categoryPanel);
+  if (analysis.recipe === "surveyReferral") {
+    const surveyFields = getSurveyVisualFields(analysis);
+    const surveyKpiPanel = document.createElement("section");
+    surveyKpiPanel.className = "dashboard-preview-panel dashboard-tile-wide survey-dashboard-tile";
+    surveyKpiPanel.dataset.dashboardTab = "visuals";
+    const usableRecords = Math.max(0, (analysis.rows || 0) - (missingProfile.missingRows || 0));
+    const significantFindings = [surveyFields.organization, surveyFields.reason, surveyFields.date, missingEntries.length ? "Missing response patterns" : ""].filter(Boolean).length;
+    surveyKpiPanel.innerHTML = `<h4>Survey / Referral Dashboard</h4><div class="survey-kpi-row"><div><strong>${escapeHtml(analysis.rows || 0)}</strong><span>Response count</span></div><div><strong>${escapeHtml(usableRecords)}</strong><span>Usable records</span></div><div><strong>${escapeHtml(significantFindings)}</strong><span>Significant findings</span></div><div><strong>${escapeHtml(dateSummary.length ? formatStudioDate(dateSummary[0].start) : "Not detected")}</strong><span>Earliest date</span></div></div><p>ProgramMetrics detected survey-style fields and prioritized response counts, readable question labels, referral or denial trends, organization comparison, and missing response quality checks.</p>`;
+    visualGrid.appendChild(surveyKpiPanel);
+
+    if (surveyFields.organization) {
+      const counts = Object.entries(countValues(normalizedRowsForRender(analysis), surveyFields.organization)).filter(([name]) => name !== "Missing").sort((a, b) => Number(b[1]) - Number(a[1])).slice(0, locked ? 5 : 10);
+      const maxOrg = Math.max(...counts.map(([, count]) => Number(count)), 1);
+      const orgPanel = document.createElement("section");
+      orgPanel.className = "dashboard-preview-panel dashboard-tile";
+      orgPanel.dataset.dashboardTab = "visuals";
+      orgPanel.innerHTML = `<h4>Shelter / Organization Comparison</h4><p class="dashboard-chart-label">${escapeHtml(studioDisplayName(analysis, surveyFields.organization))}</p>${counts.map(([name, count]) => `<div class="dashboard-bar-row"><span>${escapeHtml(name)}</span><div><i style="width:${pct((Number(count) / maxOrg) * 100)}"></i></div><b>${escapeHtml(count)}</b></div>`).join("")}`;
+      visualGrid.appendChild(orgPanel);
+    }
+
+    if (surveyFields.reason) {
+      const counts = Object.entries(countValues(normalizedRowsForRender(analysis), surveyFields.reason)).filter(([name]) => name !== "Missing").sort((a, b) => Number(b[1]) - Number(a[1])).slice(0, locked ? 5 : 8);
+      const total = counts.reduce((sum, [, count]) => sum + Number(count), 0) || 1;
+      const reasonPanel = document.createElement("section");
+      reasonPanel.className = "dashboard-preview-panel dashboard-tile";
+      reasonPanel.dataset.dashboardTab = "visuals";
+      reasonPanel.innerHTML = `<h4>Referral / Denial Reason Distribution</h4><div class="dashboard-donut-list">${counts.map(([name, count]) => `<span><i style="--share:${Math.max(8, Math.round((Number(count) / total) * 100))}%"></i><b>${escapeHtml(name)}</b><em>${escapeHtml(count)}</em></span>`).join("")}</div>`;
+      visualGrid.appendChild(reasonPanel);
+    }
+
+    if (surveyFields.age && analysis.numeric_summary?.[surveyFields.age]?.histogram) {
+      const bins = analysis.numeric_summary[surveyFields.age].histogram;
+      const maxAge = Math.max(...bins.map((bin) => bin.count), 1);
+      const agePanel = document.createElement("section");
+      agePanel.className = "dashboard-preview-panel dashboard-tile";
+      agePanel.dataset.dashboardTab = "visuals";
+      agePanel.innerHTML = `<h4>Youth Age Distribution</h4><div class="dashboard-trend-bars histogram-bars">${bins.map((bin) => `<div><i style="height:${pct((bin.count / maxAge) * 100)}"></i><span>${escapeHtml(bin.label)}</span><b>${escapeHtml(bin.count)}</b></div>`).join("")}</div>`;
+      visualGrid.appendChild(agePanel);
+    }
+  }
 
   const missingPanel = document.createElement("section");
   missingPanel.className = `dashboard-preview-panel dashboard-tile${canPreviewFeature("missingReview", preview) ? "" : " locked-preview-panel"}`;
@@ -1775,7 +2093,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   if (missingEntries.length) {
     const maxMissing = Math.max(...missingEntries.map(([, count]) => Number(count)), 1);
     missingEntries.slice(0, locked ? 5 : 8).forEach(([column, count]) => {
-      missingPanel.innerHTML += `<div class="dashboard-bar-row missing-bar"><span>${escapeHtml(column)}</span><div><i style="width:${pct((Number(count) / maxMissing) * 100)}"></i></div><b>${escapeHtml(count)}</b></div>`;
+      missingPanel.innerHTML += `<div class="dashboard-bar-row missing-bar"><span>${escapeHtml(studioDisplayName(analysis, column))}</span><div><i style="width:${pct((Number(count) / maxMissing) * 100)}"></i></div><b>${escapeHtml(count)}</b></div>`;
     });
   } else {
     missingPanel.innerHTML += "<p>No missing values were detected in table-ready fields.</p>";
@@ -1789,7 +2107,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   missingPercentPanel.innerHTML = "<h4>Top Fields by Missing Percentage</h4>";
   if (missingPercentEntries.length) {
     missingPercentEntries.slice(0, locked ? 5 : 10).forEach(([column, percent]) => {
-      missingPercentPanel.innerHTML += `<div class="dashboard-bar-row missing-bar"><span>${escapeHtml(column)}</span><div><i style="width:${pct(percent)}"></i></div><b>${escapeHtml(percent)}%</b></div>`;
+      missingPercentPanel.innerHTML += `<div class="dashboard-bar-row missing-bar"><span>${escapeHtml(studioDisplayName(analysis, column))}</span><div><i style="width:${pct(percent)}"></i></div><b>${escapeHtml(percent)}%</b></div>`;
     });
   } else {
     missingPercentPanel.innerHTML += "<p>No fields have coded missing values.</p>";
@@ -1805,7 +2123,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   const heatmapPanel = document.createElement("section");
   heatmapPanel.className = "dashboard-preview-panel dashboard-tile";
   heatmapPanel.dataset.dashboardTab = "visuals";
-  heatmapPanel.innerHTML = `<h4>Field Completeness Heatmap</h4><div class="field-heatmap">${Object.entries(missingProfile.byColumn || {}).slice(0, 48).map(([column, count]) => { const complete = analysis.rows ? Math.round(100 - (Number(count) / analysis.rows) * 100) : 100; return `<span title="${escapeHtml(column)}: ${complete}% complete" style="--complete:${complete}%">${escapeHtml(column.slice(0, 14))}</span>`; }).join("")}</div>`;
+  heatmapPanel.innerHTML = `<h4>Field Completeness Heatmap</h4><div class="field-heatmap">${Object.entries(missingProfile.byColumn || {}).slice(0, 48).map(([column, count]) => { const complete = analysis.rows ? Math.round(100 - (Number(count) / analysis.rows) * 100) : 100; return `<span title="${escapeHtml(studioDisplayName(analysis, column))}: ${complete}% complete" style="--complete:${complete}%">${escapeHtml(studioDisplayName(analysis, column).slice(0, 14))}</span>`; }).join("")}</div>`;
   visualGrid.appendChild(heatmapPanel);
 
   const qualityPanel = document.createElement("section");
@@ -1906,6 +2224,10 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   }
   setupDashboardTabs(canvas, preview.access);
 }
+function normalizedRowsForRender(analysis) {
+  return (analysis.preview_rows || []).length ? analysis.preview_rows : [];
+}
+
 function countValues(rows, column) {
   return rows.reduce((counts, row) => {
     const value = String(row[column] || "Missing");
