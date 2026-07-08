@@ -338,6 +338,10 @@ function setupFileConverter(inputId, resultId, languageId, formatId, buttonId, a
     summary.textContent = `${formatFileSize(file.size)} | .${extension} | ${selectedFormat} | ${option} ${languageNote}`;
     result.textContent = file.name;
     result.appendChild(summary);
+    if (inputId === "studio-file-converter-input") {
+      setStudioAnalysisStatus("Ready to analyze");
+      updateStudioDownloadButton();
+    }
   };
 
   const submitFile = async (endpoint) => {
@@ -548,7 +552,7 @@ function setupStudioPackageAccess() {
 
     if (packageCard) {
       const lockedPreview = shouldWatermark(preview, unlocked);
-      packageCard.innerHTML = `<strong>Unlocked:</strong> ${escapeHtml(unlocked.label)}<br><strong>Previewing:</strong> ${escapeHtml(preview.label)}<br><small>${lockedPreview ? "Preview only - upgrade to export. Uploaded data stays limited, watermarked, and locked for premium sections." : "Outputs included in this unlocked level can be downloaded from this browser session."}</small>`;
+      packageCard.innerHTML = `<div><span>Unlocked</span><strong>${escapeHtml(unlocked.label)}</strong></div><div><span>Previewing</span><strong>${escapeHtml(preview.label)}</strong></div><div><span>Private session processing</span><strong>${lockedPreview ? "Preview only - upgrade to export locked outputs" : "Included outputs ready for download"}</strong></div><small>Use your unlocked access for real uploads. Preview higher-tier outputs with protected previews. Full downloads and exports require the matching Studio level.</small>`;
     }
 
     if (packageLabel) {
@@ -564,10 +568,12 @@ function setupStudioPackageAccess() {
         item.dataset.lockMessage = unlockedItem ? "Unlocked" : `Full export requires ${getLevelLabelByAccess(required)}`;
       }
     });
+    updateStudioDownloadButton();
   };
 
   accessSelect?.addEventListener("change", applyAccess);
   packageSelect?.addEventListener("change", applyAccess);
+  document.getElementById("studio-output-format")?.addEventListener("change", updateStudioDownloadButton);
 
   packageButtons.forEach((button) => {
     button.addEventListener("click", () => {
@@ -729,6 +735,7 @@ const studioOutputRequirements = {
   reusable_workflow: 5,
   recurring_report: 6,
   workflow_activation: 7,
+  workflow_package: 7,
   advanced_analytics: 8,
 };
 
@@ -743,6 +750,34 @@ function getLevelLabelByAccess(requiredAccess) {
   return entry ? entry.label : `Tier access ${requiredAccess}`;
 }
 
+function setStudioAnalysisStatus(step, isComplete = false) {
+  const status = document.getElementById("studio-analysis-status");
+  if (!status) return;
+  status.classList.toggle("is-complete", isComplete);
+  status.innerHTML = `<span>${escapeHtml(step)}</span>`;
+}
+
+function waitForStudioStatus() {
+  return new Promise((resolve) => setTimeout(resolve, 130));
+}
+
+async function runStudioStatusSteps(steps) {
+  for (const step of steps) {
+    setStudioAnalysisStatus(step);
+    await waitForStudioStatus();
+  }
+}
+
+function updateStudioDownloadButton() {
+  const button = document.getElementById("studio-convert-button");
+  const format = document.getElementById("studio-output-format");
+  if (!button || !format) return;
+  const unlocked = getUnlockedStudioAccess();
+  const outputType = format.value || "txt";
+  const unlockedOutput = canDownloadOutput(outputType, unlocked);
+  button.textContent = unlockedOutput ? "Download" : "Unlock download";
+  button.classList.toggle("is-output-locked", !unlockedOutput);
+}
 function canUploadRealFile(unlockedLevel) {
   return accessValue(unlockedLevel) >= studioFeatureRequirements.upload;
 }
@@ -971,9 +1006,12 @@ async function analyzeStudioUploadedFile(input, result, analyzeButton, analyzeLa
   }
   result.textContent = "Processing this file in the current browser session...";
   try {
+    await runStudioStatusSteps(["Reading file", "Detecting columns", "Checking missing values", "Checking duplicates", "Building preview"]);
     activeStudioUploadedAnalysis = await readStudioFileAsAnalysis(file);
     renderInsightPanel(insightPanel, activeStudioUploadedAnalysis);
     const limit = activeStudioUploadedAnalysis.preview_limit;
+    setStudioAnalysisStatus("Ready to preview", true);
+    updateStudioDownloadButton();
     result.textContent = `${activeStudioUploadedAnalysis.locked ? "Preview only - upgrade to export. " : "Preview generated. "}Showing first ${limit} rows from this browser session.`;
   } catch (error) {
     result.textContent = `${error.message} CSV, JSON, and plain text files can be previewed directly in the browser session.`;
@@ -1005,7 +1043,9 @@ async function studioDownloadCurrentOutput(input, result, format, language, butt
   const unlocked = getUnlockedStudioAccess();
   const required = getRequiredLevelForOutput(outputType);
   if (!canDownloadOutput(outputType, unlocked)) {
-    result.innerHTML = `Preview only - upgrade to export. <strong>${escapeHtml(format?.options[format.selectedIndex]?.text || outputType)}</strong> requires ${escapeHtml(getLevelLabelByAccess(required))}.`;
+    const targetPlan = Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === required) || "t1l3";
+    result.innerHTML = `Preview only - upgrade to export. <strong>${escapeHtml(format?.options[format.selectedIndex]?.text || outputType)}</strong> requires ${escapeHtml(getLevelLabelByAccess(required))}. <a href="checkout.html?plan=${encodeURIComponent(targetPlan)}">Unlock download</a>`;
+    updateStudioDownloadButton();
     return;
   }
   if (button) {
@@ -1027,9 +1067,9 @@ async function studioDownloadCurrentOutput(input, result, format, language, butt
     if (outputType === "csv") {
       blob = new Blob([csvFromRows(analysis.preview_rows || [])], { type: "text/csv;charset=utf-8" });
       filename = "programmetrics-cleaned-preview.csv";
-    } else if (outputType === "json") {
+    } else if (outputType === "json" || outputType === "workflow_package" || outputType === "advanced_analytics") {
       blob = new Blob([JSON.stringify({ analysis, language: language?.value || "English" }, null, 2)], { type: "application/json;charset=utf-8" });
-      filename = "programmetrics-studio-package.json";
+      filename = outputType === "workflow_package" ? "programmetrics-workflow-package.json" : outputType === "advanced_analytics" ? "programmetrics-advanced-analytics-export.json" : "programmetrics-studio-package.json";
     } else if (["html", "pdf"].includes(outputType)) {
       blob = new Blob([reportHtmlFromAnalysis(analysis, outputType === "pdf" ? "PDF-ready report" : "HTML report")], { type: "text/html;charset=utf-8" });
       filename = outputType === "pdf" ? "programmetrics-pdf-ready-report.html" : "programmetrics-report.html";

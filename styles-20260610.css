@@ -2432,3 +2432,110 @@ input.is-locked {
   color: #cbd5e1;
   font-weight: 800;
 }
+
+/* Studio Workspace refinements */
+.studio-status-card {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: stretch;
+  padding: 16px;
+}
+
+.studio-status-card div {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(15, 118, 110, 0.14);
+  border-radius: 8px;
+}
+
+.studio-status-card span {
+  color: #115e59;
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.studio-status-card strong {
+  color: var(--navy);
+  font-size: 0.96rem;
+}
+
+.studio-status-card small {
+  grid-column: 1 / -1;
+  color: var(--slate);
+  line-height: 1.45;
+}
+
+.studio-analysis-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 36px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  color: #115e59;
+  background: #ecfeff;
+  border: 1px solid #99f6e4;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.studio-analysis-status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  background: #14b8a6;
+  border-radius: 999px;
+}
+
+.studio-analysis-status.is-complete::before {
+  background: #22c55e;
+}
+
+.feature-access-item {
+  gap: 7px;
+  min-height: 132px;
+  padding: 16px;
+}
+
+.feature-access-item p {
+  margin: 0;
+  color: var(--slate);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.feature-access-item.is-unlocked {
+  box-shadow: 0 12px 28px rgba(20, 184, 166, 0.12);
+}
+
+.feature-access-item.is-locked {
+  opacity: 0.74;
+}
+
+#studio-convert-button.is-output-locked {
+  color: var(--navy);
+  background: #eef6ff;
+  border-color: #bfdbfe;
+}
+
+.dashboard-kpi-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dashboard-preview-panel.locked-preview-panel {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+@media (max-width: 900px) {
+  .studio-status-card,
+  .dashboard-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}

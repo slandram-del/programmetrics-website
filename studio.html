@@ -15,7 +15,7 @@
     <meta http-equiv="pragma" content="no-cache" />
     <meta http-equiv="expires" content="0" />
 
-    <link rel="stylesheet" href="styles-20260610.css?v=20260708-studio-access" />
+    <link rel="stylesheet" href="styles-20260610.css?v=20260708-studio-refine" />
   </head>
 
   <body>
@@ -78,9 +78,9 @@
 
         <div class="studio-workspace-grid">
           <article class="studio-control-panel reveal">
-            <p class="template-label" id="studio-package-label">Selected package</p>
-            <h3>Build a report-ready file</h3>
-            <p>Preview higher Studio levels with the uploaded file, then unlock the required level to download usable outputs.</p>
+            <p class="template-label" id="studio-package-label">Studio Workspace</p>
+            <h3>Upload, analyze, preview, export.</h3>
+            <p>Use your unlocked access for real uploads. Preview higher-tier outputs with protected previews. Full downloads and exports require the matching Studio level.</p>
 
             <div class="studio-package-picker">
               <label class="language-output" for="studio-access-select">
@@ -110,10 +110,12 @@
                   <option value="t4" data-access="8">Tier 4 Advanced Analytics - $3,500</option>
                 </select>
               </label>
-              <div class="active-package-card" id="active-package-card" aria-live="polite">
-                Unlocked: Tier 1 Level 1 - $49. Previewing: Tier 1 Level 1 - $49.
-              </div>
-              <div class="studio-security-rules">
+              <div class="active-package-card studio-status-card" id="active-package-card" aria-live="polite">
+                <div><span>Unlocked</span><strong>Tier 1 Level 1 - $49</strong></div>
+                <div><span>Previewing</span><strong>Tier 1 Level 1 - $49</strong></div>
+                <div><span>Private session processing</span><strong>Preview only - upgrade to export locked outputs</strong></div>
+                <small>Use your unlocked access for real uploads. Preview higher-tier outputs with protected previews. Full downloads and exports require the matching Studio level.</small>
+              </div><div class="studio-security-rules">
                 <strong>Privacy &amp; Session Processing</strong>
                 <ul>
                   <li>Your uploaded file is processed only for your current browser session.</li>
@@ -146,10 +148,14 @@
             </label>
 
             <label class="upload-zone" for="studio-file-converter-input">
-              <span>Choose a file</span>
-              <small>Drag and drop or choose a CSV, JSON, or text file for browser-session preview. Exports unlock only at the required paid level.</small>
+              <span>Upload your business file</span>
+              <small>Drag and drop or choose a spreadsheet, CSV, or business data file. Your file is processed only for this browser session and is not stored as long-term ProgramMetrics data.</small>
               <input id="studio-file-converter-input" type="file" />
             </label>
+
+            <div class="studio-analysis-status" id="studio-analysis-status" aria-live="polite">
+              <span>Ready for upload</span>
+            </div>
 
             <div class="studio-options-grid">
               <label class="language-output" for="studio-output-language">
@@ -166,13 +172,15 @@
               </label>
 
               <label class="language-output" for="studio-output-format">
-                <span>Download format</span>
+                <span>Choose output format</span>
                 <select id="studio-output-format">
-                  <option value="pdf" data-required-access="3">PDF report - Tier 1 Level 3+</option>
-                  <option value="html" data-required-access="3">HTML report - Tier 1 Level 3+</option>
-                  <option value="txt">Text report</option>
-                  <option value="csv">CSV table</option>
-                  <option value="json" data-required-access="4">JSON package - Tier 2+</option>
+                  <option value="txt">Text summary - included</option>
+                  <option value="csv" data-required-access="3">Cleaned CSV export - requires Tier 1 Level 3+</option>
+                  <option value="pdf" data-required-access="3">PDF report - requires Tier 1 Level 3+</option>
+                  <option value="html" data-required-access="3">HTML report - requires Tier 1 Level 3+</option>
+                  <option value="json" data-required-access="4">JSON package - requires Tier 2+</option>
+                  <option value="workflow_package" data-required-access="7">Workflow package - requires Tier 3</option>
+                  <option value="advanced_analytics" data-required-access="8">Advanced analytics export - requires Tier 4</option>
                 </select>
               </label>
             </div>
@@ -180,14 +188,14 @@
             <div class="feature-access-panel" aria-live="polite">
               <h4>Real-file feature access</h4>
               <div class="feature-access-grid">
-                <div class="feature-access-item" data-required-access="1"><strong>File upload and conversion</strong><span>Tier 1 Level 1+</span></div>
-                <div class="feature-access-item" data-required-access="2"><strong>Duplicate and missing-value checks</strong><span>Tier 1 Level 2+</span></div>
-                <div class="feature-access-item" data-required-access="3"><strong>Cleaned export and basic insights</strong><span>Tier 1 Level 3+</span></div>
-                <div class="feature-access-item" data-required-access="4"><strong>Branded report structure</strong><span>Tier 2 Level 1+</span></div>
-                <div class="feature-access-item" data-required-access="5"><strong>Translated report setup</strong><span>Tier 2 Level 2+</span></div>
-                <div class="feature-access-item" data-required-access="6"><strong>Recurring report setup</strong><span>Tier 2 Level 3+</span></div>
-                <div class="feature-access-item" data-required-access="7"><strong>Workflow rules and integrations</strong><span>Tier 3+</span></div>
-                <div class="feature-access-item" data-required-access="8"><strong>Advanced analytics and automation</strong><span>Tier 4</span></div>
+                <div class="feature-access-item" data-required-access="1"><strong>File upload and conversion</strong><p>Prepare your file for preview and standard output.</p><span>Unlocked at Tier 1 Level 1+</span></div>
+                <div class="feature-access-item" data-required-access="2"><strong>Duplicate and missing-value checks</strong><p>Find records that need review before reporting.</p><span>Unlocked at Tier 1 Level 2+</span></div>
+                <div class="feature-access-item" data-required-access="3"><strong>Cleaned export and dashboard summary</strong><p>Download cleaned data and a basic insight summary.</p><span>Unlocked at Tier 1 Level 3+</span></div>
+                <div class="feature-access-item" data-required-access="4"><strong>Branded report structure</strong><p>Create a professional report layout from your file.</p><span>Unlocked at Tier 2 Level 1+</span></div>
+                <div class="feature-access-item" data-required-access="5"><strong>Reusable report workflow</strong><p>Save a repeatable reporting setup for similar files.</p><span>Unlocked at Tier 2 Level 2+</span></div>
+                <div class="feature-access-item" data-required-access="6"><strong>Advanced quality review</strong><p>Add richer data checks and recurring report setup.</p><span>Unlocked at Tier 2 Level 3+</span></div>
+                <div class="feature-access-item" data-required-access="7"><strong>Workflow system preview</strong><p>Preview rules, fields, and workflow logic.</p><span>Unlocked at Tier 3+</span></div>
+                <div class="feature-access-item" data-required-access="8"><strong>Advanced analytics preview</strong><p>Preview predictive insights and multi-file analytics.</p><span>Unlocked at Tier 4+</span></div>
               </div>
             </div>
 
@@ -196,7 +204,7 @@
                 Generate dashboard preview
               </button>
               <button class="button mini secondary-mini converter-button" id="studio-convert-button" type="button">
-                Download report/export
+                Download
               </button>
             </div>
 
@@ -211,7 +219,7 @@
             <h3>Uploaded-file previews appear here</h3>
             <div class="studio-preview-empty" id="studio-preview-empty">
               <strong>No preview yet.</strong>
-              <span>Upload a real file, choose a preview level, and ProgramMetrics will show KPIs, tier-specific features, quality checks, charts, and a limited sample table without storing the upload as long-term customer data.</span>
+              <span>No preview yet. Upload a file to see your data summary, quality checks, charts, and available outputs.</span>
             </div>
             <div class="studio-preview-shell" id="studio-preview-shell" aria-live="polite"></div>
           </aside>
@@ -228,7 +236,7 @@
       </nav>
     </footer>
 
-    <script src="script-20260610.js?v=20260708-studio-access"></script>
+    <script src="script-20260610.js?v=20260708-studio-refine"></script>
     <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   </body>
 </html>
