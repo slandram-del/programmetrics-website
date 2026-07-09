@@ -3,6 +3,14 @@
 ## TypeScript-First
 New analytics modules should be TypeScript-first where the build supports it. Static browser compatibility may require mirrored JavaScript until the app has a bundler.
 
+
+## Platform Architecture Rules
+- Presentation code should call `src/lib/services` rather than importing protected engine modules directly.
+- Services call engines and configuration; engines perform calculations; shared utilities provide diagnostics and errors.
+- New package, pricing, export, feature flag, branding, and report-template data belongs in `src/config`.
+- Protected engines should return structured outputs and should not expose formulas, weights, ranking rules, heuristics, or internal prompts to browser UI.
+- Use `ProgramMetricsError` subclasses for consistent error handling.
+- Use diagnostics helpers for internal timing and warnings; do not expose diagnostic logs directly to customers.
 ## Centralized Configuration
 - Keep pricing in centralized package configuration.
 - Do not hardcode package prices in unrelated UI code.

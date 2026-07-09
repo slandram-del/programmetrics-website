@@ -15,6 +15,8 @@ ProgramMetrics product planning and implementation references live in [`docs/`](
 - [Coding Standards](docs/CODING_STANDARDS.md)
 
 - [Enterprise Architecture](docs/ENTERPRISE_ARCHITECTURE.md)
+- [Platform Architecture](docs/PLATFORM_ARCHITECTURE.md)
+- [Architecture Refactoring Report](docs/ARCHITECTURE_REFACTOR_REPORT.md)
 
 ## Copyright
-Copyright © 2026 ProgramMetrics. All Rights Reserved.
+Copyright Â© 2026 ProgramMetrics. All Rights Reserved.

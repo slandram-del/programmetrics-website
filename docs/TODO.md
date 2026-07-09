@@ -20,6 +20,14 @@
 - Add industry-intelligence adapters that enrich observations without inventing unsupported conclusions.
 - Add tests for executive observations, findings, warnings, opportunities, recommendations, action plans, and confidence narratives.
 - Add package-aware narrative depth for Data Foundation, Management Insights, Professional Analytics, Executive Intelligence, and Enterprise outputs.
+
+## Platform Architecture Follow-Ups
+- Add TypeScript build/test setup for service, config, registry, and shared utility layers.
+- Add architecture lint rules that prevent presentation components from importing protected engines directly.
+- Migrate static `script.js` package, pricing, preview, and analytics mirrors behind `src/lib/services` or a ProgramMetrics API.
+- Generate static page package/pricing content from `src/config/analyticsPackages.ts`.
+- Add diagnostics adapters for browser, server, and background job contexts.
+- Move future API base URLs and payment configuration into secure environment configuration.
 ## Enterprise Architecture Follow-Ups
 - Implement ProgramMetrics API boundary for analytics, reports, branding, workflows, and exports.
 - Add authentication and role-based access controls.

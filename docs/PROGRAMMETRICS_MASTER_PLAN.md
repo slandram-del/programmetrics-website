@@ -61,6 +61,22 @@ Upload Data -> Review Data Setup -> Choose Analytics Package -> Choose Output Le
 
 
 
+
+## Platform Architecture
+ProgramMetrics now uses a layered architecture:
+
+```text
+Presentation Layer
+  -> Application Services
+  -> Analytics / Report / Branding / Workflow Engines
+  -> Shared Utilities
+  -> Configuration
+  -> Future Infrastructure
+```
+
+Application services live in `src/lib/services/`, centralized product configuration lives in `src/config/`, shared diagnostics and error types live in `src/lib/shared/`, and engine discovery lives in `src/lib/engineRegistry.ts`.
+
+UI and future React components should call services. Services call engines. Engines perform protected calculations and return structured outputs only.
 ## Analytics Intelligence Layer
 The Analytics Intelligence Layer sits above the Analytics Recommendation Engine and converts `AnalyticsPlan` outputs into evidence-backed executive observations, analytical findings, warnings, opportunities, prioritized recommendations, action plans, grouped insights, and confidence-aware narratives.
 
@@ -92,7 +108,11 @@ Internal docs may describe module responsibilities, inputs, and outputs. Custome
 ### Future API Architecture
 Future SaaS architecture should route requests through a ProgramMetrics API before invoking analytics, report, branding, workflow, and export engines. Browser clients should receive renderable results, summaries, dashboards, and export metadata instead of protected calculation methods.
 ## Current Architecture
-- `src/lib/platform/` exposes the analytics interface contract for UI and future API callers.
+- `src/lib/services/` exposes application-service boundaries for analytics, previews, reports, branding, deliverables, workflows, and pricing.
+- `src/config/` centralizes packages, feature flags, export formats, templates, branding defaults, and application config.
+- `src/lib/shared/` provides platform errors and diagnostics.
+- `src/lib/engineRegistry.ts` registers current and future engines.
+- `src/lib/platform/` exposes the analytics interface contract for services, UI, and future API callers.
 - `src/lib/analytics-engine/` is the protected source of truth for `generateAnalyticsPlan()`.
 - `src/lib/chart-engine/` converts `recommendedVisuals` into reusable render models through chart registry, chart selector, chart data builder, dashboard builder, and responsive chart layouts.
 - The current static Studio browser script mirrors the chart-engine behavior so uploaded/session files can render immediately without a bundler; a future build step should import the TypeScript engine directly.

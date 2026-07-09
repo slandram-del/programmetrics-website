@@ -3,6 +3,9 @@
 ## Unreleased
 
 ### New Features
+- Added platform service layer for analytics, previews, reports, branding, deliverables, workflows, and pricing.
+- Added centralized configuration layer for packages, feature flags, industry templates, report templates, branding defaults, export formats, and application config.
+- Added engine registry, platform diagnostics, shared error types, and architecture refactoring report.
 - Added Analytics Intelligence Engine modules for executive observations, analytical findings, warnings, opportunities, prioritized recommendations, action plans, grouped insights, and confidence-aware narratives.
 - Added enterprise architecture foundation documentation for protected analytics, future API boundaries, and trade secret strategy.
 - Added src/lib/platform interface layer for Analytics Studio responses and public analytics summaries.
@@ -36,6 +39,8 @@
 - Static asset cache keys were bumped so browsers fetch the updated dashboard UI.
 
 ### Refactors
+- Established layered dependency boundaries: Presentation -> Services -> Engines -> Shared Utilities -> Configuration.
+- Moved future UI integration toward service calls instead of direct protected-engine access.
 - Kept intelligence-generation business logic isolated under src/lib/analytics-engine/intelligence so UI consumers receive structured outputs rather than internal prioritization rules.
 - Marked analytics-engine modules as protected business logic and routed future UI/API usage through platform interfaces.
 - Added report/export copyright metadata placeholders.

@@ -6,9 +6,13 @@ Sprint 4.5 - Analytics intelligence and recommendation system
 ## Overall Completion
 Estimated overall completion: 47%
 
-ProgramMetrics now has the core analytics recommendation engine, protected platform interface, reusable chart-engine render models, static Studio dashboard integration, KPI explainability panels, and an Analytics Intelligence Layer that turns `AnalyticsPlan` outputs into executive observations, findings, warnings, opportunities, recommendations, action plans, grouped insights, and confidence-aware narratives. The product is still pre-production for direct static Studio integration with the intelligence output, native SVG/canvas chart drawing, automated tests, native exports, persistence, AI Analyst, report library, accounts, authentication, and enterprise workflows.
+ProgramMetrics now has a layered platform architecture, centralized configuration, application services, shared diagnostics/errors, an engine registry, the core analytics recommendation engine, protected platform interface, reusable chart-engine render models, static Studio dashboard integration, KPI explainability panels, and an Analytics Intelligence Layer that turns `AnalyticsPlan` outputs into executive observations, findings, warnings, opportunities, recommendations, action plans, grouped insights, and confidence-aware narratives. The product is still pre-production for direct static Studio integration with the intelligence output, native SVG/canvas chart drawing, automated tests, native exports, persistence, AI Analyst, report library, accounts, authentication, and enterprise workflows.
 
 ## Recently Completed
+- Completed Sprint 4.4 platform architecture foundation with service, config, registry, diagnostics, shared errors, and refactoring-report docs.
+- Added `src/lib/services/` application boundaries for analytics, previews, reports, branding, deliverables, workflows, and pricing.
+- Added `src/config/` centralized package, flag, template, branding, export, and app configuration.
+- Added `src/lib/engineRegistry.ts` and `src/lib/shared/` diagnostics/error utilities.
 - Added `src/lib/analytics-engine/intelligence/` with intelligence orchestration and focused generator modules.
 - Added executive observations grounded in dataset profile, missingness, duplicates, dates, categories, organizations, outcomes, and numeric patterns.
 - Added analytical findings with importance, confidence, business impact, recommended action, package availability, and related fields.
@@ -21,7 +25,7 @@ ProgramMetrics now has the core analytics recommendation engine, protected platf
 
 ## In Progress
 - Connecting static Studio dashboard tabs directly to `AnalyticsIntelligence` outputs.
-- Moving static Studio browser calculations behind `src/lib/platform` or a future ProgramMetrics API.
+- Moving static Studio browser calculations behind `src/lib/services`, `src/lib/platform`, or a future ProgramMetrics API.
 - Accessibility polish for KPI detail panels, including focus management and Escape-key close behavior.
 - Visual polish and responsive fit for the Analytics Studio wizard and dashboard workspace.
 - Package-aware deliverables and export preview depth.

@@ -64,8 +64,13 @@
 - [ ] SVG/canvas production renderer for true chart drawing beyond HTML/CSS render models
 
 
-## Phase 4.4 - Enterprise Architecture Foundation - Complete
+## Phase 4.4 - Platform Architecture Foundation - Complete
 - [x] Add protected analytics interface layer in `src/lib/platform`
+- [x] Add application service layer in `src/lib/services`
+- [x] Add centralized configuration layer in `src/config`
+- [x] Add engine registry in `src/lib/engineRegistry.ts`
+- [x] Add shared diagnostics and platform error types in `src/lib/shared`
+- [x] Add architecture refactoring report
 - [x] Document protected business logic and trade secret strategy
 - [x] Add future ProgramMetrics API architecture path
 - [x] Add legal placeholder routes for `/terms`, `/privacy`, and `/license`
@@ -169,12 +174,12 @@
 - Build native SVG/canvas chart renderers from the chart-engine render model.
 - Add automated tests for KPI explainability panel content and click behavior.
 
+- Add server-side protected analytics API boundary.
+- Add architecture linting to prevent protected formulas from leaking into UI components.
+- Add tests for intelligence-engine outputs using representative survey, business, and program datasets.
+- Add architecture lint rules preventing presentation code from importing protected engines directly.
+
 ## Related Documents
 - [Master Plan](PROGRAMMETRICS_MASTER_PLAN.md)
 - [TODO](TODO.md)
 - [Coding Standards](CODING_STANDARDS.md)
-
-- Add server-side protected analytics API boundary.
-- Add architecture linting to prevent protected formulas from leaking into UI components.
-
-- Add tests for intelligence-engine outputs using representative survey, business, and program datasets.
