@@ -4867,4 +4867,59 @@ body:has(.studio-workspace) .studio-feature-card p {
   max-width: 1440px;
   margin: 0 auto;
 }
+/* Analytics Studio six-step journey */
+.studio-journey-rail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 12px;
+  width: min(100%, 1640px);
+  margin: 0 auto 24px;
+}
+
+.studio-journey-rail article {
+  position: relative;
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fbff 62%, #ecfeff 100%);
+  padding: 16px;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.07);
+}
+
+.studio-journey-rail article::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(120deg, rgba(20, 184, 166, 0.12), transparent 45%, rgba(37, 99, 235, 0.1));
+}
+
+.studio-journey-rail span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 999px;
+  background: #0b1728;
+  color: #ecfeff;
+  font-weight: 900;
+}
+
+.studio-journey-rail strong {
+  color: var(--navy);
+  font-size: 0.98rem;
+}
+
+.studio-journey-rail small {
+  color: #64748b;
+  line-height: 1.35;
+}
+
+body:has(.studio-workspace) .studio-output-panel .studio-preview-toolbar {
+  border: 1px solid #dbeafe;
+  background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+}
 

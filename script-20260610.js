@@ -584,23 +584,23 @@ let activeStudioLevelId = "essential";
 const studioPackageLevelInsights = {
   essential: "Know what is wrong with your data.",
   professional: "Understand what your data says.",
-  premium: "Explain the story behind the data.",
+  premium: "Explain the story behind your data.",
   complete: "Present actionable insights to leadership.",
   executive: "Present actionable insights to leadership.",
   custom: "Build a custom executive analytics system."
-};
+}
 
 const analyticsPackages = [
   {
     id: "data-clean",
-    name: "Data Clean Package",
-    shortName: "Data Clean",
+    name: "Data Foundation Package",
+    shortName: "Data Foundation",
     startingPrice: 49,
-    description: "Prepare messy spreadsheets for reporting.",
-    bestFor: ["Cleaning spreadsheets", "Missing-value review", "Duplicate checks", "File validation"],
-    previewFocus: "Cleaned file readiness, missingness, duplicates, validation, and data quality scoring.",
+    description: "Prepare your data for reporting.",
+    bestFor: ["Analysts", "Data managers", "Researchers", "Consultants"],
+    previewFocus: "Clean data readiness, validation, missingness, duplicates, data dictionary, and reporting foundation.",
     levels: [
-      { id: "essential", name: "Essential", price: 49, deliverables: ["Cleaned CSV", "Missing value report", "Duplicate report", "Data quality score", "Basic validation summary"], exports: ["csv", "missing_csv", "duplicate_csv", "json", "summary"] },
+      { id: "essential", name: "Essential", price: 49, deliverables: ["Clean CSV", "Missing value report", "Duplicate report", "Data quality score", "Validation Summary"], exports: ["csv", "missing_csv", "duplicate_csv", "json", "summary"] },
       { id: "professional", name: "Professional", price: 59, deliverables: ["Excel workbook", "Data dictionary", "Missing value coding report", "Field type analysis", "Cleaning recommendations"], exports: ["xlsx", "dictionary_xlsx", "missing_csv", "json", "summary"] },
       { id: "premium", name: "Premium", price: 69, deliverables: ["Interactive cleaning dashboard", "Before/after comparisons", "Downloadable quality report", "Data profile report", "Branded PDF summary"], exports: ["html", "pdf", "png", "json", "summary"] },
       { id: "complete", name: "Complete", price: 79, deliverables: ["Interactive HTML dashboard", "Executive data quality summary", "Audit trail", "Processing log", "ZIP package"], exports: ["zip", "html", "pdf", "csv", "missing_csv", "duplicate_csv", "dictionary_xlsx", "json", "summary"] }
@@ -608,26 +608,26 @@ const analyticsPackages = [
   },
   {
     id: "management-dashboard",
-    name: "Management Dashboard Package",
-    shortName: "Management Dashboard",
+    name: "Management Insights Package",
+    shortName: "Management Insights",
     startingPrice: 199,
-    description: "Create dashboards and executive-ready reports.",
-    bestFor: ["Program managers", "Directors", "Grant reporting", "Monthly reporting"],
-    previewFocus: "Operational KPIs, executive summaries, dashboard pages, charts, and management reporting deliverables.",
+    description: "Executive dashboards for operational reporting.",
+    bestFor: ["Program Managers", "Directors", "Grant Reporting", "Leadership Teams"],
+    previewFocus: "Interactive dashboards, KPI summaries, executive PDFs, dashboard images, and cleaned Excel workbooks.",
     levels: [
-      { id: "essential", name: "Essential", price: 199, deliverables: ["Interactive dashboard", "Executive PDF", "Word report", "KPI dashboard", "PNG dashboard image"], exports: ["html", "pdf", "docx", "png", "summary"] },
+      { id: "essential", name: "Essential", price: 199, deliverables: ["Interactive dashboard", "Executive PDF", "Word report", "KPI Summary", "Dashboard Images"], exports: ["html", "pdf", "docx", "png", "summary"] },
       { id: "professional", name: "Professional", price: 229, deliverables: ["Multiple dashboard pages", "Additional charts", "Organization branding", "Executive summary", "Recommendations"], exports: ["html", "pdf", "docx", "pptx", "png", "json"] },
       { id: "premium", name: "Premium", price: 249, deliverables: ["Presentation graphics", "Executive infographic", "Dashboard thumbnails", "Interactive navigation", "Expanded analytics"], exports: ["zip", "html", "pdf", "docx", "pptx", "png", "json"] }
     ]
   },
   {
     id: "analytics",
-    name: "Analytics Package",
+    name: "Professional Analytics Package",
     shortName: "Analytics",
     startingPrice: 499,
-    description: "Generate statistical summaries, trends, and deeper insights.",
-    bestFor: ["Analysts", "Evaluators", "Researchers", "Quality improvement teams"],
-    previewFocus: "Statistical summaries, trend analysis, forecasts, outlier review, correlations, and recommendations.",
+    description: "Advanced reporting and statistical analysis.",
+    bestFor: ["Analysts", "Evaluation Teams", "Researchers", "Quality improvement teams"],
+    previewFocus: "Statistical analysis, trends, forecasting, correlations, advanced dashboard views, and recommendations.",
     levels: [
       { id: "essential", name: "Essential", price: 499, deliverables: ["Statistical analysis", "Trend analysis", "Forecasts", "Descriptive statistics", "Recommendations"], exports: ["html", "pdf", "xlsx", "json", "summary"] },
       { id: "professional", name: "Professional", price: 599, deliverables: ["Correlation analysis", "Advanced charts", "Outlier review", "Benchmark comparisons", "Expanded narrative"], exports: ["zip", "html", "pdf", "docx", "xlsx", "png", "json"] },
@@ -636,30 +636,30 @@ const analyticsPackages = [
   },
   {
     id: "executive-intelligence",
-    name: "Executive Intelligence Package",
+    name: "Executive Intelligence Suite",
     shortName: "Executive Intelligence",
     startingPrice: 1999,
-    description: "Create a complete board-ready reporting suite.",
-    bestFor: ["Leadership", "Funders", "Board meetings", "Government reporting"],
-    previewFocus: "Board-ready dashboards, AI-style narratives, presentation-ready visuals, and executive reporting suites.",
+    description: "Board-ready executive reporting.",
+    bestFor: ["Executives", "Funders", "Board Meetings", "Government reporting"],
+    previewFocus: "AI executive narrative, PowerPoint, executive dashboards, publication graphics, metadata, processing audit, and complete ZIP packages.",
     levels: [
-      { id: "essential", name: "Essential", price: 1999, deliverables: ["Board-ready dashboard", "Executive PDF", "PowerPoint", "Word report", "HTML dashboard", "AI narrative"], exports: ["zip", "html", "pdf", "docx", "pptx", "png", "json"] },
+      { id: "essential", name: "Essential", price: 1999, deliverables: ["Board-ready dashboard", "Executive PDF", "PowerPoint", "Word report", "HTML dashboard", "AI Executive Narrative"], exports: ["zip", "html", "pdf", "docx", "pptx", "png", "json"] },
       { id: "professional", name: "Professional", price: 2499, deliverables: ["Executive briefing", "Board presentation", "Strategic recommendations", "Advanced branding", "Multi-report package"], exports: ["zip", "html", "pdf", "docx", "pptx", "xlsx", "png", "json"] },
       { id: "premium", name: "Premium", price: 2999, deliverables: ["Publication graphics", "Enhanced executive storytelling", "Multiple dashboard themes", "Presentation-ready visuals", "Expanded appendix"], exports: ["zip", "html", "pdf", "docx", "pptx", "xlsx", "png", "json", "summary"] },
-      { id: "executive", name: "Complete / Executive", price: 3500, deliverables: ["Unlimited export formats", "Complete branded reporting suite", "Multi-file analytics", "Workflow templates", "Metadata package", "Processing audit", "Consulting-grade deliverables", "Enterprise-ready ZIP package"], exports: ["zip", "html", "pdf", "docx", "pptx", "xlsx", "csv", "missing_csv", "duplicate_csv", "dictionary_xlsx", "png", "json", "summary"] }
+      { id: "executive", name: "Executive", price: 3500, deliverables: ["Unlimited export formats", "Complete branded reporting suite", "Multi-file analytics", "Workflow templates", "Metadata package", "Processing audit", "Consulting-grade deliverables", "Enterprise-ready ZIP package"], exports: ["zip", "html", "pdf", "docx", "pptx", "xlsx", "csv", "missing_csv", "duplicate_csv", "dictionary_xlsx", "png", "json", "summary"] }
     ]
   },
   {
     id: "enterprise-suite",
-    name: "Enterprise Executive Suite",
-    shortName: "Enterprise Suite",
+    name: "Enterprise Intelligence Platform",
+    shortName: "Enterprise Platform",
     startingPrice: 3500,
     customQuote: true,
-    description: "Custom branded analytics systems, recurring workflows, multi-file analysis, and consulting-grade deliverables.",
+    description: "Custom enterprise analytics.",
     bestFor: ["Custom quote", "Recurring reporting", "Multi-file systems", "Consulting-grade delivery"],
     previewFocus: "Custom executive analytics system planning, workflow design, multi-file strategy, and enterprise package scoping.",
     levels: [
-      { id: "custom", name: "Custom Quote", price: 3500, displayPrice: "$3,500+", deliverables: ["Custom branded analytics system", "Recurring workflow design", "Multi-file analysis", "Consulting-grade deliverables", "Enterprise implementation plan"], exports: ["zip", "html", "pdf", "docx", "pptx", "xlsx", "png", "json", "summary"] }
+      { id: "custom", name: "Custom Quote", price: 3500, displayPrice: "$3,500+", deliverables: ["Custom branded analytics system", "Recurring reporting", "Multi-file analysis", "Consulting-grade deliverables", "White labeling, API, unlimited exports"], exports: ["zip", "html", "pdf", "docx", "pptx", "xlsx", "png", "json", "summary"] }
     ]
   }
 ];
@@ -859,11 +859,11 @@ function setupStudioPackageAccess() {
       ["PowerPoint", ["-", "Premium", "Premium", "Included"]],
       ["Advanced analytics", ["-", "Premium", "Included", "Included"]],
       ["Forecasting", ["-", "Premium", "Essential+", "Included"]],
-      ["AI narrative", ["-", "Professional+", "Professional+", "Included"]],
+      ["AI Executive Narrative", ["-", "Professional+", "Professional+", "Included"]],
       ["Branding", ["Premium+", "Professional+", "Premium", "Included"]],
       ["ZIP package", ["Complete", "Premium", "Professional+", "Included"]]
     ];
-    comparison.innerHTML = `<h4>Package comparison</h4><div class="studio-comparison-table"><table><thead><tr><th>Deliverable</th><th>Data Clean</th><th>Management Dashboard</th><th>Analytics</th><th>Executive Intelligence</th></tr></thead><tbody>${rows.map(([name, values]) => `<tr><th>${escapeHtml(name)}</th>${values.map((value) => `<td>${value === "Included" ? "✓" : escapeHtml(value)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+    comparison.innerHTML = `<h4>Package comparison</h4><div class="studio-comparison-table"><table><thead><tr><th>Deliverable</th><th>Data Foundation</th><th>Management Insights</th><th>Analytics</th><th>Executive Intelligence</th></tr></thead><tbody>${rows.map(([name, values]) => `<tr><th>${escapeHtml(name)}</th>${values.map((value) => `<td>${value === "Included" ? "✓" : escapeHtml(value)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
   };
 
   function applyAccess(refreshPreview = false) {
@@ -1924,8 +1924,8 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind, setupMetadata = {})
   const narrative = buildDashboardNarrative({ rows: normalizedRows, columns, missingEntries, missingTotal, duplicates, dateSummary, categorySummary, qualityScore, feature, recipe });
   const cleaningSteps = [
     "Detected fields and table shape from the uploaded file",
-    canPreviewFeature("duplicateChecks", preview) ? "Reviewed duplicate records" : "Duplicate checks are available in limited preview",
-    canPreviewFeature("missingReview", preview) ? "Counted missing values by field" : "Missing-value review is available in limited preview",
+    canPreviewFeature("duplicateChecks", preview) ? "Reviewed duplicate records" : "Researchers are available in limited preview",
+    canPreviewFeature("missingReview", preview) ? "Counted missing values by field" : "Data managers is available in limited preview",
     canPreviewFeature("cleanedExport", preview) ? "Prepared cleaned-export preview" : "Cleaned export can be previewed before purchase",
     canPreviewFeature("branded", preview) ? "Mapped branded report sections" : "Branded report structure can be previewed before purchase",
     canPreviewFeature("translatedReport", preview) ? "Prepared translated report setup preview" : "Translated report setup can be previewed before purchase",
@@ -2390,7 +2390,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   const actionsPanel = document.createElement("section");
   actionsPanel.className = "dashboard-preview-panel dashboard-tile";
   actionsPanel.innerHTML = `<h4>Recommended Cleaning Actions</h4><ul>${(analysis.cleaning_steps || []).slice(0, locked ? 5 : 8).map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ul>${exportControls}`;
-  actionsPanel.dataset.dashboardTab = "executive";
+  actionsPanel.dataset.dashboardTab = "recommendations";
   visualGrid.appendChild(actionsPanel);
   const fieldTypePanel = document.createElement("section");
   fieldTypePanel.className = "dashboard-preview-panel dashboard-tile";
@@ -2597,13 +2597,13 @@ function setupStudioFeatureCards() {
   if (!canvas || canvas.querySelector(".dashboard-tabs")) return;
   const tabs = [
     ["overview", "Overview"],
-    ["quality", "Data Quality"],
+    ["visuals", "Dashboard"],
+    ["advanced", "Visual Analytics"],
     ["stats", "Descriptive Statistics"],
-    ["missing", "Missing Values"],
-    ["visuals", "Visual Analytics"],
-    ["advanced", "Advanced Analytics"],
-    ["executive", "Executive Report"],
-    ["exports", "Exports"],
+    ["quality", "Data Quality"],
+    ["executive", "Executive Summary"],
+    ["recommendations", "Recommendations"],
+    ["exports", "Deliverables"],
   ];
   const tabBar = document.createElement("div");
   tabBar.className = "dashboard-tabs";
@@ -2839,7 +2839,7 @@ const studioPricingPlans = {
     price: "$799",
     summary: "Best for customers who repeat the same reporting process monthly or quarterly.",
     includes: ["Everything in Tier 2 Level 2", "Richer data-quality rules", "Recurring report layout", "Reusable reporting process"],
-    best: ["Grant reporting", "Monthly leadership dashboards", "Quarterly compliance packets", "Teams that repeat the same upload-to-report process"],
+    best: ["Grant Reporting", "Monthly leadership dashboards", "Quarterly compliance packets", "Teams that repeat the same upload-to-report process"],
     upgrade: "Upgrade to Tier 3 when the customer needs custom fields, workflow rules, dashboard logic, or integrations."
   },
   t3: {
@@ -3059,6 +3059,10 @@ function setupCheckoutFlow() {
 }
 
 setupCheckoutFlow();
+
+
+
+
 
 
 
