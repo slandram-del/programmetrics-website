@@ -177,7 +177,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   }
 
   const missingEntries = Object.entries(analysis.missing_values || {}).filter(([, count]) => Number(count) > 0);
-  const categoryEntries = Object.entries(analysis.category_summary || {});
+  const categoryEntries = Object.entries(analysis.category_summary || {}).filter(([field]) => !isStudioBadVisualField(field, studioDisplayName(analysis, field))).sort(([a], [b]) => (a === dashboardConfig.groupField ? -1 : b === dashboardConfig.groupField ? 1 : studioFieldScore(b, analysis, "category") - studioFieldScore(a, analysis, "category")));
   const previewRows = analysis.preview_rows || [];
   const previewColumns = previewRows.length ? Object.keys(previewRows[0]).slice(0, 6) : [];
 
@@ -216,7 +216,9 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   categoryPanel.className = "dashboard-preview-panel";
   categoryPanel.innerHTML = "<h4>Top category chart</h4>";
   if (categoryEntries.length) {
-    const [column, counts] = categoryEntries[0];
+    const selectedCategoryField = dashboardConfig.groupField || dashboardConfig.reasonField || categoryEntries[0]?.[0];
+    const column = selectedCategoryField || categoryEntries[0]?.[0];
+    const counts = analysis.category_summary?.[column] || categoryEntries[0]?.[1] || {};
     const maxCount = Math.max(...Object.values(counts).map(Number), 1);
     const label = document.createElement("p");
     label.className = "dashboard-chart-label";
@@ -234,17 +236,17 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   categoryPanel.dataset.dashboardTab = "visuals";
   visualGrid.appendChild(categoryPanel);
   if (analysis.recipe === "surveyReferral") {
-    const surveyFields = getSurveyVisualFields(analysis);
+    const surveyFields = Object.assign({}, getSurveyVisualFields(analysis), { date: dashboardConfig.trendField || getSurveyVisualFields(analysis).date, organization: dashboardConfig.groupField || getSurveyVisualFields(analysis).organization, reason: dashboardConfig.reasonField || getSurveyVisualFields(analysis).reason, age: dashboardConfig.numericField || getSurveyVisualFields(analysis).age });
     const surveyKpiPanel = document.createElement("section");
     surveyKpiPanel.className = "dashboard-preview-panel dashboard-tile-wide survey-dashboard-tile";
     surveyKpiPanel.dataset.dashboardTab = "visuals";
-    const usableRecords = Math.max(0, (analysis.rows || 0) - (missingProfile.missingRows || 0));
+    const usableRecords = usableSurveyRecordCount(analysis, surveyFields);
     const significantFindings = [surveyFields.organization, surveyFields.reason, surveyFields.date, missingEntries.length ? "Missing response patterns" : ""].filter(Boolean).length;
     surveyKpiPanel.innerHTML = `<h4>Survey / Referral Dashboard</h4><div class="survey-kpi-row"><div><strong>${escapeHtml(analysis.rows || 0)}</strong><span>Response count</span></div><div><strong>${escapeHtml(usableRecords)}</strong><span>Usable records</span></div><div><strong>${escapeHtml(significantFindings)}</strong><span>Significant findings</span></div><div><strong>${escapeHtml(dateSummary.length ? formatStudioDate(dateSummary[0].start) : "Not detected")}</strong><span>Earliest date</span></div></div><p>ProgramMetrics detected survey-style fields and prioritized response counts, readable question labels, referral or denial trends, organization comparison, and missing response quality checks.</p>`;
     visualGrid.appendChild(surveyKpiPanel);
 
     if (surveyFields.organization) {
-      const counts = Object.entries(countValues(normalizedRowsForRender(analysis), surveyFields.organization)).filter(([name]) => name !== "Missing").sort((a, b) => Number(b[1]) - Number(a[1])).slice(0, locked ? 5 : 10);
+      const counts = topCountsForField(analysis, surveyFields.organization, locked ? 5 : 10);
       const maxOrg = Math.max(...counts.map(([, count]) => Number(count)), 1);
       const orgPanel = document.createElement("section");
       orgPanel.className = "dashboard-preview-panel dashboard-tile";
@@ -254,7 +256,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
     }
 
     if (surveyFields.reason) {
-      const counts = Object.entries(countValues(normalizedRowsForRender(analysis), surveyFields.reason)).filter(([name]) => name !== "Missing").sort((a, b) => Number(b[1]) - Number(a[1])).slice(0, locked ? 5 : 8);
+      const counts = topCountsForField(analysis, surveyFields.reason, locked ? 5 : 8);
       const total = counts.reduce((sum, [, count]) => sum + Number(count), 0) || 1;
       const reasonPanel = document.createElement("section");
       reasonPanel.className = "dashboard-preview-panel dashboard-tile";
@@ -387,6 +389,7 @@ function setupFileConverter(inputId, resultId, languageId, formatId, buttonId, a
       activeStudioUploadedAnalysis = null;
       activeStudioRawImport = null;
       activeStudioDataSetup = null;
+      activeStudioDashboardConfig = null;
       const setupPanel = document.getElementById("studio-data-setup-panel");
       if (setupPanel) setupPanel.hidden = true;
     }
@@ -561,6 +564,7 @@ let activeStudioExampleAnalysis = null;
 let activeStudioUploadedAnalysis = null;
 let activeStudioRawImport = null;
 let activeStudioDataSetup = null;
+let activeStudioDashboardConfig = null;
 let activeBrandLogoDataUrl = "";
 let activeStudioFeatureKey = "conversion";
 const defaultStudioMissingCodes = ["", " ", "NA", "N/A", "n/a", "null", "NULL", "unknown", "Unknown", "blank", "Blank", "not reported", "Not Reported", "missing", "Missing", "--", "-"];
@@ -1276,8 +1280,8 @@ function uniqueStudioName(name, used) {
 function rowLooksLikeImportMetadata(row) {
   const cells = (row || []).map((value) => String(value || "").trim()).filter(Boolean);
   if (!cells.length) return false;
-  const metadataHits = cells.filter((value) => /^(importid|recipient|external|startdate|enddate|status|duration|recordeddate|responseid|locationlatitude|locationlongitude)$/i.test(value) || /^\$?\{.+\}$/.test(value)).length;
-  return metadataHits / cells.length > 0.45;
+  const metadataHits = cells.filter((value) => /^(importid|recipient|external|startdate|enddate|status|duration|recordeddate|responseid|locationlatitude|locationlongitude)$/i.test(value) || /^QID\d+/i.test(value) || /^\$?\{.+\}$/.test(value)).length;
+  return metadataHits / cells.length > 0.28;
 }
 
 function rowLooksLikeCodes(row) {
@@ -1302,6 +1306,7 @@ function detectStudioDataSetup(matrix) {
   if (!codeRow) codeRow = 1;
   if (!labelRow && matrix.length > 1) labelRow = 2;
   if (!metadataRow && matrix.length > 2 && rowLooksLikeImportMetadata(matrix[2])) metadataRow = 3;
+  if (!metadataRow && matrix.length > 2 && (matrix[2] || []).some((value) => /^QID\d+/i.test(String(value || "")))) metadataRow = 3;
   let dataStartsAt = Math.max(codeRow, labelRow || 0, metadataRow || 0) + 1;
   if (codeRow === 1 && labelRow === 2 && (!metadataRow || metadataRow === 3)) dataStartsAt = 4;
   const labelSignals = matrix[labelRow - 1] || [];
@@ -1452,14 +1457,84 @@ function regenerateStudioFromSetupControls() {
   const result = document.getElementById("studio-converter-result");
   if (result) result.textContent = `Data setup applied. Missing values and visuals now use data starting at row ${activeStudioDataSetup.dataStartsAt}.`;
 }
+
+function isStudioBadVisualField(column, label = column) {
+  const text = `${column || ""} ${label || ""}`.toLowerCase();
+  return /please enter your name|\bname\b|additional information|click to write|write the question|\btext\b|importid|responseid|recipient|external data|duration|locationlatitude|locationlongitude|startdate|enddate|recordeddate/.test(text);
+}
+
+function studioFieldScore(column, analysis, purpose = "category") {
+  const label = studioDisplayName(analysis, column);
+  const text = `${column || ""} ${label || ""}`.toLowerCase();
+  if (isStudioBadVisualField(column, label)) return -1000;
+  let score = 0;
+  if (/shelter|organization|site|location/.test(text)) score += purpose === "group" ? 120 : 80;
+  if (/referral|denial|reason|categor|category|source|agency|placement/.test(text)) score += purpose === "reason" ? 120 : 70;
+  if (/gender|race|ethnicity|county|status|outcome/.test(text)) score += 45;
+  if (/age|youth/.test(text)) score += purpose === "numeric" ? 80 : 20;
+  if (/date|month|year/.test(text)) score += purpose === "date" ? 120 : -20;
+  const counts = analysis.category_summary?.[column] || null;
+  if (counts) {
+    const unique = Object.keys(counts).filter((name) => name !== "Other" && name !== "Missing").length;
+    if (unique >= 2 && unique <= 12) score += 25;
+    if (unique > 20) score -= 35;
+  }
+  return score;
+}
+
+function sortedStudioFields(analysis, purpose, fields) {
+  return (fields || []).slice().sort((a, b) => studioFieldScore(b, analysis, purpose) - studioFieldScore(a, analysis, purpose));
+}
+
+function getStudioDashboardConfig(analysis) {
+  const categoryFields = Object.keys(analysis.category_summary || {}).filter((field) => !isStudioBadVisualField(field, studioDisplayName(analysis, field)));
+  const numericFields = Object.keys(analysis.numeric_summary || {}).filter((field) => !isStudioBadVisualField(field, studioDisplayName(analysis, field)));
+  const dateFields = (analysis.date_summary || []).map((item) => item.column);
+  const survey = getSurveyVisualFields(analysis);
+  const defaults = {
+    trendField: survey.date || sortedStudioFields(analysis, "date", dateFields)[0] || "",
+    groupField: survey.organization || sortedStudioFields(analysis, "group", categoryFields)[0] || "",
+    reasonField: survey.reason || sortedStudioFields(analysis, "reason", categoryFields)[0] || "",
+    numericField: survey.age || sortedStudioFields(analysis, "numeric", numericFields)[0] || "",
+    missingFocus: (analysis.top_missing_columns || [])[0]?.[0] || "",
+  };
+  return Object.assign({}, defaults, activeStudioDashboardConfig || {});
+}
+
+function studioSelectOptions(fields, selected, analysis, emptyLabel = "Auto select") {
+  return [`<option value="">${escapeHtml(emptyLabel)}</option>`].concat((fields || []).map((field) => `<option value="${escapeHtml(field)}" ${field === selected ? "selected" : ""}>${escapeHtml(studioDisplayName(analysis, field))}</option>`)).join("");
+}
+
+function applyStudioDashboardControls(container, analysis) {
+  container.querySelectorAll("[data-studio-dashboard-control]").forEach((control) => {
+    control.addEventListener("change", () => {
+      activeStudioDashboardConfig = Object.assign({}, activeStudioDashboardConfig || {}, { [control.dataset.studioDashboardControl]: control.value });
+      renderStudioDashboardPreview(analysis);
+    });
+  });
+}
+
+function topCountsForField(analysis, field, limit = 8) {
+  const source = analysis.chart_rows || analysis.preview_rows || [];
+  return Object.entries(countValues(source, field)).filter(([name]) => name && name !== "Missing" && !/^\{?"?ImportId/i.test(name) && !/^QID\d+/i.test(name)).sort((a, b) => Number(b[1]) - Number(a[1])).slice(0, limit);
+}
+
+function usableSurveyRecordCount(analysis, fields) {
+  const source = analysis.chart_rows || analysis.preview_rows || [];
+  const important = [fields.organization, fields.reason, fields.date, fields.age].filter(Boolean);
+  if (!important.length) return Math.max(0, analysis.rows || 0);
+  const usableSample = source.filter((row) => important.some((field) => !isStudioMissingValue(row[field]))).length;
+  if (!source.length) return 0;
+  return Math.round((usableSample / source.length) * (analysis.rows || source.length));
+}
 function getSurveyVisualFields(analysis) {
   const columns = analysis.column_names || [];
-  const find = (patterns) => columns.find((column) => patterns.some((pattern) => pattern.test(`${column} ${studioDisplayName(analysis, column)}`)));
+  const find = (patterns) => sortedStudioFields(analysis, "group", columns).find((column) => !isStudioBadVisualField(column, studioDisplayName(analysis, column)) && patterns.some((pattern) => pattern.test(`${column} ${studioDisplayName(analysis, column)}`)));
   return {
     organization: find([/shelter/i, /organization/i, /site/i, /location/i]),
-    reason: find([/reason/i, /referral.*type/i, /denial.*type/i]),
-    age: find([/age/i, /youth.*age/i]),
-    date: (analysis.date_summary || [])[0]?.column,
+    reason: sortedStudioFields(analysis, "reason", columns).find((column) => !isStudioBadVisualField(column, studioDisplayName(analysis, column)) && [/reason/i, /categor/i, /referral/i, /denial/i, /placement/i].some((pattern) => pattern.test(`${column} ${studioDisplayName(analysis, column)}`))),
+    age: sortedStudioFields(analysis, "numeric", Object.keys(analysis.numeric_summary || {})).find((column) => /age|youth/i.test(`${column} ${studioDisplayName(analysis, column)}`)) || find([/age/i, /youth.*age/i]),
+    date: sortedStudioFields(analysis, "date", (analysis.date_summary || []).map((item) => item.column))[0] || (analysis.date_summary || [])[0]?.column,
   };
 }
 function rowsFromJsonText(text) {
@@ -1582,7 +1657,7 @@ function buildDashboardNarrative({ rows, columns, missingEntries, missingTotal, 
   const parts = [`This file contains ${rows.length} records across ${columns.length} fields.`];
   if (recipe === "surveyReferral") parts.push("The data appears to track survey, referral, denial, program, or participant responses, so ProgramMetrics is prioritizing response counts, organization comparisons, referral reasons, date trends, and missing response quality checks.");
   if (dateSummary.length) {
-    const primary = dateSummary[0];
+    const primary = dateSummary.find((item) => item.column === dashboardConfig.trendField) || dateSummary[0];
     parts.push(`${primary.column} ranges from ${formatStudioDate(primary.start)} to ${formatStudioDate(primary.end)}, so a trend view is more useful than individual date bars.`);
   }
   const firstCategory = Object.entries(categorySummary || {})[0];
@@ -1693,7 +1768,7 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind, setupMetadata = {})
   const numericSummary = numericColumnSummary(normalizedRows, visualColumns);
   const numericColumns = Object.keys(numericSummary);
   const dateSummary = summarizeDateColumns(normalizedRows, visualColumns);
-  const categorySummary = topCategorySummary(normalizedRows.slice(0, 500), visualColumns, numericColumns, dateSummary);
+  const categorySummary = topCategorySummary(normalizedRows.slice(0, 500), visualColumns.filter((column) => !isStudioBadVisualField(column, labelMap[column] || column)), numericColumns, dateSummary);
   const dateColumns = new Set(dateSummary.map((item) => item.column));
   const categoricalColumns = Object.keys(categorySummary);
   const fieldTypeCounts = { date: dateSummary.length, numeric: numericColumns.length, categorical: categoricalColumns.length, other: Math.max(0, visualColumns.length - dateSummary.length - numericColumns.length - categoricalColumns.length) };
@@ -1756,6 +1831,7 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind, setupMetadata = {})
     quality_breakdown: qualityBreakdown,
     top_missing_columns: missingEntries.slice(0, 8),
     preview_rows: normalizedRows.slice(0, previewLimit),
+    chart_rows: normalizedRows.slice(0, locked ? Math.min(250, normalizedRows.length) : Math.min(1000, normalizedRows.length)),
     preview_limit: previewLimit,
     quality_score: canPreviewFeature("missingReview", preview) ? qualityScore : "Preview locked",
     cleaning_steps: cleaningSteps,
@@ -1931,7 +2007,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   const previewRows = analysis.preview_rows || [];
   const previewColumns = previewRows.length ? Object.keys(previewRows[0]).slice(0, 6) : [];
   const missingEntries = (analysis.top_missing_columns || Object.entries(analysis.missing_values || {})).filter(([, count]) => Number(count) > 0);
-  const categoryEntries = Object.entries(analysis.category_summary || {});
+  const categoryEntries = Object.entries(analysis.category_summary || {}).filter(([field]) => !isStudioBadVisualField(field, studioDisplayName(analysis, field))).sort(([a], [b]) => (a === dashboardConfig.groupField ? -1 : b === dashboardConfig.groupField ? 1 : studioFieldScore(b, analysis, "category") - studioFieldScore(a, analysis, "category")));
   const dateSummary = analysis.date_summary || [];
   const quality = analysis.quality_breakdown || {};
   const missingProfile = analysis.missing_profile || {};
@@ -2021,7 +2097,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   const trendPanel = document.createElement("section");
   trendPanel.className = "dashboard-preview-panel dashboard-tile";
   if (dateSummary.length) {
-    const primary = dateSummary[0];
+    const primary = dateSummary.find((item) => item.column === dashboardConfig.trendField) || dateSummary[0];
     const entries = Object.entries(primary.buckets).sort(([a], [b]) => a.localeCompare(b)).slice(-12);
     const max = Math.max(...entries.map(([, count]) => Number(count)), 1);
     trendPanel.innerHTML = `<h4>Records by Start Month</h4><p class="dashboard-chart-label">${escapeHtml(studioDisplayName(analysis, primary.column))}</p><div class="dashboard-trend-bars">${entries.map(([label, count]) => `<div><i style="height:${pct((Number(count) / max) * 100)}"></i><span>${escapeHtml(label.slice(2))}</span><b>${escapeHtml(count)}</b></div>`).join("")}</div>`;
@@ -2047,17 +2123,17 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   categoryPanel.dataset.dashboardTab = "visuals";
   visualGrid.appendChild(categoryPanel);
   if (analysis.recipe === "surveyReferral") {
-    const surveyFields = getSurveyVisualFields(analysis);
+    const surveyFields = Object.assign({}, getSurveyVisualFields(analysis), { date: dashboardConfig.trendField || getSurveyVisualFields(analysis).date, organization: dashboardConfig.groupField || getSurveyVisualFields(analysis).organization, reason: dashboardConfig.reasonField || getSurveyVisualFields(analysis).reason, age: dashboardConfig.numericField || getSurveyVisualFields(analysis).age });
     const surveyKpiPanel = document.createElement("section");
     surveyKpiPanel.className = "dashboard-preview-panel dashboard-tile-wide survey-dashboard-tile";
     surveyKpiPanel.dataset.dashboardTab = "visuals";
-    const usableRecords = Math.max(0, (analysis.rows || 0) - (missingProfile.missingRows || 0));
+    const usableRecords = usableSurveyRecordCount(analysis, surveyFields);
     const significantFindings = [surveyFields.organization, surveyFields.reason, surveyFields.date, missingEntries.length ? "Missing response patterns" : ""].filter(Boolean).length;
     surveyKpiPanel.innerHTML = `<h4>Survey / Referral Dashboard</h4><div class="survey-kpi-row"><div><strong>${escapeHtml(analysis.rows || 0)}</strong><span>Response count</span></div><div><strong>${escapeHtml(usableRecords)}</strong><span>Usable records</span></div><div><strong>${escapeHtml(significantFindings)}</strong><span>Significant findings</span></div><div><strong>${escapeHtml(dateSummary.length ? formatStudioDate(dateSummary[0].start) : "Not detected")}</strong><span>Earliest date</span></div></div><p>ProgramMetrics detected survey-style fields and prioritized response counts, readable question labels, referral or denial trends, organization comparison, and missing response quality checks.</p>`;
     visualGrid.appendChild(surveyKpiPanel);
 
     if (surveyFields.organization) {
-      const counts = Object.entries(countValues(normalizedRowsForRender(analysis), surveyFields.organization)).filter(([name]) => name !== "Missing").sort((a, b) => Number(b[1]) - Number(a[1])).slice(0, locked ? 5 : 10);
+      const counts = topCountsForField(analysis, surveyFields.organization, locked ? 5 : 10);
       const maxOrg = Math.max(...counts.map(([, count]) => Number(count)), 1);
       const orgPanel = document.createElement("section");
       orgPanel.className = "dashboard-preview-panel dashboard-tile";
@@ -2067,7 +2143,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
     }
 
     if (surveyFields.reason) {
-      const counts = Object.entries(countValues(normalizedRowsForRender(analysis), surveyFields.reason)).filter(([name]) => name !== "Missing").sort((a, b) => Number(b[1]) - Number(a[1])).slice(0, locked ? 5 : 8);
+      const counts = topCountsForField(analysis, surveyFields.reason, locked ? 5 : 8);
       const total = counts.reduce((sum, [, count]) => sum + Number(count), 0) || 1;
       const reasonPanel = document.createElement("section");
       reasonPanel.className = "dashboard-preview-panel dashboard-tile";
@@ -2204,11 +2280,19 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   canvas.appendChild(descriptivePanel);
 
   if (preview.access >= studioFeatureRequirements.advancedAnalytics) {
-    [["forecasting", "Forecasting", "Trend previews are grouped by month or quarter when a date field is detected."], ["advanced", "Advanced Analytics", "ProgramMetrics checks for outliers, field usability, correlations, and analysis readiness."], ["dictionary", "Data Dictionary", "Fields are typed and described for reusable analytics packages."], ["appendix", "Appendix", "Processing notes, assumptions, limitations, and metadata are packaged for review."]].forEach(([tab, title, copy]) => {
+    const outlierTotal = Object.values(analysis.numeric_summary || {}).reduce((total, item) => total + Number(item.outlierCount || 0), 0);
+    const trendReady = dateSummary.length ? "Ready" : "Needs date setup";
+    const advancedCards = [
+      ["forecasting", "Forecasting Readiness", `<div class="advanced-readiness-grid"><div><strong>${escapeHtml(trendReady)}</strong><span>Trend status</span></div><div><strong>${escapeHtml(dateSummary[0]?.bucketMode || "None")}</strong><span>Best time grain</span></div><div><strong>${escapeHtml(dateSummary[0]?.count || 0)}</strong><span>Dated records</span></div></div><p>${dateSummary.length ? "ProgramMetrics can trend records over time and preview volume changes by period." : "Choose or combine a date field in Data Setup to unlock forecasting previews."}</p>`],
+      ["advanced", "Advanced Analytics", `<div class="advanced-readiness-grid"><div><strong>${escapeHtml(outlierTotal)}</strong><span>Potential outliers</span></div><div><strong>${escapeHtml(numericEntries.length)}</strong><span>Numeric fields</span></div><div><strong>${escapeHtml(Object.keys(analysis.category_summary || {}).length)}</strong><span>Category fields</span></div></div><p>ProgramMetrics reviews outliers, field usability, missingness concentration, and segmentation readiness from the uploaded data.</p>`],
+      ["dictionary", "Data Dictionary", `<div class="dashboard-table-wrap"><table><thead><tr><th>Field</th><th>Type</th><th>Use</th></tr></thead><tbody>${(analysis.detected_fields || []).slice(0, locked ? 8 : 18).map((field) => `<tr><td>${escapeHtml(studioDisplayName(analysis, field))}</td><td>${escapeHtml(dateFieldsForControls.includes(field) ? "Date" : numericFieldsForControls.includes(field) ? "Numeric" : categoryFieldsForControls.includes(field) ? "Category" : "Text / other")}</td><td>${escapeHtml(isStudioBadVisualField(field, studioDisplayName(analysis, field)) ? "Reference only" : "Dashboard candidate")}</td></tr>`).join("")}</tbody></table></div>`],
+      ["appendix", "Appendix", `<p>Processing used the selected Data Setup rows, omitted metadata rows, current missing-value codes, and dashboard field selections. Locked previews remain watermarked and export-limited.</p>`],
+    ];
+    advancedCards.forEach(([tab, title, html]) => {
       const panel = document.createElement("section");
-      panel.className = "dashboard-preview-panel dashboard-tile-wide";
+      panel.className = "dashboard-preview-panel dashboard-tile-wide advanced-analytics-panel";
       panel.dataset.dashboardTab = tab;
-      panel.innerHTML = `<h4>${escapeHtml(title)}</h4><p>${escapeHtml(copy)}</p>`;
+      panel.innerHTML = `<h4>${escapeHtml(title)}</h4>${html}`;
       canvas.appendChild(panel);
     });
   }
