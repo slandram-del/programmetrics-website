@@ -4961,3 +4961,200 @@ body:has(.studio-workspace) .studio-output-panel .studio-preview-toolbar {
   font-weight: 800;
   margin-top: 4px;
 }
+/* Final Studio fit and metadata setup fixes */
+html,
+body:has(.studio-workspace) {
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+
+body:has(.studio-workspace) .page-section,
+body:has(.studio-workspace) .container,
+body:has(.studio-workspace) .studio-workspace,
+body:has(.studio-workspace) .studio-workspace-grid,
+body:has(.studio-workspace) .studio-control-panel,
+body:has(.studio-workspace) .studio-output-panel {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+body:has(.studio-workspace) .studio-workspace {
+  padding-inline: clamp(10px, 1.5vw, 24px);
+}
+
+body:has(.studio-workspace) .studio-package-grid,
+body:has(.studio-workspace) .studio-level-grid,
+body:has(.studio-workspace) .studio-deliverables-panel,
+body:has(.studio-workspace) .studio-selected-package-summary {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)) !important;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+body:has(.studio-workspace) .studio-package-card {
+  min-height: 0;
+  max-height: 260px;
+  overflow: hidden;
+  padding: 14px;
+}
+
+body:has(.studio-workspace) .studio-package-card p,
+body:has(.studio-workspace) .studio-package-card li,
+body:has(.studio-workspace) .studio-level-card p,
+body:has(.studio-workspace) .studio-level-card small {
+  font-size: 0.92rem;
+  line-height: 1.32;
+}
+
+body:has(.studio-workspace) .studio-package-card ul {
+  max-height: 84px;
+  overflow: hidden;
+}
+
+body:has(.studio-workspace) .studio-comparison-table {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+body:has(.studio-workspace) .studio-comparison-table table {
+  min-width: 0;
+  width: max(760px, 100%);
+}
+
+body:has(.studio-workspace) .studio-data-setup-panel {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+body:has(.studio-workspace) .studio-setup-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  gap: 12px;
+}
+
+body:has(.studio-workspace) .studio-setup-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+body:has(.studio-workspace) .studio-setup-table-wrap table {
+  width: max(860px, 100%);
+  table-layout: fixed;
+}
+
+body:has(.studio-workspace) .studio-setup-table-wrap th,
+body:has(.studio-workspace) .studio-setup-table-wrap td {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+}
+
+body:has(.studio-workspace) .studio-setup-table-wrap td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+body:has(.studio-workspace) .studio-setup-table-wrap .is-omitted-column {
+  background: #f1f5f9;
+  color: #64748b;
+  opacity: 0.72;
+}
+
+.studio-metadata-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.studio-metadata-columns strong {
+  flex: 1 0 100%;
+  color: #0f766e;
+}
+
+.studio-metadata-columns span {
+  display: inline-grid;
+  gap: 2px;
+  max-width: min(100%, 320px);
+  border: 1px solid #dbe4ef;
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 7px 10px;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.studio-metadata-columns span.is-omitted {
+  border-color: #99f6e4;
+  background: #ecfeff;
+  color: #0f766e;
+}
+
+.studio-metadata-columns em {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-style: normal;
+}
+
+body:has(.studio-workspace) .dashboard-control-strip {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)) !important;
+  align-items: end;
+  gap: 10px;
+  padding: 14px;
+}
+
+body:has(.studio-workspace) .dashboard-control-strip > div {
+  grid-column: 1 / -1;
+}
+
+body:has(.studio-workspace) .dashboard-control-strip > div span {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body:has(.studio-workspace) .dashboard-control-strip label,
+body:has(.studio-workspace) .dashboard-control-strip select {
+  min-width: 0;
+  max-width: 100%;
+}
+
+body:has(.studio-workspace) .dashboard-control-strip select {
+  font-size: 0.92rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.studio-fullscreen-preview {
+  z-index: 2147483000 !important;
+  background: #eef4fb;
+}
+
+.studio-fullscreen-body {
+  min-width: 0;
+}
+
+.studio-fullscreen-body .studio-preview-shell,
+.studio-fullscreen-body .dashboard-canvas {
+  width: min(1500px, 100%);
+  max-width: 100%;
+}
+
+@media (max-width: 900px) {
+  body:has(.studio-workspace) .studio-package-card {
+    max-height: none;
+  }
+
+  body:has(.studio-workspace) .studio-comparison-table table {
+    width: 760px;
+  }
+}

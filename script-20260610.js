@@ -1434,6 +1434,23 @@ function parseOmittedRows(value) {
   return String(value || "").split(",").map((item) => Number(item.trim())).filter((item) => Number.isFinite(item) && item > 0);
 }
 
+function parseOmittedColumns(value) {
+  return String(value || "").split(",").map((item) => Number(item.trim())).filter((item) => Number.isFinite(item) && item > 0);
+}
+
+function studioMetadataColumnReason(code, label, importValue = "") {
+  const text = `${code || ""} ${label || ""} ${importValue || ""}`.toLowerCase();
+  if (/\b(ipaddress|ip address|responseid|response id|recipient|externalreference|external reference|locationlatitude|locationlongitude|location latitude|location longitude|distributionchannel|distribution channel|userlanguage|user language)\b/.test(text)) return "Survey platform metadata";
+  if (/\b(duration|progress|finished)\b/.test(text)) return "Survey completion metadata";
+  if (/\b(importid|startdate|enddate|recordeddate|status)\b/.test(text) && /\{?"?importid/i.test(importValue || "")) return "Import metadata column";
+  return "";
+}
+
+function shouldAutoOmitMetadataColumn(code, label, importValue = "") {
+  const text = `${code || ""} ${label || ""}`.toLowerCase();
+  if (/\b(startdate|start date|enddate|end date|recordeddate|recorded date|status|response type)\b/.test(text)) return false;
+  return Boolean(studioMetadataColumnReason(code, label, importValue));
+}
 function getDatePartRole(name) {
   const text = String(name || "").toLowerCase();
   if (/\bmonth\b|#1_1|_month|month$/.test(text)) return "month";
@@ -1497,7 +1514,7 @@ function buildRowsFromStudioSetup(matrix, setup) {
     return map;
   }, {});
   dateCombinationFields.forEach((field) => { labelMap[field.name] = field.name; });
-  return { rows, labelMap, fields, datePartColumns, dateCombinationFields };
+  return { rows, labelMap, fields, allFields, omittedColumns: Array.from(omittedColumns), datePartColumns, dateCombinationFields };
 }
 
 function studioDisplayName(analysis, column) {
@@ -1541,6 +1558,7 @@ function collectStudioDataSetupControls() {
     labelRow: Number(document.getElementById("studio-setup-label-row")?.value || current.labelRow || current.codeRow || 1),
     dataStartsAt: Number(document.getElementById("studio-setup-data-row")?.value || current.dataStartsAt || 2),
     omitRows: parseOmittedRows(document.getElementById("studio-setup-omit-rows")?.value || current.omitRows || ""),
+    omitColumns: parseOmittedColumns(document.getElementById("studio-setup-omit-columns")?.value || current.omitColumns || ""),
     useLabels: (document.getElementById("studio-setup-name-mode")?.value || (current.useLabels ? "labels" : "codes")) === "labels",
     combineDates: Boolean(document.getElementById("studio-setup-combine-dates")?.checked),
   });
@@ -1602,8 +1620,12 @@ function getStudioDashboardConfig(analysis) {
   return Object.assign({}, defaults, activeStudioDashboardConfig || {});
 }
 
+function compactStudioLabel(value, max = 54) {
+  const clean = String(value || "").replace(/\s+/g, " ").trim();
+  return clean.length > max ? `${clean.slice(0, Math.max(12, max - 1)).trim()}...` : clean;
+}
 function studioSelectOptions(fields, selected, analysis, emptyLabel = "Auto select") {
-  return [`<option value="">${escapeHtml(emptyLabel)}</option>`].concat((fields || []).map((field) => `<option value="${escapeHtml(field)}" ${field === selected ? "selected" : ""}>${escapeHtml(studioDisplayName(analysis, field))}</option>`)).join("");
+  return [`<option value="">${escapeHtml(emptyLabel)}</option>`].concat((fields || []).map((field) => `<option value="${escapeHtml(field)}" title="${escapeHtml(studioDisplayName(analysis, field))}" ${field === selected ? "selected" : ""}>${escapeHtml(compactStudioLabel(studioDisplayName(analysis, field), 42))}</option>`)).join("");
 }
 
 function applyStudioDashboardControls(container, analysis) {
@@ -1649,10 +1671,10 @@ function concentrationSummary(counts) {
 
 function selectedFieldNarrative(analysis, config) {
   const parts = [];
-  if (config.groupField) parts.push(`Compare by ${studioDisplayName(analysis, config.groupField)}`);
-  if (config.reasonField) parts.push(`break down ${studioDisplayName(analysis, config.reasonField)}`);
-  if (config.trendField) parts.push(`trend using ${studioDisplayName(analysis, config.trendField)}`);
-  if (config.numericField) parts.push(`profile ${studioDisplayName(analysis, config.numericField)}`);
+  if (config.groupField) parts.push(`Compare by ${compactStudioLabel(studioDisplayName(analysis, config.groupField), 34)}`);
+  if (config.reasonField) parts.push(`break down ${compactStudioLabel(studioDisplayName(analysis, config.reasonField), 34)}`);
+  if (config.trendField) parts.push(`trend using ${compactStudioLabel(studioDisplayName(analysis, config.trendField), 34)}`);
+  if (config.numericField) parts.push(`profile ${compactStudioLabel(studioDisplayName(analysis, config.numericField), 34)}`);
   return parts.length ? parts.join("; ") : "Choose dashboard variables to customize the analysis.";
 }
 function usableSurveyRecordCount(analysis, fields) {
@@ -2964,9 +2986,27 @@ function setupStudioFeatureCards() {
   activate("overview");
 }
 
-function openStudioFullScreenPreview() {
-  const analysis = activeStudioUploadedAnalysis || activeStudioExampleAnalysis;
-  if (!analysis) return;
+async function openStudioFullScreenPreview() {
+  let analysis = activeStudioUploadedAnalysis || activeStudioExampleAnalysis;
+  const input = document.getElementById("studio-file-converter-input");
+  const result = document.getElementById("studio-converter-result");
+  if (!analysis && input?.files?.[0]) {
+    try {
+      if (result) result.textContent = "Opening interactive preview from the uploaded file...";
+      analysis = await readStudioFileAsAnalysis(input.files[0]);
+      activeStudioUploadedAnalysis = analysis;
+      renderStudioDashboardPreview(analysis);
+      renderInsightPanel(document.getElementById("studio-insight-panel"), analysis);
+      updateStudioDownloadButton();
+    } catch (error) {
+      if (result) result.textContent = `${error.message || "The interactive preview could not be built."} Generate Preview again, then open Step 6.`;
+      return;
+    }
+  }
+  if (!analysis) {
+    if (result) result.textContent = "Generate a preview first, then open the interactive preview.";
+    return;
+  }
   const modal = document.createElement("div");
   modal.className = "studio-fullscreen-preview";
   modal.setAttribute("role", "dialog");
@@ -2975,8 +3015,12 @@ function openStudioFullScreenPreview() {
   modal.innerHTML = `<div class="studio-fullscreen-toolbar"><div class="studio-fullscreen-brand">ProgramMetrics Studio</div><div class="studio-fullscreen-file" title="${escapeHtml(analysis.source_file || "Uploaded file")}">${escapeHtml(analysis.source_file || "Uploaded file")}</div><div class="studio-fullscreen-output">${escapeHtml(getSelectedStudioFeature().title)}</div><div class="studio-fullscreen-status ${fullscreenLocked ? "is-locked" : "is-unlocked"}">${fullscreenLocked ? "Preview only - export locked" : "Export unlocked"}</div><div class="studio-fullscreen-actions"><button type="button" data-action="fit">Fit</button><button type="button" data-action="zoom-out">-</button><button type="button" data-action="zoom-in">+</button>${studioExportOptionsHtml(fullscreenLocked)}${studioUpgradeButtonHtml(getSelectedStudioFeature().outputType)}<button type="button" data-action="close">Close</button></div></div><div class="studio-fullscreen-body"><div class="studio-preview-shell visible"></div></div>`;
   document.body.appendChild(modal);
   const shell = modal.querySelector(".studio-preview-shell");
-  renderStudioDashboardPreview(analysis, shell);
-  setupStudioExportMenus(modal);
+  try {
+    renderStudioDashboardPreview(analysis, shell);
+    setupStudioExportMenus(modal);
+  } catch (error) {
+    shell.innerHTML = `<section class="dashboard-preview-panel"><h4>Interactive preview could not open</h4><p>${escapeHtml(error.message || "ProgramMetrics could not render this preview.")}</p><button type="button" class="button mini" data-action="close">Close</button></section>`;
+  }
   let zoom = 1;
   const setZoom = (value) => {
     zoom = Math.max(0.55, Math.min(1.45, value));
@@ -3001,7 +3045,6 @@ function openStudioFullScreenPreview() {
   };
   document.addEventListener("keydown", closeOnEscape);
 }
-
 function setupInteractivePreviewButton() {
   const button = document.getElementById("studio-open-preview");
   if (!button || button.dataset.bound === "true") return;
