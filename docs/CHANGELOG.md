@@ -9,16 +9,23 @@
 - Added plan-driven Studio dashboard tabs for Overview, Visual Analytics, Data Quality, Descriptive Statistics, Missing Values, Recommendations, and Deliverables.
 - Added clickable Quality Score and Analytics Confidence Score KPI cards with detail panels.
 - Added Missing Values tab metrics for missing rows, missing cells, fields with blanks, missing percentage, top missing fields by count, and top missing fields by percent.
+- Implemented reusable chart-engine renderer modules for chart registry, chart selection, chart data normalization, dashboard building, and responsive layouts.
+- Added chart render models for KPI card, line chart, bar chart, horizontal bar chart, donut chart, histogram, box plot summary, gauge, table, heatmap placeholder, and insight card.
 
 ### Improvements
 - Studio dashboard visuals now render from `generateAnalyticsPlan()` outputs instead of placeholder-only chart data.
 - Recommended visual rendering now supports line, bar, horizontal bar, donut, histogram, boxplot, gauge, table, and insight-card visual types.
+- Chart data now includes axes, legends, tooltips, accessibility labels, layout metadata, confidence, and empty-state metadata.
+- Date trends are normalized into monthly/quarterly trend points when available.
+- Category visuals use top 5-10 values and group rare categories as Other.
+- Numeric fields normalize into distribution bins and box plot summaries.
 - Unsupported visual types now show polished coming-soon cards instead of blank dashboard space.
 - Static asset cache keys were bumped so browsers fetch the updated dashboard UI.
 
 ### Refactors
-- Added chart-engine renderer modules for registry, selection, chart data normalization, and dashboard grouping.
+- Added chart-engine renderer modules for registry, selection, chart data normalization, layout, and dashboard grouping.
 - Moved Studio preview behavior closer to analytics-plan-driven rendering while preserving upload, setup, package, and output level flow.
+- Separated chart recommendation output from chart render-model creation.
 
 ### Bug Fixes
 - Fixed recommended visuals that had object-based chart data, field-profile top values, missing profiles, or descriptive statistics from falling through to blank/placeholder states.

@@ -61,8 +61,8 @@ Upload Data -> Review Data Setup -> Choose Analytics Package -> Choose Output Le
 
 ## Current Architecture
 - `src/lib/analytics-engine/` is the source of truth for `generateAnalyticsPlan()`.
-- `src/lib/chart-engine/` maps recommended visuals to renderer components, normalizes chart data, selects supported visuals, and groups dashboard tabs.
-- The current static Studio browser script mirrors the chart-engine behavior so uploaded/session files can render immediately without a bundler.
+- `src/lib/chart-engine/` converts `recommendedVisuals` into reusable render models through chart registry, chart selector, chart data builder, dashboard builder, and responsive chart layouts.
+- The current static Studio browser script mirrors the chart-engine behavior so uploaded/session files can render immediately without a bundler; a future build step should import the TypeScript engine directly.
 - Locked previews keep watermark and export-disable behavior while still rendering limited plan-driven previews.
 ## Current Development Status
 | Area | Status | Notes |
@@ -70,7 +70,7 @@ Upload Data -> Review Data Setup -> Choose Analytics Package -> Choose Output Le
 | Product positioning and navigation | In Progress | Analytics package positioning is active and should keep replacing old tier language. |
 | Analytics Studio wizard | In Progress | Upload, setup, package selection, preview, and interactive preview exist and need continued polishing. |
 | Analytics Recommendation Engine | MVP Complete | `generateAnalyticsPlan()` now produces dataset, field, missing, duplicate, quality, confidence, KPI, visual, insight, and deliverable outputs used by Studio previews. |
-| Visual Analytics Engine | In Progress | Studio dashboard and Interactive Preview now render KPI cards, supported chart types, missing-value panels, quality score, confidence score, descriptive statistics, recommendations, and deliverables from analytics-plan outputs. Scatter plots, deeper duplicate visuals, and screenshot QA remain. |
+| Visual Analytics Engine | In Progress | Reusable chart-engine modules now provide registry, selector, data builder, dashboard builder, and responsive layouts for PowerBI-style render models. Static Studio consumes compatible behavior. SVG/canvas chart drawing, scatter plots, deeper duplicate visuals, tests, and screenshot QA remain. |
 | Report Generator | In Progress | HTML-style report outputs exist; native PDF, DOCX, and PPTX generation need production implementation. |
 | Export Engine | In Progress | Export menu and ZIP structure exist; native binary formats need production-grade exporters. |
 | Branding Engine | In Progress | Branding fields exist and should be expanded into reusable profiles. |

@@ -1,7 +1,7 @@
-# Analytics Engine
+﻿# Analytics Engine
 
 ## Purpose
-ProgramMetrics now has a central intelligence architecture for profiling uploaded datasets, classifying dataset type, recommending KPIs and visuals, generating grounded insights, scoring quality, scoring analytics confidence, and recommending deliverables.
+ProgramMetrics has a central intelligence architecture for profiling uploaded datasets, classifying dataset type, recommending KPIs and visuals, generating grounded insights, scoring quality, scoring analytics confidence, and recommending deliverables.
 
 The engine is intended to become the single source of truth for:
 - Analytics Studio
@@ -39,13 +39,18 @@ src/lib/analytics-engine/
   index.ts
 
 src/lib/chart-engine/
+  chartRegistry.ts
+  chartSelector.ts
+  chartDataBuilder.ts
+  dashboardBuilder.ts
+  chartLayouts.ts
+  index.ts
+
 src/lib/report-engine/
 src/lib/ai-engine/
 src/lib/branding-engine/
 src/lib/workflow-engine/
 ```
-
-The non-analytics folders contain safe placeholder functions with TODO comments so future rendering, reporting, AI, branding, and workflow systems can import them without breaking the current app.
 
 ## Main Function
 ```ts
@@ -154,29 +159,35 @@ Field role detection infers roles such as identifier, demographic, date, outcome
 - Duplicate review uses exact duplicate KPIs and tables.
 - High-cardinality or meaningless visuals are filtered out.
 
-## Current UI Integration
-The existing browser Studio still owns rendering. The current script now stores an `analytics_plan` object on each generated analysis and displays a compact “Analytics Plan Generated” summary in the dashboard header. Future UI work should replace local dashboard heuristics with `recommendedVisuals`, `recommendedKpis`, and `recommendedInsights` from the engine.
+## Chart Recommendation Pipeline
+1. `generateAnalyticsPlan()` creates `recommendedVisuals` from dataset profile, field profiles, missing profile, quality profile, and descriptive statistics.
+2. `chartRegistry.ts` maps each `VisualType` to a reusable renderer component, layout kind, tooltip/axis/legend support, and empty state.
+3. `chartSelector.ts` normalizes tabs, marks locked visuals by package rank, and sorts visuals by priority/confidence/support.
+4. `chartDataBuilder.ts` converts each recommended visual into chart-ready render data with points, axes, legends, tooltip text, layout metadata, accessibility label, confidence, and empty state.
+5. `chartLayouts.ts` provides PowerBI-style responsive layout specs for KPI, score, standard, wide, narrative, table, and compact chart cards.
+6. `dashboardBuilder.ts` groups KPIs, visuals, insights, and deliverables into dashboard tabs and returns a full render model for Studio, Interactive Preview, and future exports.
 
-## Acceptance Criteria
-- Core engine folder structure exists.
-- Main `generateAnalyticsPlan` function exists.
-- Missing-value, duplicate, field type, field role, dataset profile, dataset classification, descriptive statistics, quality score, confidence score, KPI, visual, insight, and deliverable modules exist.
-- Chart-engine renderer modules now export registry, selector, data builder, and dashboard builder functions. Report, AI, branding, and workflow engines still contain safe placeholders where production implementations are pending.
-- Existing Studio UI remains compatible and renders plan-driven dashboard previews from uploaded/session data.
+Supported chart-engine render models:
+- KPI card
+- Line chart
+- Bar chart
+- Horizontal bar chart
+- Donut chart
+- Histogram
+- Box plot summary
+- Gauge
+- Table
+- Heatmap placeholder with real completeness data
+- Insight card
 
-## Related Documents
-- [Visual Guidelines](UI_UX_GUIDELINES.md)
-- [Export Engine](EXPORT_ENGINE.md)
-- [Coding Standards](CODING_STANDARDS.md)
-- [Roadmap](ROADMAP.md)
-- [TODO](TODO.md)
+Unsupported chart types return `ComingSoonChart` render models with polished empty-state metadata rather than blank space.
 
 ## Current UI Integration
 Analytics Studio and Interactive Preview now store an `analytics_plan` object on each generated analysis and render primary dashboard content from the plan.
 
 Connected outputs:
 - `recommendedKpis` render as clickable dashboard KPI cards.
-- `recommendedVisuals` render as line, bar, horizontal bar, donut, histogram, boxplot, gauge, table, and insight-card tiles when supported.
+- `recommendedVisuals` render as line, bar, horizontal bar, donut, histogram, boxplot, gauge, table, heatmap placeholder, and insight-card tiles when supported.
 - Unsupported visual types render polished coming-soon chart cards instead of blank space.
 - `missingProfile` powers the Missing Values tab, including missing rows, missing cells, fields with blanks, missing percentage, top missing fields by count, and top missing fields by percent.
 - `qualityProfile` powers the Quality Score card, detail panel, gauge, and component bars.
@@ -185,3 +196,17 @@ Connected outputs:
 - `recommendedInsights` and `recommendedDeliverables` power the Recommendations and Deliverables tabs.
 
 The current static browser implementation mirrors the TypeScript chart-engine behavior because the site does not yet have a bundler-backed import path. Future work should add a browser-safe build step so Studio can import `src/lib/chart-engine` directly.
+
+## Acceptance Criteria
+- Core engine folder structure exists.
+- Main `generateAnalyticsPlan` function exists.
+- Missing-value, duplicate, field type, field role, dataset profile, dataset classification, descriptive statistics, quality score, confidence score, KPI, visual, insight, and deliverable modules exist.
+- Chart-engine renderer modules export registry, selector, data builder, layout, and dashboard builder functions.
+- Existing Studio UI remains compatible and renders plan-driven dashboard previews from uploaded/session data.
+
+## Related Documents
+- [Visual Guidelines](UI_UX_GUIDELINES.md)
+- [Export Engine](EXPORT_ENGINE.md)
+- [Coding Standards](CODING_STANDARDS.md)
+- [Roadmap](ROADMAP.md)
+- [TODO](TODO.md)

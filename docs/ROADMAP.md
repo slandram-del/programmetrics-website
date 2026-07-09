@@ -40,13 +40,18 @@
 - [x] Analytics confidence scoring
 
 ## Phase 4 - Visual Analytics Engine - In Progress
+- [x] Reusable chart registry
+- [x] Chart selector for `recommendedVisuals`
+- [x] Chart data builder with axes, legends, tooltips, and render metadata
+- [x] Dashboard builder with tab grouping
+- [x] Responsive chart layouts
 - [x] KPI cards from `recommendedKpis`
 - [x] Date trends from monthly/quarterly grouped plan data
 - [x] Top category charts with top values and Other grouping
 - [x] Donut charts
-- [x] Heatmaps / completeness visuals
+- [x] Heatmap placeholder / completeness visual
 - [x] Histograms
-- [x] Box plots
+- [x] Box plot summaries
 - [ ] Scatter plots
 - [x] Quality gauge
 - [x] Component bars
@@ -54,6 +59,7 @@
 - [ ] Duplicate review visuals beyond summary tables
 - [x] Dashboard tabs for Overview, Visual Analytics, Data Quality, Descriptive Statistics, Missing Values, Recommendations, and Deliverables
 - [x] Coming-soon chart card for unsupported visual types
+- [ ] SVG/canvas production renderer for true chart drawing beyond HTML/CSS render models
 
 ## Phase 5 - Report Generator
 - [ ] Executive summary
@@ -130,6 +136,8 @@
 - Add browser or build-step integration so Studio can import the TypeScript chart engine directly instead of mirroring compatible browser logic.
 - Add automated smoke tests for upload -> setup -> generate preview -> open interactive preview.
 - Add visual regression screenshots for dashboard tabs and locked preview overlays.
+- Add a TypeScript project config and test runner for chart-engine unit tests.
+- Build native SVG/canvas chart renderers from the chart-engine render model.
 
 ## Related Documents
 - [Master Plan](PROGRAMMETRICS_MASTER_PLAN.md)

@@ -1,5 +1,6 @@
 import type { AnalyticsPlan, DataRow, RecommendedDeliverable, RecommendedInsight, RecommendedKpi } from "../analytics-engine";
 import { buildChartData, type BuiltChartData } from "./chartDataBuilder";
+import { getDashboardCssVariables, getDefaultChartLayouts, type DashboardLayoutSpec } from "./chartLayouts";
 import { normalizeDashboardTab, selectCharts, type ChartSelectionOptions } from "./chartSelector";
 
 export const DASHBOARD_TABS = [
@@ -17,6 +18,7 @@ export type DashboardTabName = typeof DASHBOARD_TABS[number] | "Advanced Analyti
 export interface DashboardKpiCard extends RecommendedKpi {
   tab: DashboardTabName;
   clickable: boolean;
+  tooltip: string;
 }
 
 export interface DashboardInsightCard extends RecommendedInsight {
@@ -41,6 +43,7 @@ export interface DashboardTab {
 export interface DashboardBuildOptions extends ChartSelectionOptions {
   rows?: DataRow[];
   locked?: boolean;
+  layout?: DashboardLayoutSpec;
 }
 
 export interface BuiltDashboard {
@@ -52,6 +55,8 @@ export interface BuiltDashboard {
   deliverables: DashboardDeliverableCard[];
   locked: boolean;
   watermark?: string;
+  layout: DashboardLayoutSpec;
+  cssVariables: Record<string, string | number>;
   summary: {
     recordCount: number;
     fieldCount: number;
@@ -69,22 +74,14 @@ function tabId(label: string): string {
 
 function emptyStateForTab(label: DashboardTabName): string {
   switch (label) {
-    case "Overview":
-      return "Upload and analyze a file to see KPIs, scorecards, and top insights.";
-    case "Visual Analytics":
-      return "No recommended visuals were available for this dataset.";
-    case "Data Quality":
-      return "No quality visuals were available for this dataset.";
-    case "Descriptive Statistics":
-      return "No descriptive statistics were available for this dataset.";
-    case "Missing Values":
-      return "No missing-value issues were detected.";
-    case "Recommendations":
-      return "No recommendations were generated yet.";
-    case "Deliverables":
-      return "No deliverables are configured for this package yet.";
-    default:
-      return "No dashboard content is available yet.";
+    case "Overview": return "Upload and analyze a file to see KPIs, scorecards, and top insights.";
+    case "Visual Analytics": return "No recommended visuals were available for this dataset.";
+    case "Data Quality": return "No quality visuals were available for this dataset.";
+    case "Descriptive Statistics": return "No descriptive statistics were available for this dataset.";
+    case "Missing Values": return "No missing-value issues were detected.";
+    case "Recommendations": return "No recommendations were generated yet.";
+    case "Deliverables": return "No deliverables are configured for this package yet.";
+    default: return "No dashboard content is available yet.";
   }
 }
 
@@ -126,29 +123,24 @@ function getOrCreateTab(tabs: Map<DashboardTabName, DashboardTab>, label: string
 export function buildDashboard(plan: AnalyticsPlan, options: DashboardBuildOptions = {}): BuiltDashboard {
   const locked = options.locked ?? false;
   const rows = (options.rows || []) as Record<string, unknown>[];
+  const layout = options.layout || getDefaultChartLayouts();
   const tabs = createTabs();
-  const kpis: DashboardKpiCard[] = (plan.recommendedKpis || []).map((kpi) => ({ ...kpi, tab: kpiTab(kpi), clickable: true }));
-  const selectedVisuals = selectCharts(plan.recommendedVisuals || [], options);
+  const kpis: DashboardKpiCard[] = (plan.recommendedKpis || []).map((kpi) => ({ ...kpi, tab: kpiTab(kpi), clickable: true, tooltip: kpi.explanation || kpi.subtitle }));
+  const selectedVisuals = selectCharts(plan.recommendedVisuals || [], { includeUnsupported: true, ...options });
   const visuals = selectedVisuals.map((visual) => {
     const chart = buildChartData(visual, plan, rows);
-    chart.metadata = { ...chart.metadata, tab: visual.normalizedTab, locked: locked || visual.locked, component: visual.component };
+    chart.metadata = { ...chart.metadata, tab: visual.normalizedTab, locked: locked || visual.locked, component: visual.component, rendererLabel: visual.rendererLabel, sortScore: visual.sortScore };
     return chart;
   });
   const insights: DashboardInsightCard[] = (plan.recommendedInsights || []).map((insight) => ({ ...insight, tab: insightTab(insight) }));
-  const deliverables: DashboardDeliverableCard[] = (plan.recommendedDeliverables || []).map((deliverable) => ({
-    ...deliverable,
-    tab: "Deliverables",
-    actionLabel: deliverableAction(deliverable, locked)
-  }));
+  const deliverables: DashboardDeliverableCard[] = (plan.recommendedDeliverables || []).map((deliverable) => ({ ...deliverable, tab: "Deliverables", actionLabel: deliverableAction(deliverable, locked) }));
 
   kpis.forEach((kpi) => getOrCreateTab(tabs, kpi.tab).kpis.push(kpi));
-  visuals.forEach((visual) => getOrCreateTab(tabs, normalizeDashboardTab(String(visual.metadata.tab || selectedVisuals.find((item) => item.id === visual.visualId)?.normalizedTab || "Visual Analytics"))).visuals.push(visual));
+  visuals.forEach((visual) => getOrCreateTab(tabs, normalizeDashboardTab(String(visual.metadata.tab || "Visual Analytics"))).visuals.push(visual));
   insights.forEach((insight) => getOrCreateTab(tabs, insight.tab).insights.push(insight));
   deliverables.forEach((deliverable) => getOrCreateTab(tabs, deliverable.tab).deliverables.push(deliverable));
 
-  const orderedTabs = Array.from(tabs.values()).filter((tab) => (
-    DASHBOARD_TABS.includes(tab.label as typeof DASHBOARD_TABS[number]) || tab.visuals.length || tab.kpis.length || tab.insights.length || tab.deliverables.length
-  ));
+  const orderedTabs = Array.from(tabs.values()).filter((tab) => DASHBOARD_TABS.includes(tab.label as typeof DASHBOARD_TABS[number]) || tab.visuals.length || tab.kpis.length || tab.insights.length || tab.deliverables.length);
 
   return {
     tabs: orderedTabs,
@@ -159,6 +151,8 @@ export function buildDashboard(plan: AnalyticsPlan, options: DashboardBuildOptio
     deliverables,
     locked,
     watermark: locked ? "ProgramMetrics Preview" : undefined,
+    layout,
+    cssVariables: getDashboardCssVariables(layout),
     summary: {
       recordCount: plan.datasetProfile.totalRecords,
       fieldCount: plan.datasetProfile.totalFields,
