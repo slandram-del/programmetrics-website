@@ -2612,7 +2612,7 @@ function descriptiveStatsHtmlFromPlan(analysis, locked) {
 
 function renderPlanDrivenDashboardBody(canvas, analysis, locked, pct, exportControls, previewRows, previewColumns) {
   const plan = analysis.analytics_plan || {};
-  const kpis = analysis.recommended_kpis || plan.recommendedKpis || [];
+  const kpis = buildExplainableKpis(analysis, analysis.recommended_kpis || plan.recommendedKpis || []);
   const visuals = analysis.recommended_visuals || plan.recommendedVisuals || [];
   const insights = analysis.recommended_insights || plan.recommendedInsights || [];
   const deliverables = analysis.recommended_deliverables || plan.recommendedDeliverables || [];
@@ -3396,3 +3396,102 @@ function setupCheckoutFlow() {
 }
 
 setupCheckoutFlow();
+
+/* Sprint 4.3 KPI explainability overrides */
+function explainMetricList(items) {
+  const safe = (items || []).filter(Boolean);
+  return safe.length ? `<ul class="kpi-explain-list">${safe.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : `<p class="kpi-explain-muted">No additional items were generated for this section.</p>`;
+}
+function kpiExplainSection(title, html) {
+  return `<section class="kpi-explain-section"><h4>${escapeHtml(title)}</h4>${html}</section>`;
+}
+function kpiValueCard(label, value, note = "") {
+  return `<div class="kpi-explain-value"><strong>${escapeHtml(value ?? "-")}</strong><span>${escapeHtml(label)}</span>${note ? `<small>${escapeHtml(note)}</small>` : ""}</div>`;
+}
+function engineMissingProfile(analysis) { return analysis.missing_profile || analysis.analytics_plan?.missingProfile || {}; }
+function engineQualityProfile(analysis) { return analysis.quality_profile || analysis.analytics_plan?.qualityProfile || {}; }
+function engineConfidenceProfile(analysis) { return analysis.confidence_profile || analysis.analytics_plan?.confidenceProfile || {}; }
+function engineDuplicateProfile(analysis) { return analysis.duplicate_profile || analysis.analytics_plan?.duplicateProfile || {}; }
+function metricKeyFromKpi(kpi) { return `${kpi.id || ""} ${kpi.title || ""} ${kpi.detailPanelType || ""}`.toLowerCase().replace(/[^a-z0-9]+/g, ""); }
+function relatedVisualsForMetric(metricKey, analysis) {
+  const visuals = analysis.recommended_visuals || analysis.analytics_plan?.recommendedVisuals || [];
+  const key = String(metricKey || "").toLowerCase();
+  return visuals.filter((visual) => {
+    const text = `${visual.id || ""} ${visual.title || ""} ${visual.description || ""} ${visual.type || ""} ${(visual.fieldNames || []).join(" ")}`.toLowerCase();
+    if (key.includes("missing")) return /missing|blank|completeness|heatmap/.test(text);
+    if (key.includes("quality")) return /quality|gauge|component/.test(text);
+    if (key.includes("confidence")) return /confidence|insight/.test(text);
+    if (key.includes("duplicate")) return /duplicate/.test(text);
+    if (key.includes("date")) return /date|trend|month|quarter|line/.test(text);
+    if (key.includes("field") || key.includes("column")) return /field|dictionary|completeness/.test(text);
+    return /overview|kpi|insight/.test(text);
+  }).slice(0, 5);
+}
+function relatedVisualsHtml(metricKey, analysis) {
+  return explainMetricList(relatedVisualsForMetric(metricKey, analysis).map((visual) => `${visual.title || visual.id} (${visual.type || "visual"})`));
+}
+function exportAvailabilityHtml(kpi, analysis) {
+  const deliverables = analysis.recommended_deliverables || analysis.analytics_plan?.recommendedDeliverables || [];
+  const available = deliverables.filter((item) => item.previewAvailable || item.exportAvailable).slice(0, 5);
+  const locked = deliverables.filter((item) => item.locked || !item.exportAvailable).slice(0, 5);
+  return `<div class="kpi-export-grid"><div><strong>Preview</strong>${explainMetricList(available.map((item) => `${item.name} - ${item.exportAvailable ? "export available" : "preview only"}`))}</div><div><strong>Export lock</strong>${explainMetricList(locked.map((item) => `${item.name} - ${item.exportAvailable ? "available" : "upgrade required"}`))}</div></div><p class="kpi-explain-muted">Metric explanations are previewable in-session. Downloadable outputs follow the selected package and output level.</p>`;
+}
+function topMissingFieldsHtml(analysis) {
+  const profile = engineMissingProfile(analysis);
+  const topCount = profile.topMissingFieldsByCount || (profile.entries || []).map(([fieldName, missingCount]) => ({ fieldName, displayLabel: studioDisplayName(analysis, fieldName), missingCount, missingPercent: analysis.rows ? Math.round((Number(missingCount) / Math.max(1, analysis.rows)) * 1000) / 10 : 0 }));
+  return explainMetricList(topCount.slice(0, 10).map((item) => `${item.displayLabel || item.fieldName}: ${item.missingCount} missing cells${item.missingPercent !== undefined ? ` (${item.missingPercent}%)` : ""}`));
+}
+function missingDetailHtml(analysis) {
+  const profile = engineMissingProfile(analysis);
+  const rows = profile.sampleRows || profile.sampleRowsWithMissing || [];
+  const codes = profile.missingValueCodesUsed || activeStudioMissingCodes || [];
+  return `${kpiExplainSection("Difference between missing rows and missing cells", `<p>Missing rows count records with at least one blank. Missing cells count every blank field. A single record can add one missing row but many missing cells.</p>${missingProfileCardsHtml(analysis)}`)}${kpiExplainSection("Missing value coding used", explainMetricList(codes.slice(0, 16)))}${kpiExplainSection("Top affected fields", topMissingFieldsHtml(analysis))}${kpiExplainSection("Sample affected rows", explainMetricList(rows.slice(0, 8).map((row) => row.rowIndex !== undefined ? `Row ${row.rowIndex}: ${(row.missingFields || []).join(", ")}` : `Row ${row.row}: ${row.missingFields} missing fields - ${row.preview}`)))}${kpiExplainSection("Cleanup recommendations", explainMetricList(["Confirm which blank-like codes should count as missing.", "Prioritize fields used in executive summaries, dashboards, or required reporting.", "Exclude optional high-missing fields from premium exports until reviewed."]))}${kpiExplainSection("Related visuals", relatedVisualsHtml("missing", analysis))}${kpiExplainSection("Export availability by package", exportAvailabilityHtml({ title: "Missing values" }, analysis))}`;
+}
+function qualityDetailHtml(analysis) {
+  const qualityProfile = engineQualityProfile(analysis);
+  const components = qualityProfile.components || analysis.quality_breakdown || {};
+  const score = qualityProfile.overallScore ?? analysis.quality_score ?? "-";
+  const bars = Object.entries(components).map(([label, value]) => `<div class="dashboard-bar-row quality-bar"><span>${escapeHtml(label)}</span><div><i style="width:${Math.max(4, Math.min(100, Number(value) || 0))}%"></i></div><b>${escapeHtml(value ?? "-")}</b></div>`).join("");
+  return `<div class="kpi-explain-hero"><div class="quality-detail-score"><strong>${escapeHtml(score)}</strong><span>${escapeHtml(qualityProfile.grade || "Quality score")}</span></div></div>${kpiExplainSection("Definition", `<p>Quality Score estimates how clean and reporting-ready the uploaded dataset is.</p>`)}${kpiExplainSection("Calculation logic", `<p>ProgramMetrics combines completeness, duplicate checks, date consistency, required-field coverage, formatting consistency, field usability, numeric validity, categorical usability, and outlier checks into a 0-100 score.</p>`)}${kpiExplainSection("Component breakdown", bars || `<p>No component scores were generated.</p>`)}${kpiExplainSection("Dataset-specific explanation", `<p>${escapeHtml(qualityProfile.explanation || `This dataset has a quality score of ${score}.`)}</p>`)}${kpiExplainSection("Strengths", explainMetricList(qualityProfile.strengths || []))}${kpiExplainSection("Concerns", explainMetricList(qualityProfile.concerns || []))}${kpiExplainSection("Recommendations", explainMetricList(qualityProfile.recommendations || ["Review missing values, duplicate rows, date consistency, and field usability before final export."]))}${kpiExplainSection("Related visuals", relatedVisualsHtml("quality", analysis))}${kpiExplainSection("Export availability by package", exportAvailabilityHtml({ title: "Quality score" }, analysis))}`;
+}
+function confidenceDetailHtml(analysis) {
+  const confidence = engineConfidenceProfile(analysis);
+  return `<div class="kpi-explain-hero">${kpiValueCard("Analytics Confidence", confidence.overallConfidence ?? "-", confidence.label || "Confidence")}</div>${kpiExplainSection("Definition", `<p>Analytics Confidence estimates how much trust to place in the generated insights, trends, and recommendations.</p>`)}${kpiExplainSection("Calculation logic", `<p>ProgramMetrics evaluates sample size, missingness in useful fields, duplicate rate, date consistency, field type reliability, chartable field availability, dataset type confidence, and assumptions made during setup.</p>`)}${kpiExplainSection("Overall confidence explanation", `<p>${escapeHtml(confidence.explanation || "Confidence estimates how much trust to place in the generated insights.")}</p>`)}${kpiExplainSection("Confidence drivers", explainMetricList(confidence.confidenceDrivers || []))}${kpiExplainSection("Confidence concerns", explainMetricList(confidence.confidenceConcerns || []))}${kpiExplainSection("Assumptions made", explainMetricList((analysis.analytics_plan?.assumptions || analysis.assumptions || []).slice(0, 8)))}${kpiExplainSection("Affected insights", explainMetricList(confidence.affectedInsights || (analysis.recommended_insights || []).slice(0, 5).map((item) => item.title || item.text)))}${kpiExplainSection("Recommended actions", explainMetricList(confidence.recommendations || ["Review setup assumptions and key missing fields before exporting."]))}${kpiExplainSection("Related visuals", relatedVisualsHtml("confidence", analysis))}${kpiExplainSection("Export availability by package", exportAvailabilityHtml({ title: "Analytics confidence" }, analysis))}`;
+}
+function kpiDetailHtmlFromPlan(kpi, analysis) {
+  const key = metricKeyFromKpi(kpi);
+  const missing = engineMissingProfile(analysis);
+  const duplicate = engineDuplicateProfile(analysis);
+  const dateSummary = analysis.date_summary || [];
+  const totalRows = analysis.rows || analysis.dataset_profile?.totalRecords || analysis.analytics_plan?.datasetProfile?.totalRecords || 0;
+  const totalFields = analysis.columns || analysis.dataset_profile?.totalFields || analysis.analytics_plan?.datasetProfile?.totalFields || 0;
+  const totalCells = Math.max(1, Number(totalRows) * Math.max(1, Number(totalFields)));
+  const missingCells = missing.missingCells ?? analysis.missing_value_count ?? 0;
+  const missingRows = missing.missingRows ?? 0;
+  const fieldsWithBlanks = missing.fieldsWithBlanks ?? missing.missingColumns ?? 0;
+  const missingPercent = missing.missingPercent ?? Math.round((Number(missingCells) / totalCells) * 1000) / 10;
+  const duplicateRows = duplicate.exactDuplicateRows ?? analysis.duplicate_rows ?? 0;
+  if (key.includes("quality")) return qualityDetailHtml(analysis);
+  if (key.includes("confidence")) return confidenceDetailHtml(analysis);
+  if (key.includes("missing")) return missingDetailHtml(analysis);
+  let definition = kpi.explanation || "ProgramMetrics calculated this metric from the uploaded file after applying Data Setup rules.";
+  let calculation = "Calculated from the analytics plan generated for this browser session.";
+  let datasetExplanation = `${kpi.title || "This metric"} is ${kpi.value ?? "available"} for this uploaded dataset.`;
+  let why = "This helps determine whether the file is ready for reporting, dashboarding, and export.";
+  let actions = ["Review the related visuals.", "Use Data Setup if headers, metadata rows, or missing codes need adjustment.", "Export only when the selected package unlocks the output you need."];
+  if (key.includes("totalrecords") || key === "rows") { definition = "Total Records is the number of analyzed data rows after omitted metadata rows and setup rules are applied."; calculation = `ProgramMetrics counted ${totalRows} usable rows from the prepared dataset.`; datasetExplanation = `This file currently contributes ${totalRows} records to the preview dashboard.`; why = "Record count affects confidence, trend usefulness, duplicate review, and whether advanced analytics have enough data to be meaningful."; actions = [totalRows < 30 ? "Use caution with trend or advanced analytics because the record count is small." : "Confirm the record count matches the expected reporting period.", "Check Data Setup if metadata rows were accidentally included."]; }
+  else if (key.includes("totalfields") || key.includes("columns")) { definition = "Total Fields is the number of analyzed columns after omitted columns, header setup, and label setup are applied."; calculation = `ProgramMetrics counted ${totalFields} fields in the prepared dataset.`; datasetExplanation = `The dashboard has ${totalFields} fields available for quality checks, visuals, and reporting.`; why = "Field count explains reporting breadth and whether the file supports segmentation, comparisons, and data dictionaries."; actions = ["Review field labels in Data Setup if columns read like metadata or import IDs.", "Use the field dictionary/export once unlocked to document reporting fields."]; }
+  else if (key.includes("duplicate")) { definition = "Duplicate Rows are exact duplicate records detected from normalized full-row signatures."; calculation = `ProgramMetrics compared analyzed rows and found ${duplicateRows} exact duplicate rows.`; datasetExplanation = duplicate.explanation || `${duplicateRows} potential exact duplicate rows were detected.`; why = "Duplicates can inflate counts, distort trends, and overstate activity or participation."; actions = [duplicateRows ? "Review duplicate groups before export." : "No exact duplicate cleanup is needed from this check.", "Use key identifiers or dates for deeper likely-duplicate review if available."]; }
+  else if (key.includes("daterange") || key.includes("date")) { const first = dateSummary[0] || {}; definition = "Date Range is the earliest and latest detected date in the strongest date field."; calculation = first.column ? `ProgramMetrics parsed ${studioDisplayName(analysis, first.column)} and found dates from ${formatStudioDate(first.start)} to ${formatStudioDate(first.end)}.` : "No reliable date field was detected after setup rules."; datasetExplanation = first.column ? `${studioDisplayName(analysis, first.column)} supports trend analysis across the detected reporting period.` : "This file does not currently support a reliable date trend."; why = "Date range determines whether monthly, quarterly, or yearly trend visuals are meaningful."; actions = [first.column ? "Use monthly or quarterly trends instead of one bar per unique date." : "Adjust Data Setup or standardize date columns if trend analysis is expected.", "Check date fields for inconsistent formats before export."]; }
+  else if (key.includes("missingpercent")) { definition = "Missing % is the share of analyzed cells that are blank or coded as missing."; calculation = `Missing % = missing cells (${missingCells}) divided by analyzed cells (${totalCells}), which equals ${missingPercent}%.`; datasetExplanation = `${missingPercent}% of the analyzed data cells are missing in this file.`; why = "Missing percentage makes files of different sizes comparable and helps explain confidence in reports."; actions = [missingPercent > 25 ? "Treat participant-level or field-heavy reporting with caution until missing values are reviewed." : "Missingness appears manageable, but high-impact fields should still be reviewed.", "Use missing-value charts to identify cleanup priorities."]; }
+  return `<div class="kpi-explain-hero">${kpiValueCard(kpi.title || "KPI", kpi.value ?? "-", kpi.subtitle || "")}</div>${kpiExplainSection("Definition", `<p>${escapeHtml(definition)}</p>`)}${kpiExplainSection("Calculation logic", `<p>${escapeHtml(calculation)}</p>`)}${kpiExplainSection("Dataset-specific explanation", `<p>${escapeHtml(datasetExplanation)}</p>`)}${kpiExplainSection("Why it matters", `<p>${escapeHtml(why)}</p>`)}${kpiExplainSection("Recommended actions", explainMetricList(actions))}${kpiExplainSection("Related visuals", relatedVisualsHtml(key, analysis))}${kpiExplainSection("Export availability by package", exportAvailabilityHtml(kpi, analysis))}`;
+}
+function buildExplainableKpis(analysis, kpis) {
+  const list = [...(kpis || [])];
+  const has = (needle) => list.some((kpi) => metricKeyFromKpi(kpi).includes(needle));
+  const missing = engineMissingProfile(analysis);
+  const confidence = engineConfidenceProfile(analysis);
+  if (!has("missingpercent")) list.push({ id: "missingPercent", title: "Missing %", value: `${missing.missingPercent ?? analysis.missing_percent ?? 0}%`, subtitle: "Missing cells / analyzed cells", explanation: "Percent of all analyzed cells that are blank or coded as missing.", detailPanelType: "missingPercent", packageAvailability: "all" });
+  if (!has("confidence")) list.push({ id: "analyticsConfidence", title: "Analytics confidence", value: confidence.overallConfidence ?? "-", subtitle: confidence.label || "View details", explanation: confidence.explanation || "Confidence in generated analytics.", detailPanelType: "confidence", packageAvailability: "all" });
+  return list;
+}

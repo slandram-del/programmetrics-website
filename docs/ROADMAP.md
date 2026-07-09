@@ -1,4 +1,4 @@
-﻿# ProgramMetrics Roadmap
+# ProgramMetrics Roadmap
 
 ## Phase 1 - Product Positioning and Site Structure
 - [ ] Replace feature upgrade language with Analytics Packages
@@ -46,6 +46,7 @@
 - [x] Dashboard builder with tab grouping
 - [x] Responsive chart layouts
 - [x] KPI cards from `recommendedKpis`
+- [x] Interactive KPI detail panels for records, fields, missingness, duplicates, quality, confidence, and date range
 - [x] Date trends from monthly/quarterly grouped plan data
 - [x] Top category charts with top values and Other grouping
 - [x] Donut charts
@@ -55,6 +56,7 @@
 - [ ] Scatter plots
 - [x] Quality gauge
 - [x] Component bars
+- [x] KPI explainability sections: definition, calculation logic, dataset-specific explanation, why it matters, actions, related visuals, and export availability
 - [x] Missing value visuals
 - [ ] Duplicate review visuals beyond summary tables
 - [x] Dashboard tabs for Overview, Visual Analytics, Data Quality, Descriptive Statistics, Missing Values, Recommendations, and Deliverables
@@ -138,6 +140,7 @@
 - Add visual regression screenshots for dashboard tabs and locked preview overlays.
 - Add a TypeScript project config and test runner for chart-engine unit tests.
 - Build native SVG/canvas chart renderers from the chart-engine render model.
+- Add automated tests for KPI explainability panel content and click behavior.
 
 ## Related Documents
 - [Master Plan](PROGRAMMETRICS_MASTER_PLAN.md)

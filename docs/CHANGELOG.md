@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### New Features
+- Added interactive KPI explainability panels for Total Records, Total Fields, Missing Rows, Missing Cells, Fields with Blanks, Missing %, Duplicate Rows, Quality Score, Analytics Confidence Score, and Date Range.
+- Added explainability sections for definitions, calculation logic, dataset-specific explanation, why it matters, recommended actions, related visuals, and export availability by package.
 - Added documentation system.
 - Added master product roadmap.
 - Added pricing and analytics package documentation.
@@ -13,6 +15,9 @@
 - Added chart render models for KPI card, line chart, bar chart, horizontal bar chart, donut chart, histogram, box plot summary, gauge, table, heatmap placeholder, and insight card.
 
 ### Improvements
+- Quality Score detail panels now include component breakdown, score bars, strengths, concerns, and recommendations from analytics-engine outputs.
+- Analytics Confidence panels now include drivers, concerns, assumptions, affected insights, and overall confidence explanation.
+- Missing Values panels now clarify missing rows versus missing cells, missing value coding used, top affected fields, and cleanup recommendations.
 - Studio dashboard visuals now render from `generateAnalyticsPlan()` outputs instead of placeholder-only chart data.
 - Recommended visual rendering now supports line, bar, horizontal bar, donut, histogram, boxplot, gauge, table, and insight-card visual types.
 - Chart data now includes axes, legends, tooltips, accessibility labels, layout metadata, confidence, and empty-state metadata.
@@ -23,10 +28,12 @@
 - Static asset cache keys were bumped so browsers fetch the updated dashboard UI.
 
 ### Refactors
+- Added reusable Studio KPI explainability helpers that route KPI cards to metric-specific detail panels.
 - Added chart-engine renderer modules for registry, selection, chart data normalization, layout, and dashboard grouping.
 - Moved Studio preview behavior closer to analytics-plan-driven rendering while preserving upload, setup, package, and output level flow.
 - Separated chart recommendation output from chart render-model creation.
 
 ### Bug Fixes
+- Ensured Missing % and Analytics Confidence are available as first-class clickable KPI cards when the recommendation list omits them.
 - Fixed recommended visuals that had object-based chart data, field-profile top values, missing profiles, or descriptive statistics from falling through to blank/placeholder states.
 - Preserved locked preview watermark/export protection while rendering richer analytics previews.

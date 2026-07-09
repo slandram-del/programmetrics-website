@@ -1,16 +1,22 @@
 ﻿# TODO
 
 ## Next 10 Priorities
-1. Add TypeScript project config and unit tests for `src/lib/chart-engine`.
-2. Build native SVG/canvas renderers from the chart-engine render model.
-3. Add visual regression tests for dashboard tabs, chart tiles, legends, axes, tooltips, and locked overlays.
-4. Add automated Studio smoke tests for upload, data setup, preview generation, and interactive preview.
-5. Add direct browser/build integration so Studio imports TypeScript analytics and chart engines.
-6. Add scatter plot and richer duplicate-review visuals.
-7. Improve metadata-column detection controls in Data Setup.
-8. Build package-aware deliverables preview from `recommendedDeliverables`.
-9. Add production report generator for HTML, PDF, DOCX, PPTX, PNG, JSON, and ZIP.
-10. Build AI Analyst panel from analytics plan and chart-engine context.
+1. Add automated tests for KPI detail panel click behavior and explanation content.
+2. Add TypeScript project config and unit tests for `src/lib/chart-engine`.
+3. Build native SVG/canvas renderers from the chart-engine render model.
+4. Add visual regression tests for dashboard tabs, chart tiles, KPI detail panels, legends, axes, tooltips, and locked overlays.
+5. Add automated Studio smoke tests for upload, data setup, preview generation, and interactive preview.
+6. Add direct browser/build integration so Studio imports TypeScript analytics and chart engines.
+7. Add scatter plot and richer duplicate-review visuals.
+8. Improve metadata-column detection controls in Data Setup.
+9. Build package-aware deliverables preview from `recommendedDeliverables`.
+10. Add production report generator for HTML, PDF, DOCX, PPTX, PNG, JSON, and ZIP.
+
+## Explainability Follow-Ups
+- Add keyboard focus management and Escape-key close behavior for KPI detail panels.
+- Add tests for Total Records, Total Fields, Missing Rows, Missing Cells, Fields with Blanks, Missing %, Duplicate Rows, Quality Score, Analytics Confidence, and Date Range panels.
+- Add screenshots for KPI explainability panels in desktop and mobile viewports.
+- Add richer export availability mapping by exact package/output level.
 
 ## Chart Engine Follow-Ups
 - Add a test runner and fixtures for date trends, top categories, missing values, gauges, histograms, boxplots, tables, and heatmaps.

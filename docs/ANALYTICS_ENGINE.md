@@ -1,4 +1,4 @@
-﻿# Analytics Engine
+# Analytics Engine
 
 ## Purpose
 ProgramMetrics has a central intelligence architecture for profiling uploaded datasets, classifying dataset type, recommending KPIs and visuals, generating grounded insights, scoring quality, scoring analytics confidence, and recommending deliverables.
@@ -182,11 +182,40 @@ Supported chart-engine render models:
 
 Unsupported chart types return `ComingSoonChart` render models with polished empty-state metadata rather than blank space.
 
+
+## KPI Explainability Pipeline
+Studio KPI cards are interactive and explain how each number was calculated.
+
+Supported explainability panels:
+- Total Records
+- Total Fields
+- Missing Rows
+- Missing Cells
+- Fields with Blanks
+- Missing %
+- Duplicate Rows
+- Quality Score
+- Analytics Confidence Score
+- Date Range
+
+Each panel includes:
+- Definition
+- Calculation logic
+- Dataset-specific explanation
+- Why it matters
+- Recommended actions
+- Related visuals
+- Export availability by package
+
+Specialized panels:
+- Quality Score uses `qualityProfile.components`, `strengths`, `concerns`, and `recommendations`.
+- Analytics Confidence uses `confidenceProfile.confidenceDrivers`, `confidenceConcerns`, `affectedInsights`, `recommendations`, and analytics-plan assumptions.
+- Missing Values uses `missingProfile`, missing value codes, top affected fields, and cleanup recommendations.
 ## Current UI Integration
 Analytics Studio and Interactive Preview now store an `analytics_plan` object on each generated analysis and render primary dashboard content from the plan.
 
 Connected outputs:
-- `recommendedKpis` render as clickable dashboard KPI cards.
+- `recommendedKpis` render as clickable dashboard KPI cards with dataset-specific explainability panels.
 - `recommendedVisuals` render as line, bar, horizontal bar, donut, histogram, boxplot, gauge, table, heatmap placeholder, and insight-card tiles when supported.
 - Unsupported visual types render polished coming-soon chart cards instead of blank space.
 - `missingProfile` powers the Missing Values tab, including missing rows, missing cells, fields with blanks, missing percentage, top missing fields by count, and top missing fields by percent.
@@ -202,7 +231,7 @@ The current static browser implementation mirrors the TypeScript chart-engine be
 - Main `generateAnalyticsPlan` function exists.
 - Missing-value, duplicate, field type, field role, dataset profile, dataset classification, descriptive statistics, quality score, confidence score, KPI, visual, insight, and deliverable modules exist.
 - Chart-engine renderer modules export registry, selector, data builder, layout, and dashboard builder functions.
-- Existing Studio UI remains compatible and renders plan-driven dashboard previews from uploaded/session data.
+- Existing Studio UI remains compatible and renders plan-driven dashboard previews plus KPI explainability panels from uploaded/session data.
 
 ## Related Documents
 - [Visual Guidelines](UI_UX_GUIDELINES.md)

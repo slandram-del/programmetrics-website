@@ -5255,3 +5255,89 @@ body:has(.studio-workspace) .dashboard-control-strip select {
     grid-template-columns: 1fr;
   }
 }
+
+/* Sprint 4.3 KPI explainability panels */
+.kpi-explain-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 14px 0 18px;
+}
+
+.kpi-explain-value {
+  display: grid;
+  gap: 4px;
+  min-width: 180px;
+  padding: 16px 18px;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffffff, #eef6ff);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+}
+
+.kpi-explain-value strong {
+  color: #1d4ed8;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.kpi-explain-value span {
+  color: #071525;
+  font-weight: 800;
+}
+
+.kpi-explain-value small,
+.kpi-explain-muted {
+  color: #53647f;
+}
+
+.kpi-explain-section {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid #dbe4ef;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.kpi-explain-section h4 {
+  margin: 0 0 10px;
+  color: #071525;
+  font-size: 1rem;
+}
+
+.kpi-explain-list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.kpi-explain-list li + li {
+  margin-top: 6px;
+}
+
+.kpi-export-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.kpi-export-grid > div {
+  min-width: 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #dbe4ef;
+}
+
+.kpi-export-grid strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #0f766e;
+}
+
+@media (max-width: 720px) {
+  .kpi-explain-hero,
+  .kpi-export-grid {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+}
