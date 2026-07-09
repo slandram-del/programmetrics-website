@@ -1,10 +1,10 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ProgramMetrics Checkout | Fixed Studio Levels</title>
-    <meta name="description" content="Choose a ProgramMetrics Studio level, calculate upgrade differences, and continue to Studio access." />
+    <title>ProgramMetrics Checkout | Analytics Packages</title>
+    <meta name="description" content="Choose a ProgramMetrics Analytics Package and Output Level, calculate upgrade differences, and continue to Studio access." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
@@ -45,11 +45,11 @@
         <div class="hero-grid">
           <div class="hero-copy reveal">
             <p class="badge">Self-Serve Studio Checkout</p>
-            <h1>Choose a Studio level now. Upgrade later by paying the difference.</h1>
-            <p class="hero-subtitle">ProgramMetrics Studio can support full purchases and step-up upgrades. Customers can preview higher levels with uploaded data in the browser session, but Studio unlocks downloads, full exports, reusable reports, workflows, and advanced analytics only for the paid access level.</p>
+            <h1>Choose an Analytics Package and Output Level.</h1>
+            <p class="hero-subtitle">ProgramMetrics Studio uses package-based checkout. Customers choose the analytics package and output level they want, preview with uploaded data in the browser session, then unlock exports only after checkout.</p>
             <div class="hero-actions">
               <a class="button primary" href="#checkout-panel">Start Checkout</a>
-              <a class="button primary" href="studio-pricing.html#studio-pricing-guide">Compare Levels</a>
+              <a class="button primary" href="studio-pricing.html#studio-pricing-guide">Compare Packages</a>
             </div>
           </div>
           <figure class="hero-dashboard reveal">
@@ -61,60 +61,74 @@
       <section class="section checkout-section" id="checkout-panel">
         <div class="section-title reveal">
           <h2>Studio checkout</h2>
-          <p>Select the customer&apos;s current paid level and the level they want next. If they are upgrading, ProgramMetrics calculates the difference instead of charging the full new tier again.</p>
+          <p>Select the current paid package and the package/output level the customer wants next. If they are upgrading, ProgramMetrics calculates the difference instead of charging the full package again.</p>
         </div>
 
         <div class="checkout-layout reveal">
           <article class="checkout-card">
             <p class="template-label">Purchase or upgrade</p>
             <label class="language-output" for="checkout-current-plan">
-              <span>Current paid level</span>
+              <span>Current paid package</span>
               <select id="checkout-current-plan">
-                <option value="none">No current paid level</option>
-                <option value="t1l1">Tier 1 Level 1 - $49</option>
-                <option value="t1l2">Tier 1 Level 2 - $99</option>
-                <option value="t1l3">Tier 1 Level 3 - $199</option>
-                <option value="t2l1">Tier 2 Level 1 - $299</option>
-                <option value="t2l2">Tier 2 Level 2 - $499</option>
-                <option value="t2l3">Tier 2 Level 3 - $799</option>
-                <option value="t3">Tier 3 Workflow System - $1,500</option>
-                <option value="t4">Tier 4 Advanced Analytics - $3,500</option>
+                <option value="none">No current package</option>
+                <option value="data-clean-essential" data-access="1">Data Clean - Essential - $49</option>
+                  <option value="data-clean-professional" data-access="2">Data Clean - Professional - $59</option>
+                  <option value="data-clean-premium" data-access="3">Data Clean - Premium - $69</option>
+                  <option value="data-clean-complete" data-access="4">Data Clean - Complete - $79</option>
+                  <option value="management-dashboard-essential" data-access="5">Management Dashboard - Essential - $199</option>
+                  <option value="management-dashboard-professional" data-access="6">Management Dashboard - Professional - $229</option>
+                  <option value="management-dashboard-premium" data-access="7">Management Dashboard - Premium - $249</option>
+                  <option value="analytics-essential" data-access="8">Analytics - Essential - $499</option>
+                  <option value="analytics-professional" data-access="9">Analytics - Professional - $599</option>
+                  <option value="analytics-premium" data-access="10">Analytics - Premium - $699</option>
+                  <option value="executive-intelligence-essential" data-access="11">Executive Intelligence - Essential - $1,999</option>
+                  <option value="executive-intelligence-professional" data-access="12">Executive Intelligence - Professional - $2,499</option>
+                  <option value="executive-intelligence-premium" data-access="13">Executive Intelligence - Premium - $2,999</option>
+                  <option value="executive-intelligence-executive" data-access="14">Executive Intelligence - Complete / Executive - $3,500</option>
+                  <option value="enterprise-suite-custom" data-access="15">Enterprise Executive Suite - Custom Quote - $3,500+</option>
               </select>
             </label>
 
             <label class="language-output" for="checkout-desired-plan">
-              <span>New Studio level</span>
+              <span>New package and output level</span>
               <select id="checkout-desired-plan">
-                <option value="t1l1">Tier 1 Level 1 - $49</option>
-                <option value="t1l2">Tier 1 Level 2 - $99</option>
-                <option value="t1l3">Tier 1 Level 3 - $199</option>
-                <option value="t2l1">Tier 2 Level 1 - $299</option>
-                <option value="t2l2">Tier 2 Level 2 - $499</option>
-                <option value="t2l3">Tier 2 Level 3 - $799</option>
-                <option value="t3">Tier 3 Workflow System - $1,500</option>
-                <option value="t4">Tier 4 Advanced Analytics - $3,500</option>
+                <option value="data-clean-essential" data-access="1">Data Clean - Essential - $49</option>
+                  <option value="data-clean-professional" data-access="2">Data Clean - Professional - $59</option>
+                  <option value="data-clean-premium" data-access="3">Data Clean - Premium - $69</option>
+                  <option value="data-clean-complete" data-access="4">Data Clean - Complete - $79</option>
+                  <option value="management-dashboard-essential" data-access="5">Management Dashboard - Essential - $199</option>
+                  <option value="management-dashboard-professional" data-access="6">Management Dashboard - Professional - $229</option>
+                  <option value="management-dashboard-premium" data-access="7">Management Dashboard - Premium - $249</option>
+                  <option value="analytics-essential" data-access="8">Analytics - Essential - $499</option>
+                  <option value="analytics-professional" data-access="9">Analytics - Professional - $599</option>
+                  <option value="analytics-premium" data-access="10">Analytics - Premium - $699</option>
+                  <option value="executive-intelligence-essential" data-access="11">Executive Intelligence - Essential - $1,999</option>
+                  <option value="executive-intelligence-professional" data-access="12">Executive Intelligence - Professional - $2,499</option>
+                  <option value="executive-intelligence-premium" data-access="13">Executive Intelligence - Premium - $2,999</option>
+                  <option value="executive-intelligence-executive" data-access="14">Executive Intelligence - Complete / Executive - $3,500</option>
+                  <option value="enterprise-suite-custom" data-access="15">Enterprise Executive Suite - Custom Quote - $3,500+</option>
               </select>
             </label>
 
             <div class="checkout-summary" aria-live="polite">
-              <div><span>Selected access</span><strong id="checkout-plan-label">Tier 1 Level 1</strong></div>
+              <div><span>Selected package</span><strong id="checkout-plan-label">Data Clean - Essential</strong></div>
               <div><span>Amount due</span><strong id="checkout-amount-due">$49</strong></div>
-              <p id="checkout-upgrade-note">New customer purchase. The full selected level is due.</p>
+              <p id="checkout-upgrade-note">New customer purchase. The full selected package is due.</p>
             </div>
 
             <div class="checkout-actions">
               <a class="button primary" id="checkout-preview-unlock" href="studio.html?access=t1l1&checkout=preview">Preview Studio Access</a>
               <a class="button primary secondary-mini" id="checkout-stripe-placeholder" href="#stripe-links-needed">Stripe Link Not Added Yet</a>
             </div>
-            <p class="checkout-fine-print" id="checkout-stripe-status">Preview access stores only the selected paid level in this browser session. Locked higher-tier previews remain watermarked and export-gated until Stripe payment links issue the matching access.</p>
+            <p class="checkout-fine-print" id="checkout-stripe-status">Preview access stores only the selected paid package in this browser session. Locked previews remain watermarked and export-gated until Stripe payment links issue matching access.</p>
           </article>
 
           <aside class="checkout-card checkout-explain" id="stripe-links-needed">
             <p class="template-label">Recommended payment setup</p>
             <h3>Use Stripe as the payment record, not a customer-file database.</h3>
             <ul>
-              <li>Create one checkout price for each full Studio level.</li>
-              <li>Create upgrade checkout links for each price difference customers can buy later.</li>
+              <li>Create one checkout price for each package and output level.</li>
+              <li>Create upgrade checkout links for package and output-level price differences customers can buy later.</li>
               <li>After successful checkout, redirect back to Studio with a signed access token.</li>
               <li>Keep uploaded customer files temporary: process, download, discard.</li>
             </ul>
@@ -139,6 +153,9 @@
     <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   </body>
 </html>
+
+
+
 
 
 

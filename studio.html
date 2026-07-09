@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -15,7 +15,7 @@
     <meta http-equiv="pragma" content="no-cache" />
     <meta http-equiv="expires" content="0" />
 
-    <link rel="stylesheet" href="styles-20260610.css?v=20260709-studio-bi-v5" />
+    <link rel="stylesheet" href="styles-20260610.css?v=20260709-packages-v1" />
   </head>
 
   <body>
@@ -55,7 +55,7 @@
             <p class="badge">ProgramMetrics Studio</p>
             <h1>Upload files. Clean data. Preview dashboard-ready reports.</h1>
             <p class="hero-subtitle">
-              This is the working Studio. Upload a real file, choose the Studio level you want to preview, and see quality checks, charts, insight notes, and locked report/export options before upgrading.
+              This is the working Studio. Upload a real file, choose an Analytics Package, select an Output Level, and preview professional deliverables before checkout.
             </p>
             <div class="hero-actions">
               <a class="button primary" href="#studio-workspace">Open Studio Workspace</a>
@@ -72,51 +72,65 @@
         <div class="section-title reveal">
           <h2>Studio workspace</h2>
           <p>
-            Uploaded files can power in-session previews across Studio tiers. Export packages, full exports, reusable reports, workflow activation, and advanced analytics output stay locked until the required paid tier and level are unlocked.
+            Choose an Analytics Package, choose an Output Level, preview with your real file, then export or check out when you are ready. Locked previews stay watermarked and export-protected.
           </p>
         </div>
 
         <div class="studio-workspace-grid">
           <article class="studio-control-panel reveal">
             <p class="template-label" id="studio-package-label">Studio Workspace</p>
-            <h3>Preview with your real file.</h3>
-            <p>Upload a file, choose what you want to create, and preview the result. Locked outputs can be previewed before purchase. Upgrade only when you are ready to export.</p>
+            <h3>Choose your analytics package.</h3>
+            <p>Choose an Analytics Package, select an Output Level, preview with your real file, then export or checkout when you are ready.</p>
 
             <div class="studio-package-picker">
               <label class="language-output studio-hidden-level-control" for="studio-access-select" hidden>
-                <span>Unlocked access for real uploads</span>
+                <span>Unlocked package access</span>
                 <select id="studio-access-select" aria-describedby="active-package-card">
-                  <option value="t1l1" data-access="1">Tier 1 Level 1 - $49</option>
-                  <option value="t1l2" data-access="2">Tier 1 Level 2 - $99</option>
-                  <option value="t1l3" data-access="3">Tier 1 Level 3 - $199</option>
-                  <option value="t2l1" data-access="4">Tier 2 Level 1 - $299</option>
-                  <option value="t2l2" data-access="5">Tier 2 Level 2 - $499</option>
-                  <option value="t2l3" data-access="6">Tier 2 Level 3 - $799</option>
-                  <option value="t3" data-access="7">Tier 3 Workflow System - $1,500</option>
-                  <option value="t4" data-access="8">Tier 4 Advanced Analytics - $3,500</option>
+                  <option value="data-clean-essential" data-access="1">Data Clean - Essential - $49</option>
+                  <option value="data-clean-professional" data-access="2">Data Clean - Professional - $59</option>
+                  <option value="data-clean-premium" data-access="3">Data Clean - Premium - $69</option>
+                  <option value="data-clean-complete" data-access="4">Data Clean - Complete - $79</option>
+                  <option value="management-dashboard-essential" data-access="5">Management Dashboard - Essential - $199</option>
+                  <option value="management-dashboard-professional" data-access="6">Management Dashboard - Professional - $229</option>
+                  <option value="management-dashboard-premium" data-access="7">Management Dashboard - Premium - $249</option>
+                  <option value="analytics-essential" data-access="8">Analytics - Essential - $499</option>
+                  <option value="analytics-professional" data-access="9">Analytics - Professional - $599</option>
+                  <option value="analytics-premium" data-access="10">Analytics - Premium - $699</option>
+                  <option value="executive-intelligence-essential" data-access="11">Executive Intelligence - Essential - $1,999</option>
+                  <option value="executive-intelligence-professional" data-access="12">Executive Intelligence - Professional - $2,499</option>
+                  <option value="executive-intelligence-premium" data-access="13">Executive Intelligence - Premium - $2,999</option>
+                  <option value="executive-intelligence-executive" data-access="14">Executive Intelligence - Complete / Executive - $3,500</option>
+                  <option value="enterprise-suite-custom" data-access="15">Enterprise Executive Suite - Custom Quote - $3,500+</option>
                 </select>
               </label>
 
               <label class="language-output studio-hidden-level-control" for="studio-package-select" hidden>
-                <span>Preview Studio level</span>
+                <span>Preview output level</span>
                 <select id="studio-package-select">
-                  <option value="t1l1" data-access="1">Tier 1 Level 1 - $49</option>
-                  <option value="t1l2" data-access="2">Tier 1 Level 2 - $99</option>
-                  <option value="t1l3" data-access="3">Tier 1 Level 3 - $199</option>
-                  <option value="t2l1" data-access="4">Tier 2 Level 1 - $299</option>
-                  <option value="t2l2" data-access="5">Tier 2 Level 2 - $499</option>
-                  <option value="t2l3" data-access="6">Tier 2 Level 3 - $799</option>
-                  <option value="t3" data-access="7">Tier 3 Workflow System - $1,500</option>
-                  <option value="t4" data-access="8">Tier 4 Advanced Analytics - $3,500</option>
+                  <option value="data-clean-essential" data-access="1">Data Clean - Essential - $49</option>
+                  <option value="data-clean-professional" data-access="2">Data Clean - Professional - $59</option>
+                  <option value="data-clean-premium" data-access="3">Data Clean - Premium - $69</option>
+                  <option value="data-clean-complete" data-access="4">Data Clean - Complete - $79</option>
+                  <option value="management-dashboard-essential" data-access="5">Management Dashboard - Essential - $199</option>
+                  <option value="management-dashboard-professional" data-access="6">Management Dashboard - Professional - $229</option>
+                  <option value="management-dashboard-premium" data-access="7">Management Dashboard - Premium - $249</option>
+                  <option value="analytics-essential" data-access="8">Analytics - Essential - $499</option>
+                  <option value="analytics-professional" data-access="9">Analytics - Professional - $599</option>
+                  <option value="analytics-premium" data-access="10">Analytics - Premium - $699</option>
+                  <option value="executive-intelligence-essential" data-access="11">Executive Intelligence - Essential - $1,999</option>
+                  <option value="executive-intelligence-professional" data-access="12">Executive Intelligence - Professional - $2,499</option>
+                  <option value="executive-intelligence-premium" data-access="13">Executive Intelligence - Premium - $2,999</option>
+                  <option value="executive-intelligence-executive" data-access="14">Executive Intelligence - Complete / Executive - $3,500</option>
+                  <option value="enterprise-suite-custom" data-access="15">Enterprise Executive Suite - Custom Quote - $3,500+</option>
                 </select>
               </label><div class="studio-security-rules">
                 <strong>Privacy &amp; browser session</strong>
                 <ul>
                   <li>Your uploaded file is processed only for your current browser session.</li>
                   <li>Files are not stored as customer projects or long-term ProgramMetrics data.</li>
-                  <li>Previews can use your uploaded data with feature limits based on your Studio access.</li>
-                  <li>Export packages and exports are available when the selected output is unlocked.</li>
-                  <li>Export package any outputs before ending your session.</li>
+                  <li>Previews can use your uploaded data with limits based on your selected package and output level.</li>
+                  <li>Exports are available only when the selected package and output level are unlocked.</li>
+                  <li>Download any unlocked outputs before ending your session.</li>
                 </ul>
               </div>
             </div>
@@ -275,35 +289,51 @@
               <label class="language-output studio-hidden-output-format" for="studio-output-format" hidden>
                 <span>Output format</span>
                 <select id="studio-output-format" aria-describedby="studio-output-helper">
+                  <option value="selected_package">Selected package export</option>
                   <option value="txt">File upload and conversion</option>
                   <option value="duplicate_review" data-required-access="2">Duplicate and missing-value checks</option>
                   <option value="dashboard_summary" data-required-access="3">Cleaned export and dashboard summary</option>
-                  <option value="csv" data-required-access="3">Cleaned CSV export - requires Tier 1 Level 3+</option>
-                  <option value="pdf" data-required-access="3">PDF report - requires Tier 1 Level 3+</option>
-                  <option value="html" data-required-access="3">HTML report - requires Tier 1 Level 3+</option>
-                  <option value="json" data-required-access="4">JSON package - requires Tier 2+</option>
+                  <option value="csv" data-required-access="3">Cleaned Data CSV</option>
+                  <option value="pdf" data-required-access="3">Executive Summary PDF</option>
+                  <option value="html" data-required-access="3">Interactive Dashboard HTML</option>
+                  <option value="json" data-required-access="4">JSON Metadata Package</option>
                   <option value="branded_report" data-required-access="4">Branded report structure</option>
                   <option value="reusable_workflow" data-required-access="5">Reusable report workflow</option>
                   <option value="quality_review" data-required-access="6">Advanced quality review</option>
                   <option value="workflow_package" data-required-access="7">Workflow system preview</option>
                   <option value="advanced_analytics" data-required-access="8">Advanced analytics preview</option>
                 </select>
-                <small id="studio-output-helper" class="studio-output-helper">Feature cards choose the output for this preview.</small>
+                <small id="studio-output-helper" class="studio-output-helper">Package and output level choose the export menu for this preview.</small>
               </label>
             </div>
 
-            <div class="feature-access-panel" aria-live="polite">
-              <h4>Choose what you want to create</h4><p>Preview with your real file. Locked outputs can be previewed before purchase.</p>
-              <div class="feature-access-grid">
-                <button class="feature-access-item is-selected" type="button" data-feature-key="conversion" data-output-type="txt" data-preview-plan="t1l1" data-required-access="1" data-action-label="Export package summary"><strong>File upload and conversion</strong><p>Prepare your file for preview and standard output.</p><span class="feature-status-badge">Available</span></button>
-                <button class="feature-access-item" type="button" data-feature-key="duplicateChecks" data-output-type="duplicate_review" data-preview-plan="t1l2" data-required-access="2" data-action-label="Export review"><strong>Duplicate and missing-value checks</strong><p>Find records that need review before reporting.</p><span class="feature-status-badge">Preview only</span></button>
-                <button class="feature-access-item" type="button" data-feature-key="dashboard" data-output-type="dashboard_summary" data-preview-plan="t1l3" data-required-access="3" data-action-label="Export dashboard"><strong>Cleaned export and dashboard summary</strong><p>Export package cleaned data and a basic insight summary.</p><span class="feature-status-badge">Upgrade to export</span></button>
-                <button class="feature-access-item" type="button" data-feature-key="branded" data-output-type="branded_report" data-preview-plan="t2l1" data-required-access="4" data-action-label="Generate report"><strong>Branded report structure</strong><p>Create a professional report layout from your file.</p><span class="feature-status-badge">Upgrade to export</span></button>
-                <button class="feature-access-item" type="button" data-feature-key="reusableWorkflow" data-output-type="reusable_workflow" data-preview-plan="t2l2" data-required-access="5" data-action-label="Export workflow"><strong>Reusable report workflow</strong><p>Save a repeatable reporting setup for similar files.</p><span class="feature-status-badge">Upgrade to export</span></button>
-                <button class="feature-access-item" type="button" data-feature-key="recurringReport" data-output-type="quality_review" data-preview-plan="t2l3" data-required-access="6" data-action-label="Export quality review"><strong>Advanced quality review</strong><p>Add richer data checks and recurring report setup.</p><span class="feature-status-badge">Upgrade to export</span></button>
-                <button class="feature-access-item" type="button" data-feature-key="workflowActivation" data-output-type="workflow_package" data-preview-plan="t3" data-required-access="7" data-action-label="Export workflow package"><strong>Workflow system preview</strong><p>Preview rules, fields, and workflow logic.</p><span class="feature-status-badge">Upgrade to export</span></button>
-                <button class="feature-access-item" type="button" data-feature-key="advancedAnalytics" data-output-type="advanced_analytics" data-preview-plan="t4" data-required-access="8" data-action-label="Export analytics"><strong>Advanced analytics preview</strong><p>Preview predictive insights and multi-file analytics.</p><span class="feature-status-badge">Upgrade to export</span></button>
+            <div class="feature-access-panel studio-package-flow" aria-live="polite">
+              <div class="studio-flow-heading">
+                <p class="template-label">Step 1</p>
+                <h4>Choose your Analytics Package</h4>
+                <p>Start with the kind of result you want. You do not need to understand internal tiers before using Studio.</p>
               </div>
+              <div class="studio-package-grid" id="studio-package-grid"></div>
+
+              <div class="studio-flow-heading">
+                <p class="template-label">Step 2</p>
+                <h4>Choose your Output Level</h4>
+                <p>Essential finds the data problems. Professional explains what the data says. Premium sharpens the story. Complete prepares leadership-ready outputs.</p>
+              </div>
+              <div class="studio-level-grid" id="studio-level-grid"></div>
+
+              <div class="studio-selected-package-summary" id="studio-selected-package-summary"></div>
+              <div class="studio-deliverables-panel">
+                <div>
+                  <h4>Deliverables preview</h4>
+                  <ul id="studio-deliverables-list"></ul>
+                </div>
+                <div>
+                  <h4>Export menu for this selection</h4>
+                  <ul id="studio-export-preview-list"></ul>
+                </div>
+              </div>
+              <div class="studio-package-comparison" id="studio-package-comparison"></div>
             </div>
 
             <div class="converter-actions studio-actions">
@@ -317,7 +347,7 @@
 
             <div class="insight-panel" id="studio-insight-panel" aria-live="polite"></div>
             <div class="converter-result" id="studio-converter-result" aria-live="polite">
-              Upload a file, choose a feature card, and preview the result with your real data. Locked previews are watermarked and limited until upgraded.
+              Upload a file, choose an Analytics Package and Output Level, then preview the deliverables with your real data. Locked previews are watermarked and export-protected until checkout.
             </div>
           </article>
 
@@ -348,10 +378,15 @@
       </nav>
     </footer>
 
-    <script src="script-20260610.js?v=20260709-studio-bi-v5"></script>
+    <script src="script-20260610.js?v=20260709-packages-v1"></script>
     <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   </body>
 </html>
+
+
+
+
+
 
 
 

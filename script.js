@@ -1,4 +1,4 @@
-const serviceDetails = {
+﻿const serviceDetails = {
   dashboards: {
     title: "Custom built dashboards",
     text:
@@ -577,294 +577,364 @@ let activeStudioRawImport = null;
 let activeStudioDataSetup = null;
 let activeStudioDashboardConfig = null;
 let activeBrandLogoDataUrl = "";
-let activeStudioFeatureKey = "conversion";
-const defaultStudioMissingCodes = ["", " ", "NA", "N/A", "n/a", "null", "NULL", "unknown", "Unknown", "blank", "Blank", "not reported", "Not Reported", "missing", "Missing", "--", "-"];
-let activeStudioMissingCodes = defaultStudioMissingCodes.slice();
+let activeStudioFeatureKey = "packageSelection";
+let activeStudioPackageId = "data-clean";
+let activeStudioLevelId = "essential";
 
-setupFileConverter("file-converter-input", "converter-result", "file-output-language", "file-output-format", "file-convert-button", "file-analyze-button", "file-insight-panel");
-setupFileConverter("studio-file-converter-input", "studio-converter-result", "studio-output-language", "studio-output-format", "studio-convert-button", "studio-analyze-button", "studio-insight-panel");
+const studioPackageLevelInsights = {
+  essential: "Know what is wrong with your data.",
+  professional: "Understand what your data says.",
+  premium: "Explain the story behind the data.",
+  complete: "Present actionable insights to leadership.",
+  executive: "Present actionable insights to leadership.",
+  custom: "Build a custom executive analytics system."
+};
+
+const analyticsPackages = [
+  {
+    id: "data-clean",
+    name: "Data Clean Package",
+    shortName: "Data Clean",
+    startingPrice: 49,
+    description: "Prepare messy spreadsheets for reporting.",
+    bestFor: ["Cleaning spreadsheets", "Missing-value review", "Duplicate checks", "File validation"],
+    previewFocus: "Cleaned file readiness, missingness, duplicates, validation, and data quality scoring.",
+    levels: [
+      { id: "essential", name: "Essential", price: 49, deliverables: ["Cleaned CSV", "Missing value report", "Duplicate report", "Data quality score", "Basic validation summary"], exports: ["csv", "missing_csv", "duplicate_csv", "json", "summary"] },
+      { id: "professional", name: "Professional", price: 59, deliverables: ["Excel workbook", "Data dictionary", "Missing value coding report", "Field type analysis", "Cleaning recommendations"], exports: ["xlsx", "dictionary_xlsx", "missing_csv", "json", "summary"] },
+      { id: "premium", name: "Premium", price: 69, deliverables: ["Interactive cleaning dashboard", "Before/after comparisons", "Downloadable quality report", "Data profile report", "Branded PDF summary"], exports: ["html", "pdf", "png", "json", "summary"] },
+      { id: "complete", name: "Complete", price: 79, deliverables: ["Interactive HTML dashboard", "Executive data quality summary", "Audit trail", "Processing log", "ZIP package"], exports: ["zip", "html", "pdf", "csv", "missing_csv", "duplicate_csv", "dictionary_xlsx", "json", "summary"] }
+    ]
+  },
+  {
+    id: "management-dashboard",
+    name: "Management Dashboard Package",
+    shortName: "Management Dashboard",
+    startingPrice: 199,
+    description: "Create dashboards and executive-ready reports.",
+    bestFor: ["Program managers", "Directors", "Grant reporting", "Monthly reporting"],
+    previewFocus: "Operational KPIs, executive summaries, dashboard pages, charts, and management reporting deliverables.",
+    levels: [
+      { id: "essential", name: "Essential", price: 199, deliverables: ["Interactive dashboard", "Executive PDF", "Word report", "KPI dashboard", "PNG dashboard image"], exports: ["html", "pdf", "docx", "png", "summary"] },
+      { id: "professional", name: "Professional", price: 229, deliverables: ["Multiple dashboard pages", "Additional charts", "Organization branding", "Executive summary", "Recommendations"], exports: ["html", "pdf", "docx", "pptx", "png", "json"] },
+      { id: "premium", name: "Premium", price: 249, deliverables: ["Presentation graphics", "Executive infographic", "Dashboard thumbnails", "Interactive navigation", "Expanded analytics"], exports: ["zip", "html", "pdf", "docx", "pptx", "png", "json"] }
+    ]
+  },
+  {
+    id: "analytics",
+    name: "Analytics Package",
+    shortName: "Analytics",
+    startingPrice: 499,
+    description: "Generate statistical summaries, trends, and deeper insights.",
+    bestFor: ["Analysts", "Evaluators", "Researchers", "Quality improvement teams"],
+    previewFocus: "Statistical summaries, trend analysis, forecasts, outlier review, correlations, and recommendations.",
+    levels: [
+      { id: "essential", name: "Essential", price: 499, deliverables: ["Statistical analysis", "Trend analysis", "Forecasts", "Descriptive statistics", "Recommendations"], exports: ["html", "pdf", "xlsx", "json", "summary"] },
+      { id: "professional", name: "Professional", price: 599, deliverables: ["Correlation analysis", "Advanced charts", "Outlier review", "Benchmark comparisons", "Expanded narrative"], exports: ["zip", "html", "pdf", "docx", "xlsx", "png", "json"] },
+      { id: "premium", name: "Premium", price: 699, deliverables: ["Predictive insights", "Multi-page analytics workbook", "Advanced statistical appendix", "Publication-quality graphics", "Reusable workflow template"], exports: ["zip", "html", "pdf", "docx", "pptx", "xlsx", "png", "json", "summary"] }
+    ]
+  },
+  {
+    id: "executive-intelligence",
+    name: "Executive Intelligence Package",
+    shortName: "Executive Intelligence",
+    startingPrice: 1999,
+    description: "Create a complete board-ready reporting suite.",
+    bestFor: ["Leadership", "Funders", "Board meetings", "Government reporting"],
+    previewFocus: "Board-ready dashboards, AI-style narratives, presentation-ready visuals, and executive reporting suites.",
+    levels: [
+      { id: "essential", name: "Essential", price: 1999, deliverables: ["Board-ready dashboard", "Executive PDF", "PowerPoint", "Word report", "HTML dashboard", "AI narrative"], exports: ["zip", "html", "pdf", "docx", "pptx", "png", "json"] },
+      { id: "professional", name: "Professional", price: 2499, deliverables: ["Executive briefing", "Board presentation", "Strategic recommendations", "Advanced branding", "Multi-report package"], exports: ["zip", "html", "pdf", "docx", "pptx", "xlsx", "png", "json"] },
+      { id: "premium", name: "Premium", price: 2999, deliverables: ["Publication graphics", "Enhanced executive storytelling", "Multiple dashboard themes", "Presentation-ready visuals", "Expanded appendix"], exports: ["zip", "html", "pdf", "docx", "pptx", "xlsx", "png", "json", "summary"] },
+      { id: "executive", name: "Complete / Executive", price: 3500, deliverables: ["Unlimited export formats", "Complete branded reporting suite", "Multi-file analytics", "Workflow templates", "Metadata package", "Processing audit", "Consulting-grade deliverables", "Enterprise-ready ZIP package"], exports: ["zip", "html", "pdf", "docx", "pptx", "xlsx", "csv", "missing_csv", "duplicate_csv", "dictionary_xlsx", "png", "json", "summary"] }
+    ]
+  },
+  {
+    id: "enterprise-suite",
+    name: "Enterprise Executive Suite",
+    shortName: "Enterprise Suite",
+    startingPrice: 3500,
+    customQuote: true,
+    description: "Custom branded analytics systems, recurring workflows, multi-file analysis, and consulting-grade deliverables.",
+    bestFor: ["Custom quote", "Recurring reporting", "Multi-file systems", "Consulting-grade delivery"],
+    previewFocus: "Custom executive analytics system planning, workflow design, multi-file strategy, and enterprise package scoping.",
+    levels: [
+      { id: "custom", name: "Custom Quote", price: 3500, displayPrice: "$3,500+", deliverables: ["Custom branded analytics system", "Recurring workflow design", "Multi-file analysis", "Consulting-grade deliverables", "Enterprise implementation plan"], exports: ["zip", "html", "pdf", "docx", "pptx", "xlsx", "png", "json", "summary"] }
+    ]
+  }
+];
+
+const studioExportCatalog = {
+  zip: "ZIP Package: Everything",
+  html: "Interactive Dashboard HTML",
+  pdf: "Executive Summary PDF",
+  docx: "Word Executive Report DOCX",
+  pptx: "PowerPoint Presentation PPTX",
+  xlsx: "Excel Workbook XLSX",
+  csv: "Cleaned Data CSV",
+  missing_csv: "Missing Value Report CSV",
+  duplicate_csv: "Duplicate Review CSV",
+  dictionary_xlsx: "Field Dictionary XLSX",
+  png: "Dashboard / Infographic Image",
+  json: "JSON Metadata",
+  summary: "Processing Summary"
+};
+
+function flattenStudioPackages() {
+  const plans = {};
+  let access = 1;
+  analyticsPackages.forEach((pkg) => {
+    pkg.levels.forEach((level) => {
+      const key = `${pkg.id}-${level.id}`;
+      plans[key] = {
+        ...level,
+        key,
+        packageId: pkg.id,
+        packageName: pkg.name,
+        packageShortName: pkg.shortName,
+        packageDescription: pkg.description,
+        bestFor: pkg.bestFor,
+        previewFocus: pkg.previewFocus,
+        customQuote: Boolean(pkg.customQuote),
+        access: access++,
+        label: `${pkg.name} - ${level.name}`,
+        priceLabel: level.displayPrice || `$${Number(level.price).toLocaleString()}`,
+        insightPromise: studioPackageLevelInsights[level.id] || studioPackageLevelInsights.essential,
+        summary: `${studioPackageLevelInsights[level.id] || "Preview your selected deliverables."} ${pkg.description}`,
+      };
+    });
+  });
+  return plans;
+}
+
+const studioPackageSummaries = flattenStudioPackages();
+const legacyStudioPlanMap = {
+  t1l1: "data-clean-essential",
+  t1l2: "data-clean-professional",
+  t1l3: "management-dashboard-essential",
+  t2l1: "management-dashboard-professional",
+  t2l2: "management-dashboard-premium",
+  t2l3: "analytics-essential",
+  t3: "analytics-premium",
+  t4: "executive-intelligence-executive"
+};
 const studioFeatureCards = {
-  conversion: { title: "File upload and conversion", outputType: "txt", previewPlan: "t1l1", requiredAccess: 1, actionLabel: "Download summary", lockedAction: "Upgrade to export", lockedCopy: "Upload and preview are available. Upgrade only if you want a reusable export." },
-  duplicateChecks: { title: "Duplicate and missing-value checks", outputType: "duplicate_review", previewPlan: "t1l2", requiredAccess: 2, actionLabel: "Export review", lockedAction: "Upgrade to export", lockedCopy: "Your file preview is limited. Upgrade to export the full duplicate and missing-value review." },
-  dashboard: { title: "Cleaned export and dashboard summary", outputType: "dashboard_summary", previewPlan: "t1l3", requiredAccess: 3, actionLabel: "Export dashboard", lockedAction: "Upgrade to export", lockedCopy: "Your file preview is limited. Upgrade to export the cleaned file and dashboard summary." },
-  branded: { title: "Branded report structure", outputType: "branded_report", previewPlan: "t2l1", requiredAccess: 4, actionLabel: "Generate report", lockedAction: "Unlock this report", lockedCopy: "Your file preview is limited. Upgrade to export the full branded report." },
-  reusableWorkflow: { title: "Reusable report workflow", outputType: "reusable_workflow", previewPlan: "t2l2", requiredAccess: 5, actionLabel: "Export workflow", lockedAction: "Upgrade to export", lockedCopy: "Preview the setup now. Upgrade to export a reusable reporting workflow." },
-  recurringReport: { title: "Advanced quality review", outputType: "quality_review", previewPlan: "t2l3", requiredAccess: 6, actionLabel: "Export quality review", lockedAction: "Upgrade to export", lockedCopy: "Your file preview is limited. Upgrade to export the full quality review." },
-  workflowActivation: { title: "Workflow system preview", outputType: "workflow_package", previewPlan: "t3", requiredAccess: 7, actionLabel: "Export workflow package", lockedAction: "Upgrade to export", lockedCopy: "Preview the workflow logic now. Upgrade to export or activate the workflow package." },
-  advancedAnalytics: { title: "Advanced analytics preview", outputType: "advanced_analytics", previewPlan: "t4", requiredAccess: 8, actionLabel: "Export analytics", lockedAction: "Upgrade to export", lockedCopy: "Preview analytics from your file. Upgrade to export the full advanced analytics package." },
+  packageSelection: { title: "Analytics Package Selection", outputType: "selected_package", previewPlan: "data-clean-essential", requiredAccess: 1, actionLabel: "Export package", lockedAction: "Upgrade to export", lockedCopy: "Preview the selected package with your real file. Upgrade only when you are ready to export." }
 };
-const studioPackageSummaries = {
-  t1l1: { access: 1, label: "Tier 1 Level 1 - $49", summary: "Unlocks upload, basic conversion, browser preview, and standard downloads." },
-  t1l2: { access: 2, label: "Tier 1 Level 2 - $99", summary: "Adds duplicate detection, missing-value checks, and cleanup notes." },
-  t1l3: { access: 3, label: "Tier 1 Level 3 - $199", summary: "Adds cleaned-data export, PDF/HTML reports, and basic dashboard insights." },
-  t2l1: { access: 4, label: "Tier 2 Level 1 - $299", summary: "Adds branded report structure and JSON package exports." },
-  t2l2: { access: 5, label: "Tier 2 Level 2 - $499", summary: "Adds translated report setup and multilingual report outputs." },
-  t2l3: { access: 6, label: "Tier 2 Level 3 - $799", summary: "Adds richer quality checks and recurring report setup." },
-  t3: { access: 7, label: "Tier 3 Workflow System - $1,500", summary: "Unlocks workflow rules, dashboard logic, custom fields, and integrations." },
-  t4: { access: 8, label: "Tier 4 Advanced Analytics - $3,500", summary: "Unlocks advanced analytics, automation, multi-file workflows, and predictive reporting logic." },
+const studioFeatureRequirements = {
+  upload: 1,
+  conversion: 1,
+  duplicateChecks: studioPackageSummaries["data-clean-essential"].access,
+  missingReview: studioPackageSummaries["data-clean-essential"].access,
+  cleanupNotes: studioPackageSummaries["data-clean-professional"].access,
+  cleanedExport: studioPackageSummaries["data-clean-essential"].access,
+  report: studioPackageSummaries["management-dashboard-essential"].access,
+  dashboard: studioPackageSummaries["management-dashboard-essential"].access,
+  branded: studioPackageSummaries["management-dashboard-professional"].access,
+  jsonPackage: studioPackageSummaries["data-clean-essential"].access,
+  translatedReport: studioPackageSummaries["management-dashboard-professional"].access,
+  reusableWorkflow: studioPackageSummaries["analytics-premium"].access,
+  recurringReport: studioPackageSummaries["analytics-professional"].access,
+  workflowActivation: studioPackageSummaries["executive-intelligence-executive"].access,
+  advancedAnalytics: studioPackageSummaries["analytics-essential"].access,
 };
+const studioOutputRequirements = { selected_package: 1 };
+
+function normalizeStudioPlanKey(value) {
+  return studioPackageSummaries[value] ? value : legacyStudioPlanMap[value] || "data-clean-essential";
+}
+
+function getStudioPackage(packageId = activeStudioPackageId) {
+  return analyticsPackages.find((pkg) => pkg.id === packageId) || analyticsPackages[0];
+}
+
+function getStudioPlanFromSelection(packageId = activeStudioPackageId, levelId = activeStudioLevelId) {
+  const pkg = getStudioPackage(packageId);
+  const level = pkg.levels.find((item) => item.id === levelId) || pkg.levels[0];
+  return studioPackageSummaries[`${pkg.id}-${level.id}`] || Object.values(studioPackageSummaries)[0];
+}
+
+function setActiveStudioPlan(planKey) {
+  const normalized = normalizeStudioPlanKey(planKey);
+  const plan = studioPackageSummaries[normalized] || studioPackageSummaries["data-clean-essential"];
+  activeStudioPackageId = plan.packageId;
+  activeStudioLevelId = plan.id;
+  return plan;
+}
+
+function populateStudioPlanSelect(select, includeNone = false) {
+  if (!select) return;
+  const rawValue = select.value;
+  const currentValue = rawValue === "none" ? "none" : normalizeStudioPlanKey(rawValue);
+  const options = [];
+  if (includeNone) options.push(`<option value="none">No current package</option>`);
+  analyticsPackages.forEach((pkg) => {
+    const optionHtml = pkg.levels.map((level) => {
+      const plan = studioPackageSummaries[`${pkg.id}-${level.id}`];
+      return `<option value="${escapeHtml(plan.key)}" data-access="${escapeHtml(plan.access)}">${escapeHtml(plan.packageShortName)} - ${escapeHtml(level.name)} - ${escapeHtml(plan.priceLabel)}</option>`;
+    }).join("");
+    options.push(`<optgroup label="${escapeHtml(pkg.name)}">${optionHtml}</optgroup>`);
+  });
+  select.innerHTML = options.join("");
+  if (includeNone && currentValue === "none") select.value = "none";
+  else select.value = studioPackageSummaries[currentValue] ? currentValue : "data-clean-essential";
+}
 
 function setupStudioPackageAccess() {
   const accessSelect = document.getElementById("studio-access-select");
   const packageSelect = document.getElementById("studio-package-select");
-  if (!packageSelect && !accessSelect) {
-    return;
-  }
+  if (!packageSelect && !accessSelect && !document.getElementById("studio-package-grid")) return;
+
+  populateStudioPlanSelect(accessSelect);
+  populateStudioPlanSelect(packageSelect);
 
   const packageCard = document.getElementById("active-package-card");
   const packageLabel = document.getElementById("studio-package-label");
+  const packageGrid = document.getElementById("studio-package-grid");
+  const levelGrid = document.getElementById("studio-level-grid");
+  const deliverablesList = document.getElementById("studio-deliverables-list");
+  const exportPreviewList = document.getElementById("studio-export-preview-list");
+  const comparison = document.getElementById("studio-package-comparison");
+  const selectedSummary = document.getElementById("studio-selected-package-summary");
   const gatedItems = document.querySelectorAll("[data-required-access]");
-  const packageButtons = document.querySelectorAll("[data-select-package]");
   const storageKey = "programmetrics_unlocked_plan";
 
   const params = new URLSearchParams(window.location.search);
   const checkoutAccess = params.get("access") || params.get("plan");
-  if (checkoutAccess && studioPackageSummaries[checkoutAccess]) {
-    sessionStorage.setItem(storageKey, checkoutAccess);
+  if (checkoutAccess && studioPackageSummaries[normalizeStudioPlanKey(checkoutAccess)]) {
+    sessionStorage.setItem(storageKey, normalizeStudioPlanKey(checkoutAccess));
   }
 
-  if (accessSelect) {
-    const storedAccess = sessionStorage.getItem(storageKey);
-    if (storedAccess && studioPackageSummaries[storedAccess]) {
-      accessSelect.value = storedAccess;
-    }
-    accessSelect.disabled = false;
-    accessSelect.removeAttribute("aria-disabled");
-  }
+  const storedAccess = normalizeStudioPlanKey(sessionStorage.getItem(storageKey) || accessSelect?.value || "data-clean-essential");
+  if (accessSelect) accessSelect.value = storedAccess;
+  setActiveStudioPlan(normalizeStudioPlanKey(packageSelect?.value || storedAccess));
+  if (packageSelect) packageSelect.value = getStudioPlanFromSelection().key;
 
-  const currentUnlocked = () => {
-    const selected = studioPackageSummaries[accessSelect?.value] || studioPackageSummaries.t1l1;
-    return selected;
+  const currentUnlocked = () => studioPackageSummaries[normalizeStudioPlanKey(accessSelect?.value)] || studioPackageSummaries["data-clean-essential"];
+  const currentPreview = () => getStudioPlanFromSelection();
+
+  const renderPackageCards = () => {
+    if (!packageGrid) return;
+    packageGrid.innerHTML = analyticsPackages.map((pkg) => {
+      const selected = pkg.id === activeStudioPackageId;
+      const best = pkg.bestFor.slice(0, 4).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+      const deliverables = pkg.levels[pkg.levels.length - 1].deliverables.slice(0, 4).map((item) => `<span>${escapeHtml(item)}</span>`).join("");
+      return `<button class="studio-package-card${selected ? " is-selected" : ""}" type="button" data-package-id="${escapeHtml(pkg.id)}"><span class="package-card-kicker">Starting at ${escapeHtml(pkg.customQuote ? "$3,500+" : `$${pkg.startingPrice}`)}</span><strong>${escapeHtml(pkg.name)}</strong><p>${escapeHtml(pkg.description)}</p><em>Best for</em><ul>${best}</ul><div class="package-deliverable-preview">${deliverables}</div><b>${escapeHtml(pkg.customQuote ? "Contact for custom quote" : "Select package")}</b></button>`;
+    }).join("");
+    packageGrid.querySelectorAll("[data-package-id]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const pkg = getStudioPackage(button.dataset.packageId);
+        activeStudioPackageId = pkg.id;
+        activeStudioLevelId = pkg.levels[0].id;
+        applyAccess(true);
+      });
+    });
   };
 
-  const currentPreview = () => {
-    const selected = studioPackageSummaries[packageSelect?.value] || currentUnlocked();
-    return selected;
+  const renderLevelCards = () => {
+    if (!levelGrid) return;
+    const pkg = getStudioPackage();
+    levelGrid.innerHTML = pkg.levels.map((level) => {
+      const plan = studioPackageSummaries[`${pkg.id}-${level.id}`];
+      const selected = level.id === activeStudioLevelId;
+      return `<button class="studio-level-card${selected ? " is-selected" : ""}" type="button" data-level-id="${escapeHtml(level.id)}"><span>${escapeHtml(level.name)}</span><strong>${escapeHtml(plan.priceLabel)}</strong><p>${escapeHtml(plan.insightPromise)}</p><small>${escapeHtml(level.deliverables.slice(0, 3).join(" | "))}</small></button>`;
+    }).join("");
+    levelGrid.querySelectorAll("[data-level-id]").forEach((button) => {
+      button.addEventListener("click", () => {
+        activeStudioLevelId = button.dataset.levelId;
+        applyAccess(true);
+      });
+    });
   };
 
-  const resetLockedSelect = (select) => {
-    const selectedOption = select.options[select.selectedIndex];
-    if (!selectedOption || !selectedOption.disabled) {
-      return;
-    }
-
-    const fallback = Array.from(select.options).find((option) => !option.disabled);
-    if (fallback) {
-      select.value = fallback.value;
-      select.dispatchEvent(new Event("change"));
-    }
+  const renderComparison = () => {
+    if (!comparison) return;
+    const rows = [
+      ["Cleaned data", ["Included", "Included", "Included", "Included"]],
+      ["Missing value report", ["Included", "Included", "Included", "Included"]],
+      ["Duplicate review", ["Included", "Included", "Included", "Included"]],
+      ["Dashboard", ["Premium+", "Included", "Included", "Included"]],
+      ["PDF report", ["Premium+", "Included", "Included", "Included"]],
+      ["Word report", ["-", "Included", "Professional+", "Included"]],
+      ["PowerPoint", ["-", "Premium", "Premium", "Included"]],
+      ["Advanced analytics", ["-", "Premium", "Included", "Included"]],
+      ["Forecasting", ["-", "Premium", "Essential+", "Included"]],
+      ["AI narrative", ["-", "Professional+", "Professional+", "Included"]],
+      ["Branding", ["Premium+", "Professional+", "Premium", "Included"]],
+      ["ZIP package", ["Complete", "Premium", "Professional+", "Included"]]
+    ];
+    comparison.innerHTML = `<h4>Package comparison</h4><div class="studio-comparison-table"><table><thead><tr><th>Deliverable</th><th>Data Clean</th><th>Management Dashboard</th><th>Analytics</th><th>Executive Intelligence</th></tr></thead><tbody>${rows.map(([name, values]) => `<tr><th>${escapeHtml(name)}</th>${values.map((value) => `<td>${value === "Included" ? "✓" : escapeHtml(value)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
   };
 
-  const applyAccess = () => {
+  function applyAccess(refreshPreview = false) {
+    const plan = getStudioPlanFromSelection();
     const unlocked = currentUnlocked();
-    const preview = currentPreview();
-    const access = unlocked.access;
+    const lockedPreview = shouldWatermark(plan, unlocked);
+    if (packageSelect) packageSelect.value = plan.key;
+    const format = document.getElementById("studio-output-format");
+    if (format) format.value = "selected_package";
+    if (packageLabel) packageLabel.textContent = "Analytics Package Studio";
+    renderPackageCards();
+    renderLevelCards();
+    renderComparison();
 
+    if (selectedSummary) {
+      selectedSummary.innerHTML = `<div><span>Selected package</span><strong>${escapeHtml(plan.packageName)}</strong></div><div><span>Output level</span><strong>${escapeHtml(plan.name)} - ${escapeHtml(plan.priceLabel)}</strong></div><div><span>Preview status</span><strong>${lockedPreview ? "Preview only" : "Ready to export"}</strong></div><p>${escapeHtml(plan.insightPromise)}</p>`;
+    }
     if (packageCard) {
-      const lockedPreview = shouldWatermark(preview, unlocked);
-      packageCard.innerHTML = `<div><span>Selected output</span><strong>${escapeHtml(getSelectedStudioFeature().title)}</strong></div><div><span>Preview status</span><strong>${lockedPreview ? "Preview only" : "Ready to export"}</strong></div><div><span>Export access</span><strong>${lockedPreview ? "Upgrade to export" : "Download available"}</strong></div><small>Choose what you want to create. Locked outputs can be previewed before purchase.</small>`;
+      packageCard.innerHTML = `<div><span>Selected package</span><strong>${escapeHtml(plan.packageShortName)}</strong></div><div><span>Output level</span><strong>${escapeHtml(plan.name)} - ${escapeHtml(plan.priceLabel)}</strong></div><div><span>Export access</span><strong>${lockedPreview ? "Upgrade to export" : "Download available"}</strong></div><small>${escapeHtml(plan.previewFocus)}</small>`;
     }
-
-    if (packageLabel) {
-      packageLabel.textContent = "Studio Workspace";
-    }
+    if (deliverablesList) deliverablesList.innerHTML = plan.deliverables.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+    if (exportPreviewList) exportPreviewList.innerHTML = (plan.exports || []).map((kind) => `<li>${escapeHtml(studioExportCatalog[kind] || kind)}</li>`).join("");
 
     gatedItems.forEach((item) => {
       const required = Number(item.dataset.requiredAccess || "1");
-      const unlockedItem = access >= required;
+      const unlockedItem = accessValue(unlocked) >= required;
       item.classList.toggle("is-locked", !unlockedItem);
       item.classList.toggle("is-unlocked", unlockedItem);
-      if (item.tagName !== "OPTION") {
-        item.dataset.lockMessage = unlockedItem ? "Unlocked" : `Full export requires ${getLevelLabelByAccess(required)}`;
-      }
     });
     updateStudioDownloadButton();
-  };
+    updateStudioBrandingVisibility?.();
+    if (refreshPreview && activeStudioUploadedAnalysis) {
+      refreshActiveStudioPreview(`Previewing ${plan.packageName} - ${plan.name}.`);
+    }
+  }
 
   accessSelect?.addEventListener("change", () => {
-    if (accessSelect.value && studioPackageSummaries[accessSelect.value]) {
+    if (accessSelect.value && studioPackageSummaries[normalizeStudioPlanKey(accessSelect.value)]) {
+      accessSelect.value = normalizeStudioPlanKey(accessSelect.value);
       sessionStorage.setItem(storageKey, accessSelect.value);
     }
-    applyAccess();
+    applyAccess(true);
   });
-  packageSelect?.addEventListener("change", applyAccess);
-  document.getElementById("studio-output-format")?.addEventListener("change", () => {
-    syncPreviewToOutputFormat();
-    updateStudioDownloadButton();
+  packageSelect?.addEventListener("change", () => {
+    setActiveStudioPlan(packageSelect.value);
+    applyAccess(true);
   });
-  syncPreviewToOutputFormat();
-
-  packageButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const packageValue = button.dataset.selectPackage;
-      if (packageValue && studioPackageSummaries[packageValue] && packageSelect) {
-        packageSelect.value = packageValue;
-        packageSelect.dispatchEvent(new Event("change"));
-      }
-    });
-  });
-
-  applyAccess();
+  document.getElementById("studio-output-format")?.addEventListener("change", updateStudioDownloadButton);
+  applyAccess(false);
 }
 
-const studioExampleTemplates = {
-  general: {
-    title: "General business report example",
-    columns: ["record", "team", "category", "status", "month", "amount"],
-    rows: [
-      { record: "REQ-1001", team: "Operations", category: "Supplies", status: "Complete", month: "January", amount: 1240 },
-      { record: "REQ-1002", team: "Finance", category: "Invoice", status: "Review", month: "January", amount: 3180 },
-      { record: "REQ-1003", team: "Operations", category: "Supplies", status: "Complete", month: "February", amount: 980 },
-      { record: "REQ-1004", team: "Programs", category: "Service", status: "Delayed", month: "February", amount: 2150 },
-      { record: "REQ-1005", team: "Finance", category: "Invoice", status: "Complete", month: "March", amount: 4400 },
-      { record: "REQ-1006", team: "Programs", category: "Service", status: "Review", month: "March", amount: 1690 },
-    ],
-  },
-  operations: {
-    title: "Operations template example",
-    columns: ["job", "site", "owner", "priority", "status", "days_open"],
-    rows: [
-      { job: "JOB-214", site: "North", owner: "Field A", priority: "High", status: "Open", days_open: 8 },
-      { job: "JOB-215", site: "South", owner: "Field B", priority: "Medium", status: "Complete", days_open: 3 },
-      { job: "JOB-216", site: "North", owner: "Field A", priority: "Low", status: "Complete", days_open: 2 },
-      { job: "JOB-217", site: "West", owner: "Field C", priority: "High", status: "Delayed", days_open: 14 },
-      { job: "JOB-218", site: "South", owner: "Field B", priority: "Medium", status: "Open", days_open: 6 },
-      { job: "JOB-219", site: "West", owner: "Field C", priority: "High", status: "Open", days_open: 10 },
-    ],
-  },
-  program: {
-    title: "Program and service template example",
-    columns: ["participant", "program", "referral_source", "service_status", "outcome", "sessions"],
-    rows: [
-      { participant: "P-100", program: "Youth", referral_source: "School", service_status: "Active", outcome: "Improving", sessions: 6 },
-      { participant: "P-101", program: "Family", referral_source: "Agency", service_status: "Closed", outcome: "Completed", sessions: 12 },
-      { participant: "P-102", program: "Youth", referral_source: "Agency", service_status: "Active", outcome: "Pending", sessions: 3 },
-      { participant: "P-103", program: "Adult", referral_source: "Self", service_status: "Waitlist", outcome: "Pending", sessions: 0 },
-      { participant: "P-104", program: "Family", referral_source: "School", service_status: "Active", outcome: "Improving", sessions: 8 },
-      { participant: "P-105", program: "Adult", referral_source: "Self", service_status: "Closed", outcome: "Completed", sessions: 10 },
-    ],
-  },
-  monthly: {
-    title: "Grant and monthly report example",
-    columns: ["month", "funding_area", "deliverable", "status", "submitted", "units"],
-    rows: [
-      { month: "January", funding_area: "Training", deliverable: "Roster", status: "Submitted", submitted: "Yes", units: 42 },
-      { month: "January", funding_area: "Outreach", deliverable: "Contacts", status: "Submitted", submitted: "Yes", units: 88 },
-      { month: "February", funding_area: "Training", deliverable: "Roster", status: "Draft", submitted: "No", units: 37 },
-      { month: "February", funding_area: "Reporting", deliverable: "Narrative", status: "Review", submitted: "No", units: 1 },
-      { month: "March", funding_area: "Outreach", deliverable: "Contacts", status: "Submitted", submitted: "Yes", units: 104 },
-      { month: "March", funding_area: "Reporting", deliverable: "Narrative", status: "Submitted", submitted: "Yes", units: 1 },
-    ],
-  },
-  survey: {
-    title: "Survey and feedback example",
-    columns: ["response", "location", "role", "rating", "satisfaction", "follow_up"],
-    rows: [
-      { response: "R-001", location: "North", role: "Client", rating: 5, satisfaction: "Very satisfied", follow_up: "No" },
-      { response: "R-002", location: "South", role: "Partner", rating: 4, satisfaction: "Satisfied", follow_up: "No" },
-      { response: "R-003", location: "North", role: "Client", rating: 3, satisfaction: "Neutral", follow_up: "Yes" },
-      { response: "R-004", location: "West", role: "Staff", rating: 4, satisfaction: "Satisfied", follow_up: "No" },
-      { response: "R-005", location: "South", role: "Client", rating: 2, satisfaction: "Needs support", follow_up: "Yes" },
-      { response: "R-006", location: "West", role: "Partner", rating: 5, satisfaction: "Very satisfied", follow_up: "No" },
-    ],
-  },
-};
-
-studioExampleTemplates.branded = {
-  title: "Branded report layout example",
-  columns: ["report", "client_group", "section", "brand_status", "approval", "score"],
-  rows: [
-    { report: "Q1 Board Pack", client_group: "Leadership", section: "KPI", brand_status: "Applied", approval: "Ready", score: 94 },
-    { report: "Q1 Board Pack", client_group: "Finance", section: "Budget", brand_status: "Applied", approval: "Review", score: 88 },
-    { report: "Monthly Summary", client_group: "Programs", section: "Outcomes", brand_status: "Applied", approval: "Ready", score: 91 },
-    { report: "Monthly Summary", client_group: "Operations", section: "Activity", brand_status: "Draft", approval: "Review", score: 82 },
-    { report: "Grant Report", client_group: "Programs", section: "Compliance", brand_status: "Applied", approval: "Ready", score: 96 },
-    { report: "Grant Report", client_group: "Leadership", section: "Narrative", brand_status: "Draft", approval: "Review", score: 85 },
-  ],
-};
-
-studioExampleTemplates.workflow = {
-  title: "Workflow system setup example",
-  columns: ["workflow", "step", "owner", "trigger", "status", "automation_count"],
-  rows: [
-    { workflow: "Intake", step: "New submission", owner: "Coordinator", trigger: "Form received", status: "Automated", automation_count: 12 },
-    { workflow: "Intake", step: "Eligibility review", owner: "Supervisor", trigger: "Checklist complete", status: "Manual review", automation_count: 4 },
-    { workflow: "Reporting", step: "Monthly export", owner: "Analyst", trigger: "Month close", status: "Automated", automation_count: 9 },
-    { workflow: "Reporting", step: "Director approval", owner: "Director", trigger: "Report ready", status: "Manual review", automation_count: 2 },
-    { workflow: "Follow-up", step: "Reminder", owner: "Coordinator", trigger: "7 days open", status: "Automated", automation_count: 15 },
-    { workflow: "Follow-up", step: "Closure", owner: "Supervisor", trigger: "Outcome entered", status: "Automated", automation_count: 8 },
-  ],
-};
-
-studioExampleTemplates.advanced = {
-  title: "Advanced analytics package example",
-  columns: ["segment", "risk_level", "prediction", "action", "confidence", "records"],
-  rows: [
-    { segment: "North", risk_level: "Low", prediction: "On track", action: "Monitor", confidence: 91, records: 42 },
-    { segment: "South", risk_level: "Medium", prediction: "Watch", action: "Review", confidence: 84, records: 37 },
-    { segment: "West", risk_level: "High", prediction: "Intervention", action: "Escalate", confidence: 89, records: 18 },
-    { segment: "East", risk_level: "Medium", prediction: "Watch", action: "Review", confidence: 82, records: 29 },
-    { segment: "Central", risk_level: "Low", prediction: "On track", action: "Monitor", confidence: 93, records: 51 },
-    { segment: "Remote", risk_level: "High", prediction: "Intervention", action: "Escalate", confidence: 87, records: 14 },
-  ],
-};
 function getUnlockedStudioAccess() {
   const accessSelect = document.getElementById("studio-access-select");
-  const selected = studioPackageSummaries[accessSelect?.value] || studioPackageSummaries.t1l1;
-  return selected;
+  return studioPackageSummaries[normalizeStudioPlanKey(accessSelect?.value)] || studioPackageSummaries["data-clean-essential"];
 }
 
 function getStudioAccess() {
   const packageSelect = document.getElementById("studio-package-select");
-  const selected = studioPackageSummaries[packageSelect?.value] || getUnlockedStudioAccess();
-  return selected;
+  if (packageSelect?.value) setActiveStudioPlan(packageSelect.value);
+  return getStudioPlanFromSelection();
 }
-const studioFeatureRequirements = {
-  upload: 1,
-  conversion: 1,
-  duplicateChecks: 2,
-  missingReview: 2,
-  cleanupNotes: 2,
-  cleanedExport: 3,
-  report: 3,
-  dashboard: 3,
-  branded: 4,
-  jsonPackage: 4,
-  translatedReport: 5,
-  reusableWorkflow: 5,
-  recurringReport: 6,
-  workflowActivation: 7,
-  advancedAnalytics: 8,
-};
-
-const studioOutputRequirements = {
-  txt: 1,
-  duplicate_review: 2,
-  dashboard_summary: 3,
-  csv: 3,
-  cleaned_csv: 3,
-  pdf: 3,
-  html: 3,
-  json: 4,
-  branded_report: 4,
-  translated_report: 5,
-  reusable_workflow: 5,
-  quality_review: 6,
-  recurring_report: 6,
-  workflow_activation: 7,
-  workflow_package: 7,
-  advanced_analytics: 8,
-};
 
 function accessValue(level) {
   if (typeof level === "number") return level;
-  if (typeof level === "string") return studioPackageSummaries[level]?.access || 0;
+  if (typeof level === "string") return studioPackageSummaries[normalizeStudioPlanKey(level)]?.access || 0;
   return Number(level?.access || 0);
 }
 
 function getLevelLabelByAccess(requiredAccess) {
   const entry = Object.values(studioPackageSummaries).find((plan) => plan.access === Number(requiredAccess));
-  return entry ? entry.label : `Tier access ${requiredAccess}`;
+  return entry ? `${entry.packageShortName} - ${entry.name}` : `Package access ${requiredAccess}`;
 }
 
 function setStudioAnalysisStatus(step, isComplete = false) {
@@ -886,27 +956,34 @@ async function runStudioStatusSteps(steps) {
 }
 
 function getSelectedStudioFeature() {
-  return studioFeatureCards[activeStudioFeatureKey] || studioFeatureCards.conversion;
+  const plan = getStudioAccess();
+  return {
+    title: `${plan.packageName} - ${plan.name} Preview`,
+    outputType: "selected_package",
+    previewPlan: plan.key,
+    requiredAccess: plan.access,
+    actionLabel: plan.customQuote ? "Contact for quote" : "Export package",
+    lockedAction: plan.customQuote ? "Contact for custom quote" : `Upgrade to export ${plan.name} - ${plan.priceLabel}`,
+    lockedCopy: `${plan.packageName} can be previewed with your real file. Upgrade only when you are ready to export ${plan.name} deliverables.`,
+  };
 }
 
 function updateStudioDownloadButton() {
   const button = document.getElementById("studio-convert-button");
-  const format = document.getElementById("studio-output-format");
-  if (!button || !format) return;
-  const unlocked = getUnlockedStudioAccess();
-  const outputType = format.value || "txt";
-  const unlockedOutput = canDownloadOutput(outputType, unlocked);
-  button.textContent = unlockedOutput ? "Download" : "Unlock download";
+  if (!button) return;
+  const plan = getStudioAccess();
+  const unlockedOutput = canDownloadOutput("selected_package", getUnlockedStudioAccess());
+  button.textContent = unlockedOutput ? "Export package" : `Upgrade to export - ${plan.priceLabel}`;
   button.classList.toggle("is-output-locked", !unlockedOutput);
   if (unlockedOutput) {
     button.removeAttribute("data-checkout-url");
     button.removeAttribute("aria-label");
   } else {
-    const required = getRequiredLevelForOutput(outputType);
-    button.dataset.checkoutUrl = getCheckoutUrlForOutput(outputType);
-    button.setAttribute("aria-label", `Unlock ${format.options[format.selectedIndex]?.text || "download"}. Requires ${getLevelLabelByAccess(required)}.`);
+    button.dataset.checkoutUrl = getCheckoutUrlForOutput("selected_package");
+    button.setAttribute("aria-label", `Upgrade to export ${plan.packageName} ${plan.name} for ${plan.priceLabel}.`);
   }
 }
+
 function canUploadRealFile(unlockedLevel) {
   return accessValue(unlockedLevel) >= studioFeatureRequirements.upload;
 }
@@ -916,7 +993,8 @@ function canPreviewFeature(feature, selectedPreviewLevel) {
 }
 
 function canDownloadOutput(outputType, unlockedLevel) {
-  return accessValue(unlockedLevel) >= getRequiredLevelForOutput(outputType);
+  const required = outputType === "selected_package" ? accessValue(getStudioAccess()) : getRequiredLevelForOutput(outputType);
+  return accessValue(unlockedLevel) >= required;
 }
 
 function canUseFullRows(unlockedLevel) {
@@ -928,31 +1006,23 @@ function shouldWatermark(selectedPreviewLevel, unlockedLevel) {
 }
 
 function getRequiredLevelForOutput(outputType) {
-  return studioOutputRequirements[outputType] || 1;
+  if (outputType === "selected_package") return accessValue(getStudioAccess());
+  return studioOutputRequirements[outputType] || accessValue(getStudioAccess());
 }
 
 function getPlanKeyForAccess(requiredAccess) {
-  return Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === accessValue(requiredAccess)) || "t1l1";
+  return Object.keys(studioPackageSummaries).find((key) => studioPackageSummaries[key].access === accessValue(requiredAccess)) || getStudioAccess().key;
 }
 
 function getCheckoutUrlForOutput(outputType) {
-  const required = getRequiredLevelForOutput(outputType);
-  const targetPlan = getPlanKeyForAccess(required);
+  const targetPlan = outputType === "selected_package" ? getStudioAccess().key : getPlanKeyForAccess(getRequiredLevelForOutput(outputType));
   return `checkout.html?plan=${encodeURIComponent(targetPlan)}`;
 }
 
 function syncPreviewToOutputFormat() {
-  const format = document.getElementById("studio-output-format");
   const packageSelect = document.getElementById("studio-package-select");
-  if (!format || !packageSelect) return;
-  const required = getRequiredLevelForOutput(format.value || "txt");
-  const targetPlan = getPlanKeyForAccess(required);
-  if (studioPackageSummaries[targetPlan] && packageSelect.value !== targetPlan) {
-    packageSelect.value = targetPlan;
-    packageSelect.dispatchEvent(new Event("change"));
-  }
+  if (packageSelect) packageSelect.value = getStudioAccess().key;
 }
-
 function canUseBranding(unlockedLevel) {
   return accessValue(unlockedLevel) >= studioFeatureRequirements.branded;
 }
@@ -1009,34 +1079,23 @@ function applyBrandingToPreview(brandingSettings) {
 }
 
 function studioExportOptionsHtml(locked = false) {
+  const plan = getStudioAccess();
   const lock = locked ? "Locked - " : "";
+  const exportKinds = plan.exports && plan.exports.length ? plan.exports : ["html", "pdf", "csv", "json"];
   return `<div class="studio-export-menu" data-export-locked="${locked ? "true" : "false"}">
     <label>
-      <span>Export Package</span>
+      <span>Export menu</span>
       <select class="studio-export-kind">
-        <option value="zip">${lock}ZIP Package: Everything</option>
-        <option value="html">${lock}Interactive Dashboard HTML</option>
-        <option value="pdf">${lock}Executive Summary PDF-ready HTML</option>
-        <option value="docx">${lock}Word Executive Report DOCX</option>
-        <option value="pptx">${lock}PowerPoint Presentation PPTX</option>
-        <option value="xlsx">${lock}Excel Workbook XLSX</option>
-        <option value="csv">${lock}Cleaned Data CSV</option>
-        <option value="missing_csv">${lock}Missing Value Report CSV</option>
-        <option value="duplicate_csv">${lock}Duplicate Review CSV</option>
-        <option value="dictionary_xlsx">${lock}Field Dictionary XLSX</option>
-        <option value="png">${lock}Executive Infographic SVG</option>
-        <option value="json">${lock}JSON Metadata</option>
-        <option value="summary">${lock}Processing Summary</option>
+        ${exportKinds.map((kind) => `<option value="${escapeHtml(kind)}">${escapeHtml(lock + (studioExportCatalog[kind] || kind))}</option>`).join("")}
       </select>
     </label>
-    <button class="button mini studio-export-action" type="button">${locked ? "Export locked" : "Export package"}</button>
+    <button class="button mini studio-export-action" type="button">${locked ? "Export locked" : "Export selected package"}</button>
   </div>`;
 }
-
 function studioUpgradeButtonHtml(outputType = getSelectedStudioFeature().outputType) {
-  return `<a class="button mini secondary-mini studio-upgrade-action" href="${escapeHtml(getCheckoutUrlForOutput(outputType))}">Upgrade</a>`;
+  const plan = getStudioAccess();
+  return `<a class="button mini secondary-mini studio-upgrade-action" href="${escapeHtml(getCheckoutUrlForOutput(outputType))}">Upgrade to export ${escapeHtml(plan.name)} - ${escapeHtml(plan.priceLabel)}</a>`;
 }
-
 function showStudioMessage(title, message, actionHtml = "") {
   showStudioDetailPanel(title, `<p>${escapeHtml(message)}</p>${actionHtml}`);
 }
@@ -2012,7 +2071,7 @@ function reportHtmlFromAnalysis(analysis, formatLabel) {
 }
 
 async function studioDownloadCurrentOutput(input, result, format, language, button, convertLabel) {
-  const outputType = format ? format.value : "txt";
+  const outputType = getSelectedStudioFeature().outputType;
   const unlocked = getUnlockedStudioAccess();
   const required = getRequiredLevelForOutput(outputType);
   if (!canDownloadOutput(outputType, unlocked)) {
@@ -2036,6 +2095,13 @@ async function studioDownloadCurrentOutput(input, result, format, language, butt
       activeStudioUploadedAnalysis = await readStudioFileAsAnalysis(file);
     }
     const analysis = activeStudioUploadedAnalysis;
+    if (outputType === "selected_package") {
+      const plan = getStudioAccess();
+      const preferredExport = (plan.exports || []).includes("zip") ? "zip" : (plan.exports || ["html"])[0];
+      downloadStudioExport(preferredExport);
+      result.textContent = `Unlocked export prepared for ${plan.packageName} - ${plan.name}.`;
+      return;
+    }
     let blob;
     let filename;
     if (outputType === "csv") {
@@ -2512,42 +2578,22 @@ function loadGeneratedStudioExample() {
 }
 
 function updateStudioFeatureCards() {
-  const unlocked = getUnlockedStudioAccess();
-  document.querySelectorAll(".feature-access-item[data-feature-key]").forEach((card) => {
-    const feature = studioFeatureCards[card.dataset.featureKey] || studioFeatureCards.conversion;
-    const available = canDownloadOutput(feature.outputType, unlocked);
-    const selected = feature === getSelectedStudioFeature();
-    const badge = card.querySelector(".feature-status-badge");
-    card.classList.toggle("is-selected", selected);
-    card.classList.toggle("is-unlocked", available);
-    card.classList.toggle("is-locked", !available);
-    card.setAttribute("aria-pressed", selected ? "true" : "false");
-    if (badge) badge.textContent = available ? "Available" : selected ? "Preview only" : "Upgrade to export";
-  });
+  updateStudioDownloadButton();
 }
 
 function selectStudioFeature(featureKey, refreshPreview = true) {
-  if (!studioFeatureCards[featureKey]) return;
-  activeStudioFeatureKey = featureKey;
-  const feature = getSelectedStudioFeature();
-  const format = document.getElementById("studio-output-format");
-  const packageSelect = document.getElementById("studio-package-select");
-  if (format) format.value = feature.outputType;
-  if (packageSelect && feature.previewPlan) packageSelect.value = feature.previewPlan;
-  updateStudioFeatureCards();
+  activeStudioFeatureKey = featureKey || "packageSelection";
   updateStudioDownloadButton();
   if (refreshPreview && activeStudioUploadedAnalysis) {
-    refreshActiveStudioPreview(`Previewing: ${feature.title}.`);
+    const plan = getStudioAccess();
+    refreshActiveStudioPreview(`Previewing ${plan.packageName} - ${plan.name}.`);
   }
 }
 
 function setupStudioFeatureCards() {
-  document.querySelectorAll(".feature-access-item[data-feature-key]").forEach((card) => {
-    card.addEventListener("click", () => selectStudioFeature(card.dataset.featureKey));
-  });
-  selectStudioFeature(activeStudioFeatureKey, false);
-}
-function setupDashboardTabs(canvas, accessValueForTabs = 1) {
+  activeStudioFeatureKey = "packageSelection";
+  updateStudioDownloadButton();
+}function setupDashboardTabs(canvas, accessValueForTabs = 1) {
   if (!canvas || canvas.querySelector(".dashboard-tabs")) return;
   const tabs = [
     ["overview", "Overview"],
@@ -2901,17 +2947,17 @@ setupStudioPricingGuide();
 
 
 const checkoutPlans = {
-  none: { label: "No current paid level", price: 0, access: 0 },
-  t1l1: { label: "Tier 1 Level 1", price: 49, access: 1 },
-  t1l2: { label: "Tier 1 Level 2", price: 99, access: 2 },
-  t1l3: { label: "Tier 1 Level 3", price: 199, access: 3 },
-  t2l1: { label: "Tier 2 Level 1", price: 299, access: 4 },
-  t2l2: { label: "Tier 2 Level 2", price: 499, access: 5 },
-  t2l3: { label: "Tier 2 Level 3", price: 799, access: 6 },
-  t3: { label: "Tier 3 Workflow System", price: 1500, access: 7 },
-  t4: { label: "Tier 4 Advanced Analytics", price: 3500, access: 8 }
+  none: { label: "No current package", price: 0, access: 0, priceLabel: "$0" },
+  ...Object.fromEntries(Object.values(studioPackageSummaries).map((plan) => [plan.key, {
+    label: `${plan.packageShortName} - ${plan.name}`,
+    price: plan.price,
+    access: plan.access,
+    priceLabel: plan.priceLabel,
+    packageName: plan.packageName,
+    levelName: plan.name,
+    insightPromise: plan.insightPromise,
+  }]))
 };
-
 function setupCheckoutFlow() {
   const current = document.getElementById("checkout-current-plan");
   const desired = document.getElementById("checkout-desired-plan");
@@ -2926,14 +2972,19 @@ function setupCheckoutFlow() {
     return;
   }
 
+  populateStudioPlanSelect(current, true);
+  populateStudioPlanSelect(desired, false);
+
   const params = new URLSearchParams(window.location.search);
   const requestedPlan = params.get("plan");
   const storedPlan = sessionStorage.getItem("programmetrics_unlocked_plan");
-  if (storedPlan && checkoutPlans[storedPlan]) {
-    current.value = storedPlan;
+  const normalizedStoredPlan = storedPlan === "none" ? "none" : normalizeStudioPlanKey(storedPlan);
+  if (normalizedStoredPlan && checkoutPlans[normalizedStoredPlan]) {
+    current.value = normalizedStoredPlan;
   }
-  if (requestedPlan && checkoutPlans[requestedPlan] && requestedPlan !== "none") {
-    desired.value = requestedPlan;
+  const normalizedRequestedPlan = requestedPlan ? normalizeStudioPlanKey(requestedPlan) : "";
+  if (normalizedRequestedPlan && checkoutPlans[normalizedRequestedPlan] && normalizedRequestedPlan !== "none") {
+    desired.value = normalizedRequestedPlan;
   }
 
   const money = (value) => `$${Number(value).toLocaleString()}`;
@@ -2947,8 +2998,8 @@ function setupCheckoutFlow() {
   };
 
   const render = () => {
-    const currentPlan = checkoutPlans[current.value] || checkoutPlans.none;
-    const desiredPlan = checkoutPlans[desired.value] || checkoutPlans.t1l1;
+    const currentPlan = checkoutPlans[current.value === "none" ? "none" : normalizeStudioPlanKey(current.value)] || checkoutPlans.none;
+    const desiredPlan = checkoutPlans[normalizeStudioPlanKey(desired.value)] || checkoutPlans["data-clean-essential"];
     const upgradeAmount = Math.max(0, desiredPlan.price - currentPlan.price);
     const isUpgrade = currentPlan.access > 0 && desiredPlan.access > currentPlan.access;
     const alreadyHasAccess = currentPlan.access >= desiredPlan.access;
@@ -3008,6 +3059,14 @@ function setupCheckoutFlow() {
 }
 
 setupCheckoutFlow();
+
+
+
+
+
+
+
+
 
 
 
