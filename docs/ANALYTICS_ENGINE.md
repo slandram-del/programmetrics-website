@@ -247,6 +247,26 @@ The intelligence layer consumes `AnalyticsPlan`; it does not re-profile raw rows
 - `aiAnalystContext`
 
 These outputs are safe for UI, reports, exports, and future AI Analyst workflows because they expose structured conclusions and evidence summaries rather than protected prioritization or narrative-generation rules.
+
+## Package Orchestrator Pipeline
+`src/lib/package-orchestrator/` consumes selected package, selected output level, and optional `AnalyticsPlan` dataset type context to return the package manifest used by downstream deliverable, report, export, preview, and checkout surfaces.
+
+The orchestrator determines:
+- package contents
+- inherited output levels
+- deliverables
+- report sections
+- dashboards
+- export availability
+- preview limits
+- locked features
+- watermark behavior
+- branding requirements
+- industry-aware optional sections
+- permission status
+- checkout metadata
+
+The orchestrator does not generate reports or exports. It determines what should be generated. Report Generator and Export Engine should consume the manifest rather than duplicating package rules.
 ## Protected Interface Boundary
 UI and future API callers should use `src/lib/platform/analyticsEngineInterface.ts` instead of reaching directly into protected analytics modules.
 

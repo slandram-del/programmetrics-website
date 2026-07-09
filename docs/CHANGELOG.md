@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### New Features
+- Added Package Orchestrator and Deliverable Manifest Engine for package contents, output level inheritance, deliverables, previews, locked features, branding, industry sections, permissions, and checkout metadata.
+- Added centralized package registry for Data Foundation, Management Insights, Professional Analytics, Executive Intelligence, and Enterprise Intelligence packages.
 - Added platform service layer for analytics, previews, reports, branding, deliverables, workflows, and pricing.
 - Added centralized configuration layer for packages, feature flags, industry templates, report templates, branding defaults, export formats, and application config.
 - Added engine registry, platform diagnostics, shared error types, and architecture refactoring report.
@@ -22,6 +24,7 @@
 - Added chart render models for KPI card, line chart, bar chart, horizontal bar chart, donut chart, histogram, box plot summary, gauge, table, heatmap placeholder, and insight card.
 
 ### Improvements
+- Deliverables service can now return package manifests for future Report Generator, Export Engine, Studio Deliverables tab, and checkout consumers.
 - Platform responses now include structured intelligence output for future Dashboard, Report Generator, AI Analyst, and Export consumers.
 - Dashboard builder contracts now include an Executive Summary tab destination.
 - Standardized visible copyright footers to ProgramMetrics All Rights Reserved wording.
@@ -39,6 +42,7 @@
 - Static asset cache keys were bumped so browsers fetch the updated dashboard UI.
 
 ### Refactors
+- Registered Package Orchestrator as a protected engine boundary and routed package manifest access through the deliverables service.
 - Established layered dependency boundaries: Presentation -> Services -> Engines -> Shared Utilities -> Configuration.
 - Moved future UI integration toward service calls instead of direct protected-engine access.
 - Kept intelligence-generation business logic isolated under src/lib/analytics-engine/intelligence so UI consumers receive structured outputs rather than internal prioritization rules.

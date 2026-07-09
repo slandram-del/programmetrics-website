@@ -95,6 +95,23 @@
 - [ ] Connect static Studio dashboard tabs directly to intelligence output
 - [ ] Add tests for observation, warning, finding, recommendation, and narrative outputs
 
+
+## Phase 4.6 - Package Orchestrator and Deliverable Manifest Engine - Complete
+- [x] Create `src/lib/package-orchestrator/`
+- [x] Add centralized package registry for all Analytics Packages
+- [x] Add output level inheritance for Essential, Professional, Premium, and Executive
+- [x] Add deliverable manifest builder
+- [x] Add report section manifest builder
+- [x] Add dashboard manifest contracts
+- [x] Add preview availability, watermark, page, and chart limits
+- [x] Add branding availability manifest
+- [x] Add industry-aware optional sections
+- [x] Add permission resolver for included, preview-only, upgrade-required, and enterprise-only states
+- [x] Add checkout metadata placeholders for selected price, upgrade price, comparisons, and upgrades
+- [x] Expose package manifest through `deliverablesService`
+- [ ] Connect static Studio deliverable cards directly to package manifests
+- [ ] Add tests for package inheritance, permissions, previews, branding, and industry sections
+
 ## Phase 5 - Report Generator
 - [ ] Executive summary
 - [ ] Key findings

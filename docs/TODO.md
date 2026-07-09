@@ -1,7 +1,7 @@
 # TODO
 
 ## Next 10 Priorities
-1. Move static Studio browser calculations behind `src/lib/platform` or a server-side ProgramMetrics API.
+1. Connect static Studio package, deliverable, export, and preview cards directly to Package Orchestrator manifests.
 2. Add authentication, user accounts, and organization profiles.
 3. Add API layer for analytics-plan generation, report generation, workflow execution, and export packages.
 4. Add background processing for large files, scheduled reports, and recurring workflows.
@@ -13,6 +13,13 @@
 10. Build production report generator for HTML, PDF, DOCX, PPTX, PNG, JSON, and ZIP.
 
 
+
+## Package Orchestrator Follow-Ups
+- Add unit tests for output level inheritance, package rank comparisons, preview limits, and permission states.
+- Connect Studio package cards, Deliverables tab, export menu, and upgrade prompts directly to `buildPackageManifest()`.
+- Ensure future Report Generator and Export Engine consume only manifest outputs.
+- Add manifest fixtures for survey, housing, behavioral health, education, healthcare, finance, CRM, government, and research contexts.
+- Add architecture checks to prevent UI code from hardcoding package rules or upgrade logic.
 ## Analytics Intelligence Follow-Ups
 - Connect static Studio Executive Summary, Overview, Data Quality, and Recommendations tabs directly to `AnalyticsIntelligence` outputs.
 - Add AI Analyst integration that uses `aiAnalystContext` for grounded answers.

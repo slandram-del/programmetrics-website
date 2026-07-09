@@ -3,6 +3,7 @@ import { PROTECTED_ANALYTICS_SERVICES } from "./platform";
 export type EngineKey =
   | "analyticsRecommendation"
   | "analyticsIntelligence"
+  | "packageOrchestrator"
   | "chart"
   | "deliverables"
   | "branding"
@@ -37,6 +38,15 @@ export const engineRegistry: Record<EngineKey, EngineDescriptor> = {
     serviceBoundary: "analyticsService",
     outputOnly: true,
     notes: "Produces observations, findings, warnings, recommendations, actions, and narratives from AnalyticsPlan."
+  },
+  packageOrchestrator: {
+    key: "packageOrchestrator",
+    name: "Package Orchestrator",
+    layer: "engine",
+    protected: true,
+    serviceBoundary: "deliverablesService",
+    outputOnly: true,
+    notes: "Determines package manifests, deliverable availability, preview locks, branding requirements, and upgrade metadata. Do not expose package rules or inheritance logic."
   },
   chart: {
     key: "chart",

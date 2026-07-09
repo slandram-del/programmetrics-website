@@ -1,14 +1,16 @@
 # Project Status
 
 ## Current Sprint
-Sprint 4.5 - Analytics intelligence and recommendation system
+Sprint 4.6 - Package orchestrator and deliverable manifest engine
 
 ## Overall Completion
-Estimated overall completion: 47%
+Estimated overall completion: 50%
 
-ProgramMetrics now has a layered platform architecture, centralized configuration, application services, shared diagnostics/errors, an engine registry, the core analytics recommendation engine, protected platform interface, reusable chart-engine render models, static Studio dashboard integration, KPI explainability panels, and an Analytics Intelligence Layer that turns `AnalyticsPlan` outputs into executive observations, findings, warnings, opportunities, recommendations, action plans, grouped insights, and confidence-aware narratives. The product is still pre-production for direct static Studio integration with the intelligence output, native SVG/canvas chart drawing, automated tests, native exports, persistence, AI Analyst, report library, accounts, authentication, and enterprise workflows.
+ProgramMetrics now has a layered platform architecture, centralized configuration, application services, shared diagnostics/errors, an engine registry, the core analytics recommendation engine, protected platform interface, reusable chart-engine render models, static Studio dashboard integration, KPI explainability panels, an Analytics Intelligence Layer that turns `AnalyticsPlan` outputs into executive observations, findings, warnings, opportunities, recommendations, action plans, grouped insights, and confidence-aware narratives, and a Package Orchestrator that returns package manifests for deliverables, sections, dashboards, previews, branding, industry context, permissions, and checkout metadata. The product is still pre-production for direct static Studio integration with the intelligence output, native SVG/canvas chart drawing, automated tests, native exports, persistence, AI Analyst, report library, accounts, authentication, and enterprise workflows.
 
 ## Recently Completed
+- Added Package Orchestrator manifest engine for Analytics Packages, Output Levels, deliverables, previews, branding, industry context, permissions, and checkout metadata.
+- Exposed package manifests through `deliverablesService.getPackageDeliverableManifest()`.
 - Completed Sprint 4.4 platform architecture foundation with service, config, registry, diagnostics, shared errors, and refactoring-report docs.
 - Added `src/lib/services/` application boundaries for analytics, previews, reports, branding, deliverables, workflows, and pricing.
 - Added `src/config/` centralized package, flag, template, branding, export, and app configuration.
@@ -28,15 +30,16 @@ ProgramMetrics now has a layered platform architecture, centralized configuratio
 - Moving static Studio browser calculations behind `src/lib/services`, `src/lib/platform`, or a future ProgramMetrics API.
 - Accessibility polish for KPI detail panels, including focus management and Escape-key close behavior.
 - Visual polish and responsive fit for the Analytics Studio wizard and dashboard workspace.
-- Package-aware deliverables and export preview depth.
+- Connecting static Studio deliverable cards, export menu, and upgrade prompts directly to Package Orchestrator manifests.
 
 ## Next Sprint
-Sprint 5 - Visual Analytics refinement and production chart rendering.
+Sprint 4.7 - Manifest-driven Studio deliverables and export integration.
 
 ## Next Up
 - Add unit tests for intelligence observations, warnings, findings, opportunities, recommendations, action plans, and narratives.
 - Feed intelligence narrative blocks into Report Generator outputs.
 - Prepare AI Analyst to answer from `aiAnalystContext` without inventing unsupported conclusions.
+- Connect Report Generator and Export Engine to Package Orchestrator manifests.
 - Add native SVG/canvas renderers from chart-engine data for sharper PowerBI-style visuals.
 - Add visual regression QA for dashboard tabs, chart tiles, KPI panels, legends, axes, tooltips, and locked overlays.
 - Add automated smoke tests for upload -> data setup -> generate preview -> open interactive preview.

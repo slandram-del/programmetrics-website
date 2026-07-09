@@ -107,6 +107,14 @@ Internal docs may describe module responsibilities, inputs, and outputs. Custome
 
 ### Future API Architecture
 Future SaaS architecture should route requests through a ProgramMetrics API before invoking analytics, report, branding, workflow, and export engines. Browser clients should receive renderable results, summaries, dashboards, and export metadata instead of protected calculation methods.
+
+## Package Orchestrator Layer
+The Package Orchestrator sits after the Analytics Recommendation and Analytics Intelligence layers and before Deliverables, Report Generator, and Export Engine. It determines what should be generated for each Analytics Package and Output Level without generating files itself.
+
+The orchestrator returns a manifest for deliverables, report sections, dashboards, exports, branding, industry-aware sections, locked features, preview limits, permissions, checkout metadata, and future enterprise capabilities. Downstream engines should consume the manifest rather than hardcoding package rules.
+
+### Protected Package Logic
+Package definitions, output inheritance, permission decisions, upgrade rules, and deliverable availability are proprietary ProgramMetrics business logic. UI and future API consumers should receive manifest outputs only.
 ## Current Architecture
 - `src/lib/services/` exposes application-service boundaries for analytics, previews, reports, branding, deliverables, workflows, and pricing.
 - `src/config/` centralizes packages, feature flags, export formats, templates, branding defaults, and application config.
@@ -114,7 +122,7 @@ Future SaaS architecture should route requests through a ProgramMetrics API befo
 - `src/lib/engineRegistry.ts` registers current and future engines.
 - `src/lib/platform/` exposes the analytics interface contract for services, UI, and future API callers.
 - `src/lib/analytics-engine/` is the protected source of truth for `generateAnalyticsPlan()`.
-- `src/lib/chart-engine/` converts `recommendedVisuals` into reusable render models through chart registry, chart selector, chart data builder, dashboard builder, and responsive chart layouts.
+- `src/lib/chart-engine/` converts `recommendedVisuals` into reusable render models through chart registry, chart selector, chart data builder, dashboard builder, and responsive chart layouts.`r`n- `src/lib/package-orchestrator/` returns package manifests for deliverables, sections, dashboards, exports, branding, industry context, previews, permissions, and checkout metadata.
 - The current static Studio browser script mirrors the chart-engine behavior so uploaded/session files can render immediately without a bundler; a future build step should import the TypeScript engine directly.
 - Locked previews keep watermark and export-disable behavior while still rendering limited plan-driven previews.
 - Studio KPI cards now include an explainability layer that answers definition, calculation logic, dataset-specific interpretation, why it matters, recommended actions, related visuals, and package/export availability.
@@ -126,6 +134,7 @@ Future SaaS architecture should route requests through a ProgramMetrics API befo
 | Analytics Recommendation Engine | MVP Complete | `generateAnalyticsPlan()` now produces dataset, field, missing, duplicate, quality, confidence, KPI, visual, insight, and deliverable outputs used by Studio previews. |
 | Analytics Intelligence Layer | In Progress | New intelligence modules generate executive observations, findings, warnings, opportunities, prioritized actions, and confidence-aware narratives from `AnalyticsPlan`. |
 | Visual Analytics Engine | In Progress | Reusable chart-engine modules provide registry, selector, data builder, dashboard builder, and responsive layouts. Studio KPI cards now open dataset-specific explainability panels. SVG/canvas chart drawing, scatter plots, deeper duplicate visuals, accessibility tests, and screenshot QA remain. |
+| Package Orchestrator | MVP Complete | Central manifest engine now determines package contents, output level inheritance, deliverables, report sections, dashboards, previews, branding, industry sections, permissions, and checkout metadata. |
 | Report Generator | In Progress | HTML-style report outputs exist; native PDF, DOCX, and PPTX generation need production implementation. |
 | Export Engine | In Progress | Export menu and ZIP structure exist; native binary formats need production-grade exporters. |
 | Branding Engine | In Progress | Branding fields exist and should be expanded into reusable profiles. |
