@@ -2263,6 +2263,7 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind, setupMetadata = {})
     selectedLevel: activeStudioLevelId,
     brandingConfig: getBrandingSettings(),
   });
+  const analyticsPlanSummary = `Analytics Plan Generated: ${analyticsPlan.recommendedKpis?.length || 0} KPIs, ${analyticsPlan.recommendedVisuals?.length || 0} visuals, ${analyticsPlan.recommendedInsights?.length || 0} insights, ${analyticsPlan.confidenceProfile?.label || "Moderate"} confidence.`;
   const previewLimit = getPreviewLimitRows(unlocked, preview);
   const locked = shouldWatermark(preview, unlocked);
   const missingEntries = missingProfile.entries;
@@ -2308,6 +2309,7 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind, setupMetadata = {})
     date_summary: dateSummary,
     quality_breakdown: analyticsPlan.qualityProfile.components || qualityBreakdown,
     analytics_plan: analyticsPlan,
+    analytics_plan_summary: analyticsPlanSummary,
     dataset_profile: analyticsPlan.datasetProfile,
     field_profiles: analyticsPlan.fieldProfiles,
     dataset_type: analyticsPlan.datasetType,
@@ -2541,7 +2543,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   const header = document.createElement("div");
   header.className = "dashboard-preview-header";
   const dateText = dateSummary.length ? `${studioDisplayName(analysis, dateSummary[0].column)}: ${formatStudioDate(dateSummary[0].start)} to ${formatStudioDate(dateSummary[0].end)}` : "No date range detected";
-  header.innerHTML = `<span>Preview with your real file</span><strong>${escapeHtml(feature.title)}</strong><small>${escapeHtml(analysis.file_size || "Current browser session")} | ${escapeHtml(dateText)}</small>`;
+  header.innerHTML = `<span>Preview with your real file</span><strong>${escapeHtml(feature.title)}</strong><small>${escapeHtml(analysis.file_size || "Current browser session")} | ${escapeHtml(dateText)}</small>${analysis.analytics_plan_summary ? `<em>${escapeHtml(analysis.analytics_plan_summary)}</em>` : ""}`;
   header.dataset.dashboardTab = "overview";
   canvas.appendChild(header);
   const controlsPanel = document.createElement("section");
@@ -2884,6 +2886,7 @@ function buildGeneratedExampleAnalysis() {
     selectedLevel: activeStudioLevelId,
     brandingConfig: getBrandingSettings(),
   });
+  const analyticsPlanSummary = "Analytics Plan Generated: " + (analyticsPlan.recommendedKpis?.length || 0) + " KPIs, " + (analyticsPlan.recommendedVisuals?.length || 0) + " visuals, " + (analyticsPlan.recommendedInsights?.length || 0) + " insights, " + (analyticsPlan.confidenceProfile?.label || "Moderate") + " confidence.";
   return {
     is_example: true,
     watermark: true,
@@ -2898,6 +2901,7 @@ function buildGeneratedExampleAnalysis() {
     date_summary: dateSummary,
     quality_breakdown: analyticsPlan.qualityProfile.components || qualityBreakdown,
     analytics_plan: analyticsPlan,
+    analytics_plan_summary: analyticsPlanSummary,
     dataset_profile: analyticsPlan.datasetProfile,
     field_profiles: analyticsPlan.fieldProfiles,
     dataset_type: analyticsPlan.datasetType,
