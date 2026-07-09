@@ -137,6 +137,20 @@
 - [ ] Processing notes
 - [ ] Limitations
 
+
+## Phase 5.1 - Platform Stabilization, Testing, and Security Review - Complete
+- [x] Add friendly user-facing error normalization helper
+- [x] Add dataset performance guardrails for preview limits, sampling, and background-processing recommendations
+- [x] Add security/IP protection checklist utilities
+- [x] Add accessibility requirements registry and visible focus CSS
+- [x] Add no-framework stabilization test plan registry
+- [x] Add technical debt register
+- [x] Add test coverage plan documentation
+- [x] Review docs for implementation alignment
+- [ ] Add executable TypeScript test runner and CI
+- [ ] Connect static Studio directly to service/platform outputs
+- [ ] Add automated accessibility and visual regression checks
+
 ## Phase 6 - Export Engine
 - [ ] CSV
 - [ ] XLSX

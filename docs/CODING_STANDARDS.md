@@ -52,3 +52,11 @@ New analytics modules should be TypeScript-first where the build supports it. St
 - No syntax errors.
 - Documentation is updated.
 - Acceptance criteria are met.
+## Sprint 5.1 Stabilization Standards
+- UI code should render structured service/platform outputs and avoid duplicating protected analytics, package, pricing, chart, or report assembly logic.
+- New protected logic belongs in engines, services, shared utilities, or configuration files, not static UI handlers.
+- Large dataset previews should use preview limits, sampling, pagination, or future background processing rather than full-detail rendering.
+- User-facing errors should use friendly messages and avoid stack traces or internal implementation details.
+- Public-facing docs and UI must not expose scoring formulas, exact weights, recommendation heuristics, package inheritance logic, private prompts, secrets, or access-token implementation details.
+- Interactive controls must support keyboard navigation, visible focus, clear labels, and reduced-motion preferences.
+- When no executable test runner exists, add documented test coverage targets and keep them ready for conversion into automated tests.

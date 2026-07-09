@@ -1,7 +1,7 @@
 # TODO
 
 ## Next 10 Priorities
-1. Connect static Studio Deliverables tab to `buildProfessionalDeliverablesOutput()` preview cards and preview windows.
+1. Add `package.json`, `tsconfig.json`, and executable tests for analytics, orchestrator, deliverables, and shared utilities.
 2. Add authentication, user accounts, and organization profiles.
 3. Add API layer for analytics-plan generation, report generation, workflow execution, and export packages.
 4. Add background processing for large files, scheduled reports, and recurring workflows.
@@ -15,6 +15,13 @@
 
 
 
+
+## Stabilization Follow-Ups
+- Convert `src/lib/testing/stabilizationTestPlan.ts` into executable tests once a test runner is added.
+- Add CI checks for `git diff --check`, TypeScript compilation, unit tests, and public asset secret scanning.
+- Add Playwright accessibility and regression checks for upload, setup, package selection, dashboard tabs, KPI panels, deliverables previews, and locked overlays.
+- Add server/API boundary so static Studio no longer mirrors protected engine logic.
+- Add large-dataset processing strategy for 50k+ and 100k+ row uploads.
 ## Deliverables Platform Follow-Ups
 - Connect Studio Deliverables tab and Interactive Preview to deliverables platform preview cards.
 - Add tests for report template selection, reusable section assembly, locked preview limits, and version metadata.

@@ -5341,3 +5341,30 @@ body:has(.studio-workspace) .dashboard-control-strip select {
     display: grid;
   }
 }
+/* Sprint 5.1 stabilization: visible keyboard focus for Studio and shared controls. */
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible,
+.studio-package-card:focus-visible,
+.studio-level-card:focus-visible,
+.dashboard-tab:focus-visible,
+.kpi-card:focus-visible,
+.feature-card:focus-visible {
+  outline: 3px solid #14b8a6;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(20, 184, 166, 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

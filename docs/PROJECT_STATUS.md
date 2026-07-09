@@ -1,14 +1,15 @@
 # Project Status
 
 ## Current Sprint
-Sprint 5.0 - Professional deliverables platform
+Sprint 5.1 - Platform stabilization, testing, and security review
 
 ## Overall Completion
-Estimated overall completion: 54%
+Estimated overall completion: 56%
 
-ProgramMetrics now has a layered platform architecture, centralized configuration, application services, shared diagnostics/errors, an engine registry, the core analytics recommendation engine, protected platform interface, reusable chart-engine render models, static Studio dashboard integration, KPI explainability panels, an Analytics Intelligence Layer that turns `AnalyticsPlan` outputs into executive observations, findings, warnings, opportunities, recommendations, action plans, grouped insights, and confidence-aware narratives, a Package Orchestrator that returns package manifests for deliverables, sections, dashboards, previews, branding, industry context, permissions, and checkout metadata, and a Deliverables Platform that assembles versioned professional report objects and preview cards from those manifests. The product is still pre-production for direct static Studio integration with the intelligence output, native SVG/canvas chart drawing, automated tests, native exports, persistence, AI Analyst, report library, accounts, authentication, and enterprise workflows.
+ProgramMetrics now has a layered platform architecture, centralized configuration, application services, shared diagnostics/errors, an engine registry, the core analytics recommendation engine, protected platform interface, reusable chart-engine render models, static Studio dashboard integration, KPI explainability panels, an Analytics Intelligence Layer that turns `AnalyticsPlan` outputs into executive observations, findings, warnings, opportunities, recommendations, action plans, grouped insights, and confidence-aware narratives, a Package Orchestrator that returns package manifests for deliverables, sections, dashboards, previews, branding, industry context, permissions, and checkout metadata, a Deliverables Platform that assembles versioned professional report objects and preview cards from those manifests, and Sprint 5.1 stabilization utilities for friendly errors, performance guardrails, security/IP review, accessibility requirements, and test planning. The product is still pre-production for direct static Studio integration with the intelligence output, native SVG/canvas chart drawing, automated tests, native exports, persistence, AI Analyst, report library, accounts, authentication, and enterprise workflows.
 
 ## Recently Completed
+- Completed Sprint 5.1 stabilization pass with shared performance guardrails, security checklist, accessibility requirements, user-facing error mapping, visible focus CSS, technical debt register, and test coverage plan.
 - Completed Sprint 5.0 Deliverables Platform with reusable report templates, section registry, report assembly, preview cards, branding support, and version metadata.
 - Added `src/lib/versioning/` for engine version metadata and enterprise audit readiness.
 - Added Package Orchestrator manifest engine for Analytics Packages, Output Levels, deliverables, previews, branding, industry context, permissions, and checkout metadata.
@@ -32,10 +33,10 @@ ProgramMetrics now has a layered platform architecture, centralized configuratio
 - Moving static Studio browser calculations behind `src/lib/services`, `src/lib/platform`, or a future ProgramMetrics API.
 - Accessibility polish for KPI detail panels, including focus management and Escape-key close behavior.
 - Visual polish and responsive fit for the Analytics Studio wizard and dashboard workspace.
-- Connecting static Studio Deliverables tab and Interactive Preview to Deliverables Platform preview cards and report previews.
+- Adding executable tests and CI for analytics, orchestrator, deliverables, shared utilities, and Studio regression flows.
 
 ## Next Sprint
-Sprint 5.1 - Studio deliverables preview integration.
+Sprint 5.2 - Executable testing and Studio service integration.
 
 ## Next Up
 - Add export adapters that consume `ProfessionalReport` objects for HTML, PDF, DOCX, PPTX, PNG, XLSX, CSV, and ZIP.

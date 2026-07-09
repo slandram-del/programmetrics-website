@@ -123,6 +123,11 @@ The platform currently supports Executive Report, Management Report, Analytics R
 
 ### Versioning System
 `src/lib/versioning/` records Analytics Engine, Analytics Intelligence, Package Orchestrator, Deliverables Platform, Branding, Report Generator, Export Engine, generated date, and ProgramMetrics versions for every generated report object.
+
+## Stabilization Layer
+Sprint 5.1 pauses feature expansion and adds reliability guardrails: user-facing error normalization, dataset performance profiles, security/IP review checklists, accessibility requirements, and a no-framework stabilization test plan registry.
+
+This work does not replace the need for executable tests, a TypeScript project config, CI, or a server-side API boundary. Those remain required before production launch.
 ## Current Architecture
 - `src/lib/services/` exposes application-service boundaries for analytics, previews, reports, branding, deliverables, workflows, and pricing.
 - `src/config/` centralizes packages, feature flags, export formats, templates, branding defaults, and application config.
@@ -133,7 +138,7 @@ The platform currently supports Executive Report, Management Report, Analytics R
 - `src/lib/chart-engine/` converts `recommendedVisuals` into reusable render models through chart registry, chart selector, chart data builder, dashboard builder, and responsive chart layouts.
 - `src/lib/package-orchestrator/` returns package manifests for deliverables, sections, dashboards, exports, branding, industry context, previews, permissions, and checkout metadata.
 - `src/lib/deliverables-platform/` assembles versioned professional report objects, preview cards, preview models, and reusable report sections from package manifests and analytics outputs.
-- `src/lib/versioning/` provides engine version metadata for reproducibility and enterprise auditing.
+- `src/lib/versioning/` provides engine version metadata for reproducibility and enterprise auditing.`n- `src/lib/testing/` documents stabilization test cases until an executable test runner is added.`n- `src/lib/shared/` now includes error, diagnostics, performance, security-review, and accessibility guidance utilities.
 - The current static Studio browser script mirrors the chart-engine behavior so uploaded/session files can render immediately without a bundler; a future build step should import the TypeScript engine directly.
 - Locked previews keep watermark and export-disable behavior while still rendering limited plan-driven previews.
 - Studio KPI cards now include an explainability layer that answers definition, calculation logic, dataset-specific interpretation, why it matters, recommended actions, related visuals, and package/export availability.
