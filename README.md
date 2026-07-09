@@ -17,6 +17,7 @@ ProgramMetrics product planning and implementation references live in [`docs/`](
 - [Enterprise Architecture](docs/ENTERPRISE_ARCHITECTURE.md)
 - [Platform Architecture](docs/PLATFORM_ARCHITECTURE.md)
 - [Architecture Refactoring Report](docs/ARCHITECTURE_REFACTOR_REPORT.md)
+- [Business & Launch Checklist](docs/BUSINESS_LAUNCH_CHECKLIST.md)
 
 ## Copyright
-Copyright Â© 2026 ProgramMetrics. All Rights Reserved.
+Copyright © 2026 ProgramMetrics. All Rights Reserved.
