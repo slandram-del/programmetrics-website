@@ -212,6 +212,41 @@ Specialized panels:
 - Analytics Confidence uses `confidenceProfile.confidenceDrivers`, `confidenceConcerns`, `affectedInsights`, `recommendations`, and analytics-plan assumptions.
 - Missing Values uses `missingProfile`, missing value codes, top affected fields, and cleanup recommendations.
 
+
+## Analytics Intelligence Layer
+`src/lib/analytics-engine/intelligence/` converts completed `AnalyticsPlan` objects into professional analyst-style outputs.
+
+Modules:
+- `analyticsIntelligenceEngine.ts`: Orchestrates intelligence output generation.
+- `executiveObservationGenerator.ts`: Creates evidence-backed observations with supporting metrics, confidence, related visuals, related fields, and severity.
+- `findingGenerator.ts`: Converts plan evidence into analytical findings with business impact and recommended action.
+- `warningDetector.ts`: Detects data-quality and analytics-readiness warnings.
+- `opportunityDetector.ts`: Identifies dashboard, trend, statistics, forecasting, geographic, and executive-readiness opportunities when supported by the plan.
+- `recommendationPrioritizer.ts`: Produces ranked recommendations with category, action, impact, effort, package availability, and confidence.
+- `executiveNarrativeBuilder.ts`: Builds Executive Summary, Data Quality Summary, Key Findings, Recommendations, Limitations, and Next Steps blocks.
+- `summaryBuilder.ts`: Creates compact intelligence summaries.
+- `insightGrouping.ts`: Groups intelligence into Overview, Data Quality, Visual Analytics, Descriptive Statistics, Recommendations, Executive Summary, and Deliverables sections.
+- `actionPlanner.ts`: Creates prioritized action-plan items.
+- `confidenceNarrative.ts`: Creates confidence-aware summaries with drivers, concerns, assumptions, and affected insights.
+
+The intelligence layer consumes `AnalyticsPlan`; it does not re-profile raw rows. This keeps analytics logic modular and prepares it for future server-side execution.
+
+## Intelligence Outputs
+`buildAnalyticsIntelligence(plan)` returns:
+- `executiveSummary`
+- `summary`
+- `observations`
+- `keyFindings`
+- `warnings`
+- `opportunities`
+- `recommendations`
+- `groupedInsights`
+- `actionPlan`
+- `confidenceNarrative`
+- `narrativeBlocks`
+- `aiAnalystContext`
+
+These outputs are safe for UI, reports, exports, and future AI Analyst workflows because they expose structured conclusions and evidence summaries rather than protected prioritization or narrative-generation rules.
 ## Protected Interface Boundary
 UI and future API callers should use `src/lib/platform/analyticsEngineInterface.ts` instead of reaching directly into protected analytics modules.
 
@@ -258,6 +293,7 @@ Connected outputs:
 - `confidenceProfile` powers the Analytics Confidence Score card and detail panel.
 - `descriptiveStats` powers the Descriptive Statistics tab and numeric summary table.
 - `recommendedInsights` and `recommendedDeliverables` power the Recommendations and Deliverables tabs.
+- `AnalyticsIntelligence` powers future Executive Summary, Recommendations, Data Quality, and AI Analyst context with grounded observations, findings, warnings, opportunities, actions, and narratives.
 
 The current static browser implementation mirrors some TypeScript engine behavior because the site does not yet have a bundler-backed import path. Future work should add a browser-safe build step or API layer so Studio can consume `src/lib/platform` outputs directly without exposing protected calculation details.
 

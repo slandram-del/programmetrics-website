@@ -1,4 +1,4 @@
-import { generateAnalyticsPlan, type AnalyticsPlan, type BrandingConfig, type DataRow, type SelectedLevel, type SelectedPackage, type SetupConfig } from "../analytics-engine";
+import { buildAnalyticsIntelligence, generateAnalyticsPlan, type AnalyticsIntelligence, type AnalyticsPlan, type BrandingConfig, type DataRow, type SelectedLevel, type SelectedPackage, type SetupConfig } from "../analytics-engine";
 import { buildDashboard, type BuiltDashboard, type DashboardBuildOptions } from "../chart-engine";
 import { PROTECTED_ARCHITECTURE_NOTICE } from "./protectedServices";
 
@@ -20,6 +20,7 @@ export interface AnalyticsStudioResponse {
   deliverables: AnalyticsPlan["recommendedDeliverables"];
   qualityProfile: AnalyticsPlan["qualityProfile"];
   confidenceProfile: AnalyticsPlan["confidenceProfile"];
+  intelligence: AnalyticsIntelligence;
   dashboard: BuiltDashboard;
   protectedNotice: string;
 }
@@ -46,6 +47,7 @@ export function createAnalyticsStudioResponse(request: AnalyticsStudioRequest): 
     brandingConfig: request.brandingConfig
   });
 
+  const intelligence = buildAnalyticsIntelligence(analyticsPlan);
   const dashboard = buildDashboard(analyticsPlan, {
     ...(request.dashboardOptions || {}),
     locked: request.locked
@@ -59,6 +61,7 @@ export function createAnalyticsStudioResponse(request: AnalyticsStudioRequest): 
     deliverables: analyticsPlan.recommendedDeliverables,
     qualityProfile: analyticsPlan.qualityProfile,
     confidenceProfile: analyticsPlan.confidenceProfile,
+    intelligence,
     dashboard,
     protectedNotice: PROTECTED_ARCHITECTURE_NOTICE
   };

@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### New Features
+- Added Analytics Intelligence Engine modules for executive observations, analytical findings, warnings, opportunities, prioritized recommendations, action plans, grouped insights, and confidence-aware narratives.
 - Added enterprise architecture foundation documentation for protected analytics, future API boundaries, and trade secret strategy.
 - Added src/lib/platform interface layer for Analytics Studio responses and public analytics summaries.
 - Added legal placeholder routes for /terms, /privacy, and /license with legal-review TODOs.
@@ -18,6 +19,8 @@
 - Added chart render models for KPI card, line chart, bar chart, horizontal bar chart, donut chart, histogram, box plot summary, gauge, table, heatmap placeholder, and insight card.
 
 ### Improvements
+- Platform responses now include structured intelligence output for future Dashboard, Report Generator, AI Analyst, and Export consumers.
+- Dashboard builder contracts now include an Executive Summary tab destination.
 - Standardized visible copyright footers to ProgramMetrics All Rights Reserved wording.
 - Updated customer-facing package wording away from old tier language in key pages.
 - Quality Score detail panels now include component breakdown, score bars, strengths, concerns, and recommendations from analytics-engine outputs.
@@ -33,6 +36,7 @@
 - Static asset cache keys were bumped so browsers fetch the updated dashboard UI.
 
 ### Refactors
+- Kept intelligence-generation business logic isolated under src/lib/analytics-engine/intelligence so UI consumers receive structured outputs rather than internal prioritization rules.
 - Marked analytics-engine modules as protected business logic and routed future UI/API usage through platform interfaces.
 - Added report/export copyright metadata placeholders.
 - Added reusable Studio KPI explainability helpers that route KPI cards to metric-specific detail panels.

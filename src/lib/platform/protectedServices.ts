@@ -1,5 +1,12 @@
 export const PROTECTED_ANALYTICS_SERVICES = [
   "Analytics Recommendation Engine",
+  "Analytics Intelligence Engine",
+  "Executive Observation Generator",
+  "Recommendation Prioritizer",
+  "Warning Detector",
+  "Opportunity Detector",
+  "Executive Narrative Builder",
+  "Confidence Narrative Engine",
   "Dataset Profiler",
   "Dataset Classification",
   "Field Profiler",

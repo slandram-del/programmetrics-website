@@ -12,6 +12,14 @@
 9. Add automated Studio smoke tests for upload, data setup, preview generation, and interactive preview.
 10. Build production report generator for HTML, PDF, DOCX, PPTX, PNG, JSON, and ZIP.
 
+
+## Analytics Intelligence Follow-Ups
+- Connect static Studio Executive Summary, Overview, Data Quality, and Recommendations tabs directly to `AnalyticsIntelligence` outputs.
+- Add AI Analyst integration that uses `aiAnalystContext` for grounded answers.
+- Feed executive narrative blocks into Report Generator outputs.
+- Add industry-intelligence adapters that enrich observations without inventing unsupported conclusions.
+- Add tests for executive observations, findings, warnings, opportunities, recommendations, action plans, and confidence narratives.
+- Add package-aware narrative depth for Data Foundation, Management Insights, Professional Analytics, Executive Intelligence, and Enterprise outputs.
 ## Enterprise Architecture Follow-Ups
 - Implement ProgramMetrics API boundary for analytics, reports, branding, workflows, and exports.
 - Add authentication and role-based access controls.

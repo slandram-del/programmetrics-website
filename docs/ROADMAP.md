@@ -74,6 +74,22 @@
 - [ ] Move static Studio browser calculations behind the platform interface or future API
 - [ ] Add automated architecture checks for public API/result contracts
 
+
+## Phase 4.5 - Analytics Intelligence and Recommendation System - In Progress
+- [x] Create Analytics Intelligence Engine above `AnalyticsPlan`
+- [x] Add executive observation generator
+- [x] Add analytical finding generator
+- [x] Add warning detector
+- [x] Add opportunity detector
+- [x] Add recommendation prioritizer
+- [x] Add confidence-aware narrative builder
+- [x] Add executive narrative blocks for summary, quality, findings, recommendations, limitations, and next steps
+- [x] Add grouped insight sections for dashboard/report/AI Analyst consumers
+- [x] Add action planner with impact and effort
+- [x] Expose intelligence output through `src/lib/platform`
+- [ ] Connect static Studio dashboard tabs directly to intelligence output
+- [ ] Add tests for observation, warning, finding, recommendation, and narrative outputs
+
 ## Phase 5 - Report Generator
 - [ ] Executive summary
 - [ ] Key findings
@@ -160,3 +176,5 @@
 
 - Add server-side protected analytics API boundary.
 - Add architecture linting to prevent protected formulas from leaking into UI components.
+
+- Add tests for intelligence-engine outputs using representative survey, business, and program datasets.

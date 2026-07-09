@@ -9,6 +9,7 @@ export const DASHBOARD_TABS = [
   "Data Quality",
   "Descriptive Statistics",
   "Missing Values",
+  "Executive Summary",
   "Recommendations",
   "Deliverables"
 ] as const;
@@ -79,6 +80,7 @@ function emptyStateForTab(label: DashboardTabName): string {
     case "Data Quality": return "No quality visuals were available for this dataset.";
     case "Descriptive Statistics": return "No descriptive statistics were available for this dataset.";
     case "Missing Values": return "No missing-value issues were detected.";
+    case "Executive Summary": return "No executive narrative has been generated yet.";
     case "Recommendations": return "No recommendations were generated yet.";
     case "Deliverables": return "No deliverables are configured for this package yet.";
     default: return "No dashboard content is available yet.";

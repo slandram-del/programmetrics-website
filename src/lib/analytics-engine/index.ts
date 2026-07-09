@@ -19,3 +19,4 @@ export * from "./recommendationGenerator";
 export * from "./setupRows";
 export * from "./types";
 export * from "./visualRecommendationEngine";
+export * from "./intelligence";
