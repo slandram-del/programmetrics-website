@@ -1471,13 +1471,25 @@ function buildRowsFromStudioSetup(matrix, setup) {
   const codeRow = matrix[Math.max(0, Number(setup.codeRow || 1) - 1)] || [];
   const labelRow = matrix[Math.max(0, Number(setup.labelRow || setup.codeRow || 1) - 1)] || [];
   const width = Math.max(codeRow.length, labelRow.length, ...matrix.map((row) => row.length));
+  const importRow = setup.omitRows?.length ? matrix[Math.max(0, Number(setup.omitRows[0]) - 1)] || [] : [];
+  const omittedColumns = new Set(parseOmittedColumns(setup.omitColumns || []));
   const used = new Set();
-  const fields = Array.from({ length: width }, (_, index) => {
+  const allFields = Array.from({ length: width }, (_, index) => {
     const code = cleanStudioFieldLabel(codeRow[index], `Column ${index + 1}`);
     const label = cleanStudioFieldLabel(labelRow[index], code);
+    const metadataReason = studioMetadataColumnReason(code, label, importRow[index] || "");
     const display = uniqueStudioName(setup.useLabels ? label : code, used);
-    return { index, code, label, display, role: getDatePartRole(`${code} ${label}`) };
+    return {
+      index,
+      code,
+      label,
+      display,
+      metadataReason,
+      omitted: omittedColumns.has(index + 1),
+      role: getDatePartRole(`${code} ${label}`)
+    };
   });
+  const fields = allFields.filter((field) => !field.omitted);
   const omit = new Set(parseOmittedRows(setup.omitRows || []).concat([Number(setup.codeRow), Number(setup.labelRow)]).filter((row) => row > 0));
   const dataStart = Math.max(1, Number(setup.dataStartsAt || 2));
   const rows = [];
@@ -3445,3 +3457,4 @@ function setupCheckoutFlow() {
 }
 
 setupCheckoutFlow();
+
