@@ -1,4 +1,4 @@
-# ProgramMetrics Roadmap
+﻿# ProgramMetrics Roadmap
 
 ## Phase 1 - Product Positioning and Site Structure
 - [ ] Replace feature upgrade language with Analytics Packages
@@ -10,20 +10,22 @@
 - [ ] Update enterprise page
 
 ## Phase 2 - Analytics Studio Wizard
-- [ ] Upload step
-- [ ] File summary
-- [ ] Data setup step
-- [ ] Header row selector
-- [ ] Variable label row selector
-- [ ] Data start row selector
-- [ ] Omit rows control
-- [ ] Missing value coding panel
-- [ ] Package selection
-- [ ] Output level selection
-- [ ] Preview generation
-- [ ] Interactive preview launch
+- [x] Upload step
+- [x] File summary
+- [x] Data setup step
+- [x] Header row selector
+- [x] Variable label row selector
+- [x] Data start row selector
+- [x] Omit rows control
+- [x] Missing value coding panel
+- [x] Package selection
+- [x] Output level selection
+- [x] Preview generation
+- [x] Interactive preview launch
+- [ ] Further refine responsive layout and package selector fit on small screens
+- [ ] Add stronger metadata-column detection controls
 
-## Phase 3 - Analytics Recommendation Engine - In Progress
+## Phase 3 - Analytics Recommendation Engine - Complete for MVP
 - [x] Dataset profile
 - [x] Field profile
 - [x] Missing profile
@@ -35,20 +37,23 @@
 - [x] Visual recommendations
 - [x] Insight recommendations
 - [x] Deliverables recommendations
+- [x] Analytics confidence scoring
 
-## Phase 4 - Visual Analytics Engine
-- [ ] KPI cards
-- [ ] Date trends
-- [ ] Top category charts
-- [ ] Donut charts
-- [ ] Heatmaps
-- [ ] Histograms
-- [ ] Box plots
+## Phase 4 - Visual Analytics Engine - In Progress
+- [x] KPI cards from `recommendedKpis`
+- [x] Date trends from monthly/quarterly grouped plan data
+- [x] Top category charts with top values and Other grouping
+- [x] Donut charts
+- [x] Heatmaps / completeness visuals
+- [x] Histograms
+- [x] Box plots
 - [ ] Scatter plots
-- [ ] Quality gauge
-- [ ] Component bars
-- [ ] Missing value visuals
-- [ ] Duplicate review visuals
+- [x] Quality gauge
+- [x] Component bars
+- [x] Missing value visuals
+- [ ] Duplicate review visuals beyond summary tables
+- [x] Dashboard tabs for Overview, Visual Analytics, Data Quality, Descriptive Statistics, Missing Values, Recommendations, and Deliverables
+- [x] Coming-soon chart card for unsupported visual types
 
 ## Phase 5 - Report Generator
 - [ ] Executive summary
@@ -71,6 +76,7 @@
 - [ ] SVG
 - [ ] JSON
 - [ ] ZIP
+- [ ] Package-aware export locks connected to checkout state
 
 ## Phase 7 - Branding Engine
 - [ ] Brand profile
@@ -119,6 +125,11 @@
 - [ ] API
 - [ ] Audit logs
 - [ ] Multi-file analytics
+
+## Newly Discovered Subtasks
+- Add browser or build-step integration so Studio can import the TypeScript chart engine directly instead of mirroring compatible browser logic.
+- Add automated smoke tests for upload -> setup -> generate preview -> open interactive preview.
+- Add visual regression screenshots for dashboard tabs and locked preview overlays.
 
 ## Related Documents
 - [Master Plan](PROGRAMMETRICS_MASTER_PLAN.md)

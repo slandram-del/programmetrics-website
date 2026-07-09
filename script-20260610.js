@@ -2170,49 +2170,99 @@ function generateAnalyticsPlan({ rawRows, setupConfig = {}, selectedPackage = ac
     brandingConfig,
   };
 }
+function planFieldProfile(analysis, fieldName) {
+  const profiles = analysis.field_profiles || analysis.analytics_plan?.fieldProfiles || [];
+  return profiles.find((field) => field.fieldName === fieldName || field.displayLabel === fieldName) || null;
+}
+function planTopValuesForField(analysis, fieldName, limit = 10, groupOther = true) {
+  const profile = planFieldProfile(analysis, fieldName);
+  const values = Array.isArray(profile?.topValues) ? profile.topValues : [];
+  const visible = values.slice(0, limit).map((item) => ({ label: item.value || "Blank", value: Number(item.count) || 0, percent: Number(item.percent) || 0 }));
+  const rest = values.slice(limit);
+  if (groupOther && rest.length) {
+    visible.push({ label: "Other", value: rest.reduce((sum, item) => sum + (Number(item.count) || 0), 0), percent: rest.reduce((sum, item) => sum + (Number(item.percent) || 0), 0) });
+  }
+  return visible;
+}
+function planRowsForVisual(visual, analysis, locked) {
+  const config = visual.chartConfig || {};
+  const plan = analysis.analytics_plan || {};
+  const type = visual.type || config.chartType || "insightCard";
+  const limit = locked ? 6 : Number(config.top || 10);
+  const configData = config.data;
+  if (Array.isArray(configData)) return configData.slice(0, locked ? 6 : 12);
+  if (configData && typeof configData === "object") return Object.entries(configData).map(([label, value]) => ({ label, period: label, count: Number(value) || 0, value: Number(value) || 0 })).slice(0, locked ? 8 : 18);
+  if (visual.id === "missing-fields" || /missing/i.test(visual.title || "")) {
+    const missing = analysis.missing_profile || plan.missingProfile || {};
+    const fields = missing.topMissingFieldsByCount || (missing.entries || []).map(([fieldName, missingCount]) => ({ fieldName, displayLabel: studioDisplayName(analysis, fieldName), missingCount, missingPercent: analysis.rows ? Math.round((Number(missingCount) / analysis.rows) * 1000) / 10 : 0 }));
+    return fields.slice(0, limit).map((item) => ({ label: item.displayLabel || item.fieldName, category: item.displayLabel || item.fieldName, count: Number(item.missingCount) || 0, percent: Number(item.missingPercent) || 0 }));
+  }
+  if (["horizontalBar", "bar", "donut"].includes(type) && visual.fieldNames?.[0]) {
+    return planTopValuesForField(analysis, visual.fieldNames[0], limit, config.groupRareValues !== false).map((item) => ({ category: item.label, label: item.label, count: item.value, percent: item.percent }));
+  }
+  if (type === "gauge") {
+    const quality = analysis.quality_profile || plan.qualityProfile || {};
+    const confidence = analysis.confidence_profile || plan.confidenceProfile || {};
+    const score = Number(config.score ?? quality.overallScore ?? confidence.overallConfidence ?? analysis.quality_score ?? 0);
+    const components = config.components || quality.components || analysis.quality_breakdown || {};
+    return Object.entries(components).map(([component, value]) => ({ component, label: component, score: Number(value) || 0, value: Number(value) || 0 })).concat([{ component: "Overall", label: "Overall", score, value: score }]);
+  }
+  if (type === "histogram" && visual.fieldNames?.[0]) {
+    const fieldName = visual.fieldNames[0];
+    const stats = (analysis.descriptive_stats?.numeric || plan.descriptiveStats?.numeric || []).find((item) => item.fieldName === fieldName) || {};
+    const values = normalizedRowsForRender(analysis).map((row) => Number(String(row[fieldName] ?? "").replace(/,/g, ""))).filter((value) => Number.isFinite(value));
+    const min = values.length ? Math.min(...values) : Number(stats.min);
+    const max = values.length ? Math.max(...values) : Number(stats.max);
+    if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) return [];
+    const bins = Math.max(4, Math.min(14, Number(config.bins || 10)));
+    const step = (max - min) / bins;
+    const counts = Array.from({ length: bins }, () => 0);
+    values.forEach((value) => counts[Math.min(bins - 1, Math.max(0, Math.floor((value - min) / step)))] += 1);
+    return counts.map((count, index) => ({ period: `${(min + step * index).toFixed(1)}-${(index === bins - 1 ? max : min + step * (index + 1)).toFixed(1)}`, label: `${(min + step * index).toFixed(1)}`, count, value: count }));
+  }
+  if (type === "boxplot" && visual.fieldNames?.[0]) {
+    const fieldName = visual.fieldNames[0];
+    const stats = (analysis.descriptive_stats?.numeric || plan.descriptiveStats?.numeric || []).find((item) => item.fieldName === fieldName) || {};
+    return [{ min: stats.min, q1: stats.q1, median: stats.median, q3: stats.q3, max: stats.max, outlierCount: stats.outlierCount }];
+  }
+  if (type === "table") {
+    return (analysis.preview_rows || []).slice(0, locked ? 10 : 25);
+  }
+  return [];
+}
 function renderRecommendedVisualTile(visual, analysis, locked, pct) {
   const tile = document.createElement("section");
+  const type = visual.type || visual.chartConfig?.chartType || "insightCard";
+  const data = planRowsForVisual(visual, analysis, locked);
+  const implementedTypes = new Set(["line", "bar", "horizontalBar", "donut", "histogram", "boxplot", "gauge", "table", "insightCard"]);
   tile.className = `dashboard-preview-panel dashboard-tile recommended-visual-tile${locked && visual.packageMinimum !== "data-clean" ? " locked-preview-panel" : ""}`;
   tile.dataset.dashboardTab = normalizeDashboardTab(visual.tab);
-  const config = visual.chartConfig || {};
-  const rawData = Array.isArray(config.data) ? config.data : [];
-  const data = rawData.slice(0, locked ? 6 : 12);
-  const type = visual.type || config.chartType || "insightCard";
   let body = "";
-  if (!data.length && !["gauge", "insightCard"].includes(type)) {
-    body = `<div class="coming-soon-visual"><strong>Coming soon</strong><span>ProgramMetrics found the analysis recommendation, but this visual needs more usable data or renderer support.</span></div>`;
+  if (!implementedTypes.has(type)) {
+    body = `<div class="coming-soon-visual"><strong>${escapeHtml(type)} chart coming soon</strong><span>${escapeHtml(visual.insight || visual.description || "This recommended visual is queued for the chart engine renderer.")}</span></div>`;
+  } else if (!data.length && !["gauge", "insightCard"].includes(type)) {
+    body = `<div class="coming-soon-visual"><strong>No chartable data yet</strong><span>${escapeHtml(visual.insight || "ProgramMetrics recommended this visual, but the selected fields do not have enough usable values after setup rules.")}</span></div>`;
   } else if (["horizontalBar", "bar"].includes(type)) {
-    const valueKey = config.xField || "count";
-    const labelKey = config.yField || "category";
-    const max = Math.max(...data.map((row) => Number(row[valueKey] ?? row.missingCells ?? row.count) || 0), 1);
-    body = data.map((row) => {
-      const value = row[valueKey] ?? row.missingCells ?? row.count ?? 0;
-      const label = row[labelKey] ?? row.category ?? row.field ?? row.period ?? "Value";
-      return `<div class="dashboard-bar-row"><span>${escapeHtml(label)}</span><div><i style="width:${pct(((Number(value) || 0) / max) * 100)}"></i></div><b>${escapeHtml(value)}</b></div>`;
-    }).join("");
+    const max = Math.max(...data.map((row) => Number(row.count ?? row.value) || 0), 1);
+    body = data.map((row) => `<div class="dashboard-bar-row"><span title="${escapeHtml(row.label || row.category || "Value")}">${escapeHtml(row.label || row.category || "Value")}</span><div><i style="width:${pct(((Number(row.count ?? row.value) || 0) / max) * 100)}"></i></div><b>${escapeHtml(row.count ?? row.value ?? 0)}</b></div>`).join("");
   } else if (["line", "histogram"].includes(type)) {
-    const valueKey = config.yField || "count";
-    const labelKey = config.xField || "period";
-    const max = Math.max(...data.map((row) => Number(row[valueKey]) || 0), 1);
-    body = `<div class="dashboard-trend-bars ${type === "histogram" ? "histogram-bars" : ""}">${data.map((row) => `<div><i style="height:${pct(((Number(row[valueKey]) || 0) / max) * 100)}"></i><span>${escapeHtml(String(row[labelKey] ?? row.period ?? row.label ?? "").slice(0, 12))}</span><b>${escapeHtml(row[valueKey] ?? 0)}</b></div>`).join("")}</div>`;
+    const max = Math.max(...data.map((row) => Number(row.count ?? row.value) || 0), 1);
+    body = `<div class="dashboard-trend-bars ${type === "histogram" ? "histogram-bars" : ""}">${data.map((row) => `<div><i style="height:${pct(((Number(row.count ?? row.value) || 0) / max) * 100)}"></i><span title="${escapeHtml(row.period || row.label || "")}">${escapeHtml(String(row.period || row.label || "").slice(0, 12))}</span><b>${escapeHtml(row.count ?? row.value ?? 0)}</b></div>`).join("")}</div>`;
   } else if (type === "donut") {
-    const valueKey = config.valueField || "count";
-    const labelKey = config.labelField || "category";
-    const total = data.reduce((sum, row) => sum + Number(row[valueKey] ?? row.count ?? 0), 0) || 1;
-    body = `<div class="dashboard-donut-list">${data.map((row) => `<span><i style="--share:${Math.max(6, Math.round((Number(row[valueKey] ?? row.count ?? 0) / total) * 100))}%"></i><b>${escapeHtml(row[labelKey] ?? row.category ?? row.field ?? "Value")}</b><em>${escapeHtml(row[valueKey] ?? row.count ?? 0)}</em></span>`).join("")}</div>`;
+    const total = data.reduce((sum, row) => sum + Number(row.count ?? row.value ?? 0), 0) || 1;
+    body = `<div class="dashboard-donut-list">${data.map((row) => `<span><i style="--share:${Math.max(6, Math.round((Number(row.count ?? row.value ?? 0) / total) * 100))}%"></i><b title="${escapeHtml(row.label || row.category || "Value")}">${escapeHtml(row.label || row.category || "Value")}</b><em>${escapeHtml(row.count ?? row.value ?? 0)}</em></span>`).join("")}</div>`;
   } else if (type === "gauge") {
-    const score = Number(config.score ?? analysis.confidence_profile?.overallConfidence ?? analysis.quality_profile?.overallScore ?? analysis.quality_score ?? 0);
-    const bars = data.map((row) => `<div class="dashboard-bar-row quality-bar"><span>${escapeHtml(row.component || row.label || "Component")}</span><div><i style="width:${pct(row.score ?? row.value)}"></i></div><b>${escapeHtml(row.score ?? row.value ?? "-")}</b></div>`).join("");
+    const scoreRow = data.find((row) => row.component === "Overall") || data[0] || {};
+    const score = Number(visual.chartConfig?.score ?? scoreRow.score ?? analysis.quality_profile?.overallScore ?? analysis.confidence_profile?.overallConfidence ?? analysis.quality_score ?? 0);
+    const bars = data.filter((row) => row.component !== "Overall").map((row) => `<div class="dashboard-bar-row quality-bar"><span>${escapeHtml(row.component || row.label || "Component")}</span><div><i style="width:${pct(row.score ?? row.value)}"></i></div><b>${escapeHtml(row.score ?? row.value ?? "-")}</b></div>`).join("");
     body = `<div class="dashboard-ring" style="--score:${pct(score)}"><strong>${escapeHtml(score)}</strong><span>Score</span></div>${bars}`;
   } else if (type === "boxplot") {
-    const row = data[0] || config;
-    body = `<div class="boxplot-card"><span>Min ${escapeHtml(row.min ?? "-")}</span><span>Q1 ${escapeHtml(row.q1 ?? "-")}</span><strong>Median ${escapeHtml(row.median ?? "-")}</strong><span>Q3 ${escapeHtml(row.q3 ?? "-")}</span><span>Max ${escapeHtml(row.max ?? "-")}</span></div>`;
+    const row = data[0] || {};
+    body = `<div class="boxplot-card"><span>Min ${escapeHtml(row.min ?? "-")}</span><span>Q1 ${escapeHtml(row.q1 ?? "-")}</span><strong>Median ${escapeHtml(row.median ?? "-")}</strong><span>Q3 ${escapeHtml(row.q3 ?? "-")}</span><span>Max ${escapeHtml(row.max ?? "-")}</span></div><p class="dashboard-chart-label">Outliers: ${escapeHtml(row.outlierCount ?? 0)}</p>`;
   } else if (type === "table") {
-    body = data.length ? `<div class="dashboard-table-wrap"><table><thead><tr>${Object.keys(data[0]).map((key) => `<th>${escapeHtml(key)}</th>`).join("")}</tr></thead><tbody>${data.map((row) => `<tr>${Object.keys(row).map((key) => `<td>${escapeHtml(row[key])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : "<p>No rows require review for this table.</p>";
+    body = data.length ? `<div class="dashboard-table-wrap"><table><thead><tr>${Object.keys(data[0]).slice(0, 8).map((key) => `<th>${escapeHtml(key)}</th>`).join("")}</tr></thead><tbody>${data.map((row) => `<tr>${Object.keys(data[0]).slice(0, 8).map((key) => `<td>${escapeHtml(row[key])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : "<p>No rows require review for this table.</p>";
   } else if (type === "insightCard") {
     body = `<article class="plan-insight-card">${escapeHtml(visual.insight || visual.description || "ProgramMetrics generated this insight from the uploaded dataset.")}</article>`;
-  } else {
-    body = `<div class="coming-soon-visual"><strong>${escapeHtml(type)} visual coming soon</strong><span>${escapeHtml(visual.insight || visual.description || "This recommendation is ready for the chart engine renderer.")}</span></div>`;
   }
   tile.innerHTML = `<h4>${escapeHtml(visual.title)}</h4><p class="dashboard-chart-label">${escapeHtml(visual.description || "Recommended by ProgramMetrics")}</p>${body}<p class="recommended-visual-insight">${escapeHtml(visual.insight || "")}</p>`;
   return tile;
@@ -2604,9 +2654,13 @@ function renderPlanDrivenDashboardBody(canvas, analysis, locked, pct, exportCont
   missingPanel.className = `dashboard-preview-panel dashboard-tile-wide${locked ? " locked-preview-panel" : ""}`;
   missingPanel.dataset.dashboardTab = "missing";
   const missing = analysis.missing_profile || {};
-  const topMissing = missing.topMissingFieldsByCount || (missing.entries || []).map(([fieldName, missingCount]) => ({ fieldName, displayLabel: studioDisplayName(analysis, fieldName), missingCount }));
+  const topMissing = missing.topMissingFieldsByCount || (missing.entries || []).map(([fieldName, missingCount]) => ({ fieldName, displayLabel: studioDisplayName(analysis, fieldName), missingCount, missingPercent: analysis.rows ? Math.round((Number(missingCount) / Math.max(1, analysis.rows)) * 1000) / 10 : 0 }));
+  const topMissingPercent = missing.topMissingFieldsByPercent || [...topMissing].sort((a, b) => Number(b.missingPercent || 0) - Number(a.missingPercent || 0));
   const maxMissing = Math.max(...topMissing.map((item) => Number(item.missingCount) || 0), 1);
-  missingPanel.innerHTML = `<h4>Missing Values</h4><p>${escapeHtml(missing.explanation || "Missing rows are records with at least one missing value. Missing cells are every blank or coded missing field in the file. One row can contain many missing cells.")}</p>${missingProfileCardsHtml(analysis)}<h5>Top missing fields</h5>${topMissing.slice(0, locked ? 6 : 10).map((item) => `<div class="dashboard-bar-row missing-bar"><span>${escapeHtml(item.displayLabel || item.fieldName)}</span><div><i style="width:${pct((Number(item.missingCount) / maxMissing) * 100)}"></i></div><b>${escapeHtml(item.missingCount)}</b></div>`).join("") || "<p>No missing values were detected.</p>"}`;
+  const maxMissingPct = Math.max(...topMissingPercent.map((item) => Number(item.missingPercent) || 0), 1);
+  const missingCountBars = topMissing.slice(0, locked ? 6 : 10).map((item) => `<div class="dashboard-bar-row missing-bar"><span title="${escapeHtml(item.displayLabel || item.fieldName)}">${escapeHtml(item.displayLabel || item.fieldName)}</span><div><i style="width:${pct((Number(item.missingCount) / maxMissing) * 100)}"></i></div><b>${escapeHtml(item.missingCount)}</b></div>`).join("");
+  const missingPercentBars = topMissingPercent.slice(0, locked ? 6 : 10).map((item) => `<div class="dashboard-bar-row missing-bar"><span title="${escapeHtml(item.displayLabel || item.fieldName)}">${escapeHtml(item.displayLabel || item.fieldName)}</span><div><i style="width:${pct((Number(item.missingPercent) / maxMissingPct) * 100)}"></i></div><b>${escapeHtml(item.missingPercent ?? 0)}%</b></div>`).join("");
+  missingPanel.innerHTML = `<h4>Missing Values</h4><p>${escapeHtml(missing.explanation || "Missing rows are records with at least one missing value. Missing cells are every blank or coded missing field in the file. One row can contain many missing cells.")}</p>${missingProfileCardsHtml(analysis)}<div class="missing-rank-grid"><section><h5>Top missing fields by count</h5>${missingCountBars || "<p>No missing values were detected.</p>"}</section><section><h5>Top missing fields by percent</h5>${missingPercentBars || "<p>No missing percentages were detected.</p>"}</section></div>`;
   canvas.appendChild(missingPanel);
 
   const qualityPanel = document.createElement("section");

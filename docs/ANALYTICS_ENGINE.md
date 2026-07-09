@@ -161,8 +161,8 @@ The existing browser Studio still owns rendering. The current script now stores 
 - Core engine folder structure exists.
 - Main `generateAnalyticsPlan` function exists.
 - Missing-value, duplicate, field type, field role, dataset profile, dataset classification, descriptive statistics, quality score, confidence score, KPI, visual, insight, and deliverable modules exist.
-- Placeholder chart, report, AI, branding, and workflow engines export safe functions.
-- Existing Studio UI remains compatible.
+- Chart-engine renderer modules now export registry, selector, data builder, and dashboard builder functions. Report, AI, branding, and workflow engines still contain safe placeholders where production implementations are pending.
+- Existing Studio UI remains compatible and renders plan-driven dashboard previews from uploaded/session data.
 
 ## Related Documents
 - [Visual Guidelines](UI_UX_GUIDELINES.md)
@@ -170,3 +170,18 @@ The existing browser Studio still owns rendering. The current script now stores 
 - [Coding Standards](CODING_STANDARDS.md)
 - [Roadmap](ROADMAP.md)
 - [TODO](TODO.md)
+
+## Current UI Integration
+Analytics Studio and Interactive Preview now store an `analytics_plan` object on each generated analysis and render primary dashboard content from the plan.
+
+Connected outputs:
+- `recommendedKpis` render as clickable dashboard KPI cards.
+- `recommendedVisuals` render as line, bar, horizontal bar, donut, histogram, boxplot, gauge, table, and insight-card tiles when supported.
+- Unsupported visual types render polished coming-soon chart cards instead of blank space.
+- `missingProfile` powers the Missing Values tab, including missing rows, missing cells, fields with blanks, missing percentage, top missing fields by count, and top missing fields by percent.
+- `qualityProfile` powers the Quality Score card, detail panel, gauge, and component bars.
+- `confidenceProfile` powers the Analytics Confidence Score card and detail panel.
+- `descriptiveStats` powers the Descriptive Statistics tab and numeric summary table.
+- `recommendedInsights` and `recommendedDeliverables` power the Recommendations and Deliverables tabs.
+
+The current static browser implementation mirrors the TypeScript chart-engine behavior because the site does not yet have a bundler-backed import path. Future work should add a browser-safe build step so Studio can import `src/lib/chart-engine` directly.
