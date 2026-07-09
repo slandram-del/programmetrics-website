@@ -1,14 +1,15 @@
 # Project Status
 
 ## Current Sprint
-Sprint 5.1 - Platform stabilization, testing, and security review
+Sprint 5.2 - Branding engine and organization profiles
 
 ## Overall Completion
-Estimated overall completion: 56%
+Estimated overall completion: 59%
 
-ProgramMetrics now has a layered platform architecture, centralized configuration, application services, shared diagnostics/errors, an engine registry, the core analytics recommendation engine, protected platform interface, reusable chart-engine render models, static Studio dashboard integration, KPI explainability panels, an Analytics Intelligence Layer that turns `AnalyticsPlan` outputs into executive observations, findings, warnings, opportunities, recommendations, action plans, grouped insights, and confidence-aware narratives, a Package Orchestrator that returns package manifests for deliverables, sections, dashboards, previews, branding, industry context, permissions, and checkout metadata, a Deliverables Platform that assembles versioned professional report objects and preview cards from those manifests, and Sprint 5.1 stabilization utilities for friendly errors, performance guardrails, security/IP review, accessibility requirements, and test planning. The product is still pre-production for direct static Studio integration with the intelligence output, native SVG/canvas chart drawing, automated tests, native exports, persistence, AI Analyst, report library, accounts, authentication, and enterprise workflows.
+ProgramMetrics now has a layered platform architecture, centralized configuration, application services, shared diagnostics/errors, an engine registry, the core analytics recommendation engine, protected platform interface, reusable chart-engine render models, static Studio dashboard integration, KPI explainability panels, an Analytics Intelligence Layer that turns `AnalyticsPlan` outputs into executive observations, findings, warnings, opportunities, recommendations, action plans, grouped insights, and confidence-aware narratives, a Package Orchestrator that returns package manifests for deliverables, sections, dashboards, previews, branding, industry context, permissions, and checkout metadata, a Deliverables Platform that assembles versioned professional report objects and preview cards from those manifests, Sprint 5.1 stabilization utilities for friendly errors, performance guardrails, security/IP review, accessibility requirements, and test planning, and a Sprint 5.2 Branding Engine for reusable organization profiles, brand validation, theme generation, cover pages, footers, chart themes, previews, and package-aware branding permissions. The product is still pre-production for direct static Studio integration with the intelligence output, native SVG/canvas chart drawing, automated tests, native exports, persistence, AI Analyst, report library, accounts, authentication, and enterprise workflows.
 
 ## Recently Completed
+- Completed Sprint 5.2 Branding Engine with reusable organization profile contracts, ProgramMetrics defaults, profile normalization, color/font/logo validation, dashboard/report/chart themes, cover pages, footers, previews, and package-aware branding permissions.
 - Completed Sprint 5.1 stabilization pass with shared performance guardrails, security checklist, accessibility requirements, user-facing error mapping, visible focus CSS, technical debt register, and test coverage plan.
 - Completed Sprint 5.0 Deliverables Platform with reusable report templates, section registry, report assembly, preview cards, branding support, and version metadata.
 - Added `src/lib/versioning/` for engine version metadata and enterprise audit readiness.
@@ -29,6 +30,8 @@ ProgramMetrics now has a layered platform architecture, centralized configuratio
 - Added Executive Summary as a dashboard tab contract.
 
 ## In Progress
+- Connecting native report/export adapters to Branding Engine output models.
+- Planning persisted organization profiles after authentication and storage are available.
 - Connecting static Studio dashboard tabs directly to `AnalyticsIntelligence` outputs.
 - Moving static Studio browser calculations behind `src/lib/services`, `src/lib/platform`, or a future ProgramMetrics API.
 - Accessibility polish for KPI detail panels, including focus management and Escape-key close behavior.
@@ -36,9 +39,11 @@ ProgramMetrics now has a layered platform architecture, centralized configuratio
 - Adding executable tests and CI for analytics, orchestrator, deliverables, shared utilities, and Studio regression flows.
 
 ## Next Sprint
-Sprint 5.2 - Executable testing and Studio service integration.
+Sprint 5.3 - Export adapter integration and branded deliverable rendering.
 
 ## Next Up
+- Add tests for Branding Engine normalization, validation, logo safety, package permissions, and render models.
+- Connect PDF, DOCX, PPTX, PNG, HTML, and ZIP exporters to BrandTheme, ChartTheme, CoverPageModel, and FooterModel.
 - Add export adapters that consume `ProfessionalReport` objects for HTML, PDF, DOCX, PPTX, PNG, XLSX, CSV, and ZIP.
 - Add unit tests for intelligence observations, warnings, findings, opportunities, recommendations, action plans, and narratives.
 - Feed intelligence narrative blocks into Report Generator outputs.

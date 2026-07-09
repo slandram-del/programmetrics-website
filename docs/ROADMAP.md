@@ -164,14 +164,32 @@
 - [ ] ZIP
 - [ ] Package-aware export locks connected to checkout state
 
+## Phase 5.2 - Branding Engine and Organization Profiles - Complete
+- [x] Create `src/lib/branding-engine/`
+- [x] Add strongly typed BrandingProfile and BrandingProfileInput contracts
+- [x] Add ProgramMetrics default brand profile fallback
+- [x] Add profile normalization for organization, program, title, subtitle, prepared-for/by, report date, contact, mission, and executive notes
+- [x] Add color validation, normalization, contrast guidance, and palette generation
+- [x] Add approved typography resolver
+- [x] Add logo validation and session-safe preview sanitization for PNG/JPG assets
+- [x] Add SVG warning/disable behavior until sanitization is implemented
+- [x] Add theme, chart theme, cover page, footer, and preview builders
+- [x] Add package-aware branding permissions through Package Orchestrator manifests
+- [x] Expose branding system through `brandingService` and public library exports
+- [ ] Add persisted organization profiles after authentication/storage exist
+- [ ] Connect native PDF/DOCX/PPTX/PNG/ZIP exporters to the branding render models
+- [ ] Add executable tests for profile validation, theme generation, package permissions, and logo safety
+
 ## Phase 7 - Branding Engine
-- [ ] Brand profile
-- [ ] Logo upload
-- [ ] Color palette
-- [ ] Report footer
-- [ ] Cover page
-- [ ] Presentation theme
-- [ ] Organization profile
+- [x] Brand profile
+- [x] Logo upload support model
+- [x] Color palette
+- [x] Report footer
+- [x] Cover page
+- [x] Presentation/chart theme
+- [x] Organization profile model
+- [ ] Persisted organization profile library
+- [ ] White-label enterprise settings
 
 ## Phase 8 - AI Analyst
 - [ ] Ask a question panel
@@ -213,6 +231,10 @@
 - [ ] Multi-file analytics
 
 ## Newly Discovered Subtasks
+- Add persistence, authentication, and profile ownership for saved organization brand profiles.
+- Add native exporter adapters that consume BrandingPreviewModel, CoverPageModel, FooterModel, BrandTheme, and ChartTheme.
+- Add image sanitization for SVG before enabling SVG logo previews or exports.
+- Add automated branding tests for colors, contrast, fonts, logos, package permissions, and report/footer rendering.
 - Add browser or build-step integration so Studio can import the TypeScript chart engine directly instead of mirroring compatible browser logic.
 - Add automated smoke tests for upload -> setup -> generate preview -> open interactive preview.
 - Add visual regression screenshots for dashboard tabs and locked preview overlays.

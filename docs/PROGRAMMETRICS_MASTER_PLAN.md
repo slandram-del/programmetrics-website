@@ -124,6 +124,24 @@ The platform currently supports Executive Report, Management Report, Analytics R
 ### Versioning System
 `src/lib/versioning/` records Analytics Engine, Analytics Intelligence, Package Orchestrator, Deliverables Platform, Branding, Report Generator, Export Engine, generated date, and ProgramMetrics versions for every generated report object.
 
+
+## Branding Engine Layer
+The Branding Engine sits after package selection and before dashboard/report/export rendering. It normalizes customer organization profile input, applies ProgramMetrics defaults when fields are blank, validates colors/fonts/logos, builds dashboard/report/chart themes, and returns render-ready cover page, footer, and branding preview models.
+
+Branding availability and export permission should come from the Package Orchestrator branding manifest. Tier 1/Data Foundation users can preview branding fields when requested, while branded exports require the package/output level indicated by the manifest.
+
+### Branding Outputs
+`src/lib/branding-engine/` returns:
+- `BrandingProfile`
+- `BrandTheme`
+- `ChartTheme`
+- `CoverPageModel`
+- `FooterModel`
+- `BrandingPreviewModel`
+- validation messages
+- package-aware permissions
+
+Native PDF, DOCX, PPTX, PNG, HTML, and ZIP exporters should consume these outputs instead of recreating brand rules.
 ## Stabilization Layer
 Sprint 5.1 pauses feature expansion and adds reliability guardrails: user-facing error normalization, dataset performance profiles, security/IP review checklists, accessibility requirements, and a no-framework stabilization test plan registry.
 
@@ -138,7 +156,10 @@ This work does not replace the need for executable tests, a TypeScript project c
 - `src/lib/chart-engine/` converts `recommendedVisuals` into reusable render models through chart registry, chart selector, chart data builder, dashboard builder, and responsive chart layouts.
 - `src/lib/package-orchestrator/` returns package manifests for deliverables, sections, dashboards, exports, branding, industry context, previews, permissions, and checkout metadata.
 - `src/lib/deliverables-platform/` assembles versioned professional report objects, preview cards, preview models, and reusable report sections from package manifests and analytics outputs.
-- `src/lib/versioning/` provides engine version metadata for reproducibility and enterprise auditing.`n- `src/lib/testing/` documents stabilization test cases until an executable test runner is added.`n- `src/lib/shared/` now includes error, diagnostics, performance, security-review, and accessibility guidance utilities.
+- `src/lib/versioning/` provides engine version metadata for reproducibility and enterprise auditing.
+- `src/lib/testing/` documents stabilization test cases until an executable test runner is added.
+- `src/lib/branding-engine/` normalizes organization profiles, validates brand inputs, builds dashboard/report/chart themes, and creates cover page/footer/preview models.
+- `src/lib/shared/` now includes error, diagnostics, performance, security-review, and accessibility guidance utilities.
 - The current static Studio browser script mirrors the chart-engine behavior so uploaded/session files can render immediately without a bundler; a future build step should import the TypeScript engine directly.
 - Locked previews keep watermark and export-disable behavior while still rendering limited plan-driven previews.
 - Studio KPI cards now include an explainability layer that answers definition, calculation logic, dataset-specific interpretation, why it matters, recommended actions, related visuals, and package/export availability.
@@ -154,7 +175,7 @@ This work does not replace the need for executable tests, a TypeScript project c
 | Deliverables Platform | MVP Complete | Versioned report-object assembly, reusable sections, templates, preview cards, branding profile support, and future-export preparation exist. Static Studio integration and tests remain. |
 | Report Generator | In Progress | HTML-style report outputs exist; native PDF, DOCX, and PPTX generation need production implementation. |
 | Export Engine | In Progress | Export menu and ZIP structure exist; native binary formats need production-grade exporters. |
-| Branding Engine | In Progress | Branding fields exist and should be expanded into reusable profiles. |
+| Branding Engine | MVP Complete | Reusable profile normalization, validation, logo safety, color/typography/theme generation, cover pages, footers, previews, and package-aware permissions exist. Persistence and native exporter adapters remain. |
 | AI Analyst | Not Started | Planned grounded Q&A and narrative layer. |
 | Report Library | Not Started | Requires persistence, authentication, and storage decisions. |
 | Reusable Workflows | Not Started | Requires saved setup and rerun logic. |

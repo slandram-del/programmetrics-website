@@ -1,8 +1,8 @@
 # TODO
 
 ## Next 10 Priorities
-1. Add `package.json`, `tsconfig.json`, and executable tests for analytics, orchestrator, deliverables, and shared utilities.
-2. Add authentication, user accounts, and organization profiles.
+1. Add `package.json`, `tsconfig.json`, and executable tests for analytics, orchestrator, deliverables, branding, and shared utilities.
+2. Add authentication, user accounts, saved organization profiles, and profile ownership.
 3. Add API layer for analytics-plan generation, report generation, workflow execution, and export packages.
 4. Add background processing for large files, scheduled reports, and recurring workflows.
 5. Add automated tests for KPI detail panel click behavior and explanation content.
@@ -88,3 +88,10 @@
 - Keep analytics engine documentation aligned with source code.
 - Add implementation status after each major Studio release.
 - Add screenshots or diagrams once the UI stabilizes.
+
+## Branding Engine Follow-Ups
+- Connect native PDF, DOCX, PPTX, PNG, HTML, and ZIP exporters to `BrandTheme`, `ChartTheme`, `CoverPageModel`, and `FooterModel`.
+- Add persisted organization profile CRUD after authentication and storage are available.
+- Add automated tests for `normalizeBrandingProfile()`, `validateBrandingProfile()`, logo validation, contrast warnings, and package-aware export permissions.
+- Add secure SVG logo sanitization before enabling SVG previews or exports.
+- Add branded dashboard screenshot/thumbnail adapters for executive export packages.

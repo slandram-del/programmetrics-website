@@ -6,3 +6,4 @@ export * from "./package-orchestrator";
 export * from "./deliverables-platform";
 export * from "./versioning";
 export * from "./testing";
+export * from "./branding-engine";

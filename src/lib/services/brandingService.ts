@@ -1,6 +1,6 @@
 import { brandingDefaults } from "../../config";
 import type { BrandingConfig } from "../analytics-engine";
-import { normalizeBrandingProfile, buildTheme } from "../branding-engine";
+import { buildBrandingSystem, normalizeBrandingProfile, buildTheme } from "../branding-engine";
 import { timeDiagnostic } from "../shared";
 
 export function getDefaultBranding(): BrandingConfig {
@@ -13,4 +13,7 @@ export function buildBrandingSettings(branding?: BrandingConfig) {
     const profile = normalizeBrandingProfile(merged);
     return { profile, theme: buildTheme(profile) };
   });
+}
+export function buildFullBrandingSystem(branding?: BrandingConfig) {
+  return timeDiagnostic("service", "brandingService.buildFullBrandingSystem", () => buildBrandingSystem({ ...brandingDefaults, ...(branding || {}) }));
 }

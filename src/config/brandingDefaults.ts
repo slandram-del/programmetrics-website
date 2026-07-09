@@ -5,6 +5,6 @@ export const brandingDefaults = {
   secondaryColor: "#0f172a",
   accentColor: "#14b8a6",
   fontFamily: "Inter, Arial, sans-serif",
-  confidentialFooter: "Copyright © 2026 ProgramMetrics. All Rights Reserved.",
+  confidentialFooter: "Copyright (c) 2026 ProgramMetrics. All Rights Reserved.",
   logoAltText: "ProgramMetrics"
 } as const;

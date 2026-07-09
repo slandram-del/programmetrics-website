@@ -268,6 +268,18 @@ The orchestrator determines:
 
 The orchestrator does not generate reports or exports. It determines what should be generated. Report Generator and Export Engine should consume the manifest rather than duplicating package rules.
 
+
+## Branding Engine Integration
+`src/lib/branding-engine/` consumes optional branding input and optional Package Orchestrator manifests after analytics planning is complete. It does not calculate dataset analytics. It prepares the visual identity layer that downstream dashboards, reports, and exports can apply to analytics outputs.
+
+The branding pipeline includes:
+1. `normalizeBrandingProfile()` applies ProgramMetrics defaults and maps browser/Studio branding field aliases into a typed profile.
+2. `validateBrandingProfile()` checks hex colors, contrast guidance, approved fonts, contact email format, and logo safety.
+3. `resolveBrandingProfile()` combines validation with package-aware branding permissions from `PackageManifest.branding`.
+4. `buildTheme()` and `buildChartTheme()` create dashboard/report/chart styling models.
+5. `buildCoverPage()`, `buildFooter()`, and `buildBrandingPreview()` return render-ready models for future exporters.
+
+Package-aware behavior is permission-driven: previews may show branding, while branded exports require `manifest.branding.exportAvailable`.
 ## Deliverables Platform Integration
 `src/lib/deliverables-platform/` consumes `AnalyticsPlan` and `PackageManifest` outputs to assemble professional report objects. It does not re-profile data or calculate analytics. Report sections reference existing plan objects such as dataset profile, quality profile, confidence profile, missing profile, duplicate profile, recommended visuals, recommended insights, assumptions, and warnings.
 
@@ -328,6 +340,7 @@ The current static browser implementation mirrors some TypeScript engine behavio
 - Missing-value, duplicate, field type, field role, dataset profile, dataset classification, descriptive statistics, quality score, confidence score, KPI, visual, insight, and deliverable modules exist.
 - Chart-engine renderer modules export registry, selector, data builder, layout, and dashboard builder functions.
 - Existing Studio UI remains compatible and renders plan-driven dashboard previews plus KPI explainability panels from uploaded/session data.
+- Branding Engine modules exist for profile normalization, validation, package-aware permissions, themes, chart themes, cover pages, footers, and previews.
 
 ## Related Documents
 - [Visual Guidelines](UI_UX_GUIDELINES.md)
