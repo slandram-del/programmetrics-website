@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   color-scheme: light;
   --navy: #071827;
   --navy-2: #0f2740;
@@ -4922,4 +4922,42 @@ body:has(.studio-workspace) .studio-output-panel .studio-preview-toolbar {
   border: 1px solid #dbeafe;
   background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
 }
+.recommended-visual-tile {
+  border-color: rgba(20, 184, 166, 0.32);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fffd 100%);
+}
 
+.recommended-visual-insight {
+  margin: 14px 0 0;
+  color: #0f766e;
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.recommended-deliverables {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recommended-deliverables li {
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px;
+}
+
+.recommended-deliverables strong,
+.recommended-deliverables span {
+  display: block;
+}
+
+.recommended-deliverables span {
+  color: #0f766e;
+  font-size: 0.84rem;
+  font-weight: 800;
+  margin-top: 4px;
+}

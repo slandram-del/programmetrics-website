@@ -117,6 +117,9 @@ const conversionOptions = {
   jpeg: "Can be prepared for image review, OCR text extraction, or report-ready assets.",
 };
 
+const defaultStudioMissingCodes = ["", " ", "NA", "N/A", "n/a", "null", "NULL", "unknown", "Unknown", "blank", "Blank", "not reported", "Not Reported", "missing", "Missing", "--", "-"];
+let activeStudioMissingCodes = defaultStudioMissingCodes.slice();
+
 function formatFileSize(bytes) {
   if (!bytes) {
     return "0 KB";
@@ -1863,6 +1866,307 @@ function calculateMissingProfile(rows, columns, codes = activeStudioMissingCodes
   return { byColumn, missingRows, missingCells, missingColumns: entries.length, missingPercent: Math.round((missingCells / totalCells) * 1000) / 10, entries, sampleRows };
 }
 
+function valueCountsForPlan(rows, field, limit = 10) {
+  const counts = countValues(rows, field);
+  const entries = Object.entries(counts).filter(([name]) => name && name !== "Missing").sort((a, b) => Number(b[1]) - Number(a[1]));
+  const top = entries.slice(0, limit);
+  const other = entries.slice(limit).reduce((total, [, count]) => total + Number(count), 0);
+  return other ? top.concat([["Other", other]]) : top;
+}
+
+function inferAnalyticsFieldRole(fieldName, displayLabel, values = []) {
+  const text = `${fieldName || ""} ${displayLabel || ""}`.toLowerCase();
+  if (/email/.test(text)) return "email";
+  if (/phone|mobile|cell/.test(text)) return "phone";
+  if (/latitude|longitude|address|county|city|state|zip|location/.test(text)) return "location";
+  if (/shelter|site|agency|organization|organisation|provider/.test(text)) return "organization";
+  if (/program|service|department|unit/.test(text)) return "program";
+  if (/status|outcome|completion|discharge|result/.test(text)) return "status";
+  if (/reason|referral|denial|category|placement/.test(text)) return "reason";
+  if (/startdate|enddate|recordeddate|date|month|year/.test(text)) return "date";
+  if (/amount|cost|price|revenue|score|rate|progress|duration|age|count|total/.test(text)) return "score";
+  if (/id$|\bid\b|responseid|recipient|participant id|client id/.test(text)) return "identifier";
+  if (/name|first|last/.test(text) && values.length && new Set(values.map((value) => String(value).trim()).filter(Boolean)).size > Math.max(10, values.length * 0.4)) return "identifier";
+  if (values.some((value) => String(value || "").length > 80)) return "freeText";
+  return "other";
+}
+
+function buildAnalyticsFieldProfiles(rows, columns, labelMap, numericSummary, dateSummary, categorySummary, missingProfile) {
+  const dateFields = new Set((dateSummary || []).map((item) => item.column));
+  return columns.map((fieldName) => {
+    const displayLabel = labelMap?.[fieldName] || fieldName;
+    const values = rows.map((row) => row[fieldName]);
+    const nonMissing = values.filter((value) => !isStudioMissingValue(value));
+    const uniqueValues = new Set(nonMissing.map((value) => String(value).trim())).size;
+    const role = inferAnalyticsFieldRole(fieldName, displayLabel, nonMissing);
+    let type = "text";
+    if (role === "email") type = "email";
+    else if (role === "phone") type = "phone";
+    else if (role === "location") type = "location";
+    else if (role === "identifier") type = "id";
+    else if (dateFields.has(fieldName)) type = "date";
+    else if (numericSummary?.[fieldName]) type = "numeric";
+    else if (categorySummary?.[fieldName]) type = "categorical";
+    else if (uniqueValues <= 2 && nonMissing.length) type = "boolean";
+    const missingCount = Number(missingProfile?.byColumn?.[fieldName] || 0);
+    const topValues = valueCountsForPlan(rows, fieldName, 8).map(([value, count]) => ({ value, count }));
+    const warnings = [];
+    if (missingCount > rows.length * 0.5) warnings.push("High missingness");
+    if (type === "categorical" && uniqueValues > 25) warnings.push("High-cardinality category; use filters or top values only");
+    if (type === "id") warnings.push("Identifier-like field; avoid category charts");
+    return {
+      fieldName,
+      displayLabel,
+      type,
+      role,
+      nonMissingCount: nonMissing.length,
+      missingCount,
+      missingPercent: rows.length ? Math.round((missingCount / rows.length) * 1000) / 10 : 0,
+      uniqueCount: uniqueValues,
+      uniquePercent: nonMissing.length ? Math.round((uniqueValues / nonMissing.length) * 1000) / 10 : 0,
+      sampleValues: nonMissing.slice(0, 5),
+      topValues,
+      parseSuccessRate: rows.length ? Math.round((nonMissing.length / rows.length) * 1000) / 10 : 0,
+      warnings,
+    };
+  });
+}
+
+function inferDatasetTypeFromProfiles(fieldProfiles, setupConfig) {
+  const joined = fieldProfiles.map((field) => `${field.fieldName} ${field.displayLabel} ${field.role}`).join(" ").toLowerCase();
+  const scores = {
+    survey: (/q\d+|question|response|recipient|qualtrics|survey/.test(joined) ? 45 : 0) + (setupConfig?.useLabels ? 15 : 0),
+    referralOrDenial: (/referral|denial|shelter|youth|placement/.test(joined) ? 60 : 0),
+    programEvaluation: (/program|outcome|service|participant|evaluation|completion/.test(joined) ? 45 : 0),
+    caseManagement: (/client|case|service|referral|status|discharge/.test(joined) ? 40 : 0),
+    housingOrShelter: (/shelter|housing|homeless|placement|bed/.test(joined) ? 45 : 0),
+    behavioralHealth: (/behavioral|mental|substance|diagnosis|therapy|clinical/.test(joined) ? 35 : 0),
+    healthcare: (/health|medical|patient|clinic|diagnosis|provider/.test(joined) ? 30 : 0),
+    education: (/school|student|training|grade|course|class/.test(joined) ? 30 : 0),
+    finance: (/amount|invoice|payment|revenue|cost|budget|expense/.test(joined) ? 30 : 0),
+    crm: (/customer|lead|account|contact|opportunity|sales/.test(joined) ? 30 : 0),
+    hr: (/employee|staff|hire|termination|department|position/.test(joined) ? 30 : 0),
+  };
+  const ranked = Object.entries(scores).filter(([, score]) => score > 0).sort((a, b) => b[1] - a[1]);
+  const primaryType = ranked[0]?.[0] || "genericSpreadsheet";
+  return {
+    primaryType,
+    confidence: ranked.length ? Math.min(95, Math.max(45, ranked[0][1])) : 35,
+    reasons: ranked.slice(0, 3).map(([type]) => `Detected fields consistent with ${type}.`),
+    secondaryTypes: ranked.slice(1, 4).map(([type]) => type),
+  };
+}
+
+function buildDuplicateProfile(rows, fieldProfiles) {
+  const groups = {};
+  rows.forEach((row, index) => {
+    const signature = JSON.stringify(Object.keys(row).sort().map((key) => String(row[key] ?? "").trim().toLowerCase()));
+    groups[signature] = groups[signature] || [];
+    groups[signature].push(index + 1);
+  });
+  const duplicateGroups = Object.values(groups).filter((items) => items.length > 1);
+  const duplicateRows = duplicateGroups.reduce((total, items) => total + items.length - 1, 0);
+  const riskRoles = new Set(["identifier", "date", "program", "organization", "reason"]);
+  return {
+    exactDuplicateRows: duplicateRows,
+    duplicatePercent: rows.length ? Math.round((duplicateRows / rows.length) * 1000) / 10 : 0,
+    duplicateGroups: duplicateGroups.slice(0, 10),
+    likelyDuplicateRiskFields: fieldProfiles.filter((field) => riskRoles.has(field.role) || /name|dob|date of birth|client id|participant id|referral date/i.test(`${field.fieldName} ${field.displayLabel}`)).slice(0, 12).map((field) => field.displayLabel),
+    recommendations: duplicateRows ? ["Review exact duplicate groups before export.", "Use client or participant identifiers plus dates for deeper duplicate review."] : ["No exact duplicate rows were detected.", "Use identifier and date fields for future fuzzy duplicate checks if needed."],
+  };
+}
+
+function buildQualityProfile(rows, columns, missingProfile, duplicateProfile, dateSummary, numericSummary, categorySummary) {
+  const totalCells = Math.max(1, rows.length * Math.max(1, columns.length));
+  const completenessScore = Math.max(0, Math.round(100 - ((missingProfile.missingCells || 0) / totalCells) * 100));
+  const duplicateScore = Math.max(0, Math.round(100 - (duplicateProfile.exactDuplicateRows / Math.max(1, rows.length)) * 100));
+  const dateConsistencyScore = dateSummary.length ? Math.min(100, Math.round((dateSummary[0].count / Math.max(1, rows.length)) * 100)) : 88;
+  const numericValues = Object.values(numericSummary || {});
+  const outliers = numericValues.reduce((sum, item) => sum + Number(item.outlierCount || 0), 0);
+  const numericValidityScore = numericValues.length ? Math.max(45, Math.round(100 - (outliers / Math.max(1, rows.length)) * 100)) : 90;
+  const categoricalUsabilityScore = Math.min(100, Math.max(50, Object.keys(categorySummary || {}).length * 12 + 55));
+  const structureScore = Math.min(100, Math.max(45, (rows.length ? 45 : 0) + (columns.length ? 30 : 0) + (dateSummary.length || Object.keys(categorySummary || {}).length ? 25 : 0)));
+  const components = { completenessScore, duplicateScore, dateConsistencyScore, numericValidityScore, categoricalUsabilityScore, structureScore, requiredCoverageScore: structureScore, formattingScore: Math.round((structureScore + completenessScore) / 2), outlierScore: numericValidityScore };
+  const overallScore = Math.round(completenessScore * 0.3 + duplicateScore * 0.2 + dateConsistencyScore * 0.15 + numericValidityScore * 0.1 + categoricalUsabilityScore * 0.1 + structureScore * 0.15);
+  const concerns = [];
+  if (missingProfile.missingPercent > 20) concerns.push("Missing values are high enough to affect some reporting outputs.");
+  if (duplicateProfile.exactDuplicateRows) concerns.push("Exact duplicates should be reviewed before final reporting.");
+  if (!dateSummary.length) concerns.push("No reliable date field was detected for trend analysis.");
+  return {
+    overallScore,
+    grade: overallScore >= 90 ? "A" : overallScore >= 80 ? "B" : overallScore >= 70 ? "C" : overallScore >= 60 ? "D" : "Needs cleanup",
+    components,
+    explanation: `Your quality score is ${overallScore} because the file has ${rows.length ? "usable rows" : "limited usable rows"}, ${duplicateProfile.exactDuplicateRows ? "some exact duplicates" : "no exact duplicate rows detected"}, and ${missingProfile.missingCells || 0} missing cells.` ,
+    strengths: [rows.length ? "Usable table structure detected." : "File structure needs review.", Object.keys(categorySummary || {}).length ? "Chartable categorical fields were detected." : "Few chartable categorical fields were detected."],
+    concerns,
+    recommendations: concerns.length ? concerns.map((item) => item.replace(/\.$/, " before export.")) : ["Proceed to dashboard preview and export if your selected package is unlocked."],
+  };
+}
+
+function buildRecommendedKpis(profile, missingProfile, duplicateProfile, qualityProfile, dateSummary, fieldProfiles, numericSummary) {
+  const kpis = [
+    { id: "totalRecords", title: "Total records", value: profile.totalRecords, subtitle: "Rows analyzed", explanation: "Records are the usable rows after Data Setup omitted metadata rows.", detailPanelType: "rows", packageAvailability: "all" },
+    { id: "totalFields", title: "Total fields", value: profile.totalFields, subtitle: "Columns analyzed", explanation: "Fields are the usable columns after header and label setup.", detailPanelType: "columns", packageAvailability: "all" },
+    { id: "missingRows", title: "Missing rows", value: missingProfile.missingRows, subtitle: "Rows with one or more blanks", explanation: missingProfile.explanation, detailPanelType: "missing", packageAvailability: "all" },
+    { id: "missingCells", title: "Missing cells", value: missingProfile.missingCells, subtitle: `${missingProfile.missingPercent}% of cells`, explanation: missingProfile.explanation, detailPanelType: "missing", packageAvailability: "all" },
+    { id: "fieldsWithBlanks", title: "Fields with blanks", value: missingProfile.fieldsWithBlanks, subtitle: "Columns needing review", explanation: "These fields contain at least one blank or coded missing value.", detailPanelType: "missing", packageAvailability: "all" },
+    { id: "duplicates", title: "Exact duplicates", value: duplicateProfile.exactDuplicateRows, subtitle: `${duplicateProfile.duplicatePercent}% duplicate rate`, explanation: "Exact duplicates use normalized full-row signatures.", detailPanelType: "duplicates", packageAvailability: "all" },
+    { id: "qualityScore", title: "Quality score", value: qualityProfile.overallScore, subtitle: `Grade ${qualityProfile.grade}`, explanation: qualityProfile.explanation, detailPanelType: "quality", packageAvailability: "all" },
+  ];
+  if (dateSummary.length) kpis.push({ id: "dateRange", title: "Date range", value: `${formatStudioDate(dateSummary[0].start)} - ${formatStudioDate(dateSummary[0].end)}`, subtitle: studioDisplayName({ label_map: profile.labelMap || {} }, dateSummary[0].column), explanation: "Date fields are grouped into monthly, quarterly, or yearly trends.", detailPanelType: "date", packageAvailability: "management+" });
+  const orgField = fieldProfiles.find((field) => ["organization", "program"].includes(field.role));
+  if (orgField) kpis.push({ id: "topOrganization", title: "Top organization", value: orgField.topValues[0]?.value || "Not detected", subtitle: orgField.displayLabel, explanation: "ProgramMetrics found an organization or program field suitable for comparisons.", detailPanelType: "columns", packageAvailability: "management+" });
+  const scoreField = Object.keys(numericSummary || {}).find((field) => /score|progress|age|duration|amount|total/i.test(field));
+  if (scoreField) kpis.push({ id: "numericAverage", title: "Average measure", value: Math.round((numericSummary[scoreField].mean || 0) * 10) / 10, subtitle: scoreField, explanation: "Numeric fields receive descriptive statistics, distribution checks, and outlier review.", detailPanelType: "stats", packageAvailability: "analytics+" });
+  return kpis;
+}
+
+function buildRecommendedVisuals(profile, fieldProfiles, dateSummary, categorySummary, numericSummary, missingProfile, qualityProfile, duplicateProfile, selectedPackage, selectedLevel) {
+  const visuals = [];
+  if (dateSummary.length) {
+    const primary = dateSummary[0];
+    visuals.push({ id: "records-over-time", title: "Records by time period", description: "Date values are grouped by period instead of one bar per unique date.", type: "line", fieldNames: [primary.column], priority: 95, tab: "visuals", packageMinimum: "management-dashboard", levelMinimum: "essential", chartConfig: { chartType: "line", xField: primary.bucketMode, yField: "count", data: Object.entries(primary.buckets).sort(([a], [b]) => a.localeCompare(b)).map(([period, count]) => ({ period, count })), options: { xAxisLabel: primary.bucketMode, yAxisLabel: "Records", tooltip: true, legend: false } }, insight: `${studioDisplayName({ label_map: profile.labelMap || {} }, primary.column)} supports trend analysis by ${primary.bucketMode}.` });
+  }
+  const chartableCategories = Object.entries(categorySummary || {}).filter(([field]) => !fieldProfiles.find((profileItem) => profileItem.fieldName === field && ["id", "email", "phone"].includes(profileItem.type))).slice(0, 4);
+  chartableCategories.forEach(([field, counts], index) => {
+    const entries = Object.entries(counts).slice(0, 10).map(([category, count]) => ({ category, count }));
+    visuals.push({ id: `top-category-${index}`, title: `Top ${studioDisplayName({ label_map: profile.labelMap || {} }, field)}`, description: "Top categories are limited and the remainder is grouped as Other.", type: index === 0 ? "horizontalBar" : "bar", fieldNames: [field], priority: 85 - index, tab: "visuals", packageMinimum: "management-dashboard", levelMinimum: "essential", chartConfig: { chartType: "horizontalBar", xField: "count", yField: "category", data: entries, options: { tooltip: true, legend: false } }, insight: entries[0] ? `${entries[0].category} is the most common value for ${studioDisplayName({ label_map: profile.labelMap || {} }, field)}.` : "No category values found." });
+  });
+  const numericEntries = Object.entries(numericSummary || {}).slice(0, 3);
+  numericEntries.forEach(([field, stats], index) => {
+    visuals.push({ id: `numeric-distribution-${index}`, title: `${studioDisplayName({ label_map: profile.labelMap || {} }, field)} distribution`, description: "Numeric fields receive histogram and outlier checks.", type: "histogram", fieldNames: [field], priority: 75 - index, tab: "stats", packageMinimum: "analytics", levelMinimum: "professional", chartConfig: { chartType: "histogram", xField: "bin", yField: "count", data: stats.histogram || [], options: { tooltip: true, legend: false } }, insight: `${stats.outlierCount || 0} possible outliers were detected in ${studioDisplayName({ label_map: profile.labelMap || {} }, field)}.` });
+  });
+  visuals.push({ id: "missing-fields", title: "Top missing fields", description: "Shows where blanks or coded missing values are concentrated.", type: "horizontalBar", fieldNames: missingProfile.topMissingFieldsByCount.map((item) => item.fieldName), priority: 92, tab: "missing", packageMinimum: "data-clean", levelMinimum: "essential", chartConfig: { chartType: "horizontalBar", xField: "missingCells", yField: "field", data: missingProfile.topMissingFieldsByCount.slice(0, 10).map((item) => ({ field: item.displayLabel, missingCells: item.missingCount })) }, insight: missingProfile.topMissingFieldsByCount[0] ? `${missingProfile.topMissingFieldsByCount[0].displayLabel} has the most missing cells.` : "No missing fields were found." });
+  visuals.push({ id: "quality-breakdown", title: "Quality score breakdown", description: "Explains how the overall quality score was calculated.", type: "gauge", fieldNames: [], priority: 90, tab: "quality", packageMinimum: "data-clean", levelMinimum: "essential", chartConfig: { chartType: "bar", data: Object.entries(qualityProfile.components).map(([component, score]) => ({ component, score })) }, insight: qualityProfile.explanation });
+  if (duplicateProfile.exactDuplicateRows || selectedPackage === "data-clean") visuals.push({ id: "duplicate-review", title: "Duplicate review", description: "Exact duplicate rows use normalized full-row signatures.", type: "table", fieldNames: duplicateProfile.likelyDuplicateRiskFields, priority: 65, tab: "quality", packageMinimum: "data-clean", levelMinimum: "essential", chartConfig: { chartType: "table", data: duplicateProfile.duplicateGroups.map((rows, index) => ({ group: index + 1, rows: rows.join(", ") })) }, insight: duplicateProfile.exactDuplicateRows ? `${duplicateProfile.exactDuplicateRows} exact duplicate rows were detected.` : "No exact duplicate rows were detected." });
+  return visuals.sort((a, b) => b.priority - a.priority);
+}
+
+function buildRecommendedInsights(profile, datasetType, missingProfile, duplicateProfile, qualityProfile, dateSummary, fieldProfiles) {
+  const insights = [
+    { id: "shape", title: "Dataset size", text: `This dataset contains ${profile.totalRecords} records across ${profile.totalFields} fields.`, severity: "info", relatedFields: [], recommendedAction: "Use this as the baseline for dashboard and export planning.", packageAvailability: "all" },
+    { id: "type", title: "Detected dataset type", text: `This file appears to be ${datasetType.primaryType} data with ${datasetType.confidence}% confidence.`, severity: "info", relatedFields: [], recommendedAction: "Review the recommended visuals before export.", packageAvailability: "all" },
+    { id: "quality", title: "Quality score", text: qualityProfile.explanation, severity: qualityProfile.overallScore >= 80 ? "opportunity" : "warning", relatedFields: [], recommendedAction: qualityProfile.recommendations[0] || "Review quality details.", packageAvailability: "all" },
+  ];
+  if (dateSummary.length) insights.push({ id: "date", title: "Trend-ready date field", text: `${studioDisplayName({ label_map: profile.labelMap || {} }, dateSummary[0].column)} ranges from ${formatStudioDate(dateSummary[0].start)} to ${formatStudioDate(dateSummary[0].end)}. Date fields should be visualized as grouped trends, not one bar per unique date.`, severity: "opportunity", relatedFields: [dateSummary[0].column], recommendedAction: "Use monthly or quarterly trend views.", packageAvailability: "management+" });
+  if (missingProfile.missingCells) insights.push({ id: "missing", title: "Missing value concentration", text: `${missingProfile.missingCells} missing cells were detected across ${missingProfile.missingRows} rows. ${missingProfile.topMissingFieldsByCount[0]?.displayLabel || "The top missing fields"} should be reviewed before final reporting.`, severity: missingProfile.missingPercent > 25 ? "warning" : "opportunity", relatedFields: missingProfile.topMissingFieldsByCount.slice(0, 3).map((field) => field.fieldName), recommendedAction: "Review whether these fields are optional, required, or should be filtered.", packageAvailability: "all" });
+  if (!duplicateProfile.exactDuplicateRows) insights.push({ id: "duplicates", title: "Duplicate check", text: "No exact duplicate rows were detected.", severity: "info", relatedFields: duplicateProfile.likelyDuplicateRiskFields, recommendedAction: "Use likely duplicate risk fields for deeper fuzzy matching if needed.", packageAvailability: "data+" });
+  const org = fieldProfiles.find((field) => ["organization", "program"].includes(field.role));
+  if (org?.topValues?.length) insights.push({ id: "organization", title: "Comparison field", text: `${org.displayLabel} can support comparison visuals. The most common value is ${org.topValues[0].value}.`, severity: "opportunity", relatedFields: [org.fieldName], recommendedAction: "Use the Compare by dropdown to test organization or program views.", packageAvailability: "management+" });
+  return insights;
+}
+
+function buildRecommendedDeliverables(selectedPackage, selectedLevel, plan) {
+  const currentPlan = getStudioPlanFromSelection(selectedPackage, selectedLevel);
+  const exports = currentPlan.exports || [];
+  return Object.entries(studioExportCatalog).map(([format, name]) => ({
+    id: format,
+    name,
+    description: `${name} generated from the analytics recommendation plan.`,
+    format,
+    included: exports.includes(format),
+    locked: !exports.includes(format),
+    previewAvailable: true,
+    exportAvailable: exports.includes(format) && !shouldWatermark(currentPlan, getUnlockedStudioAccess()),
+  }));
+}
+
+function generateAnalyticsPlan({ rawRows, setupConfig = {}, selectedPackage = activeStudioPackageId, selectedLevel = activeStudioLevelId, brandingConfig = {} }) {
+  const rows = normalizeRows(rawRows || []);
+  const columns = rows.length ? Object.keys(rows[0]) : [];
+  const labelMap = setupConfig.labelMap || {};
+  const visualColumns = columns.filter((column) => !(setupConfig.datePartColumns || []).includes(column));
+  const missingCodes = defaultStudioMissingCodes.concat(setupConfig.missingValueCodes || []).filter((code, index, list) => list.indexOf(code) === index);
+  const missingProfileBase = calculateMissingProfile(rows, columns, missingCodes);
+  const numericSummary = numericColumnSummary(rows, visualColumns);
+  const dateSummary = summarizeDateColumns(rows, visualColumns);
+  const categorySummary = topCategorySummary(rows.slice(0, 1000), visualColumns.filter((column) => !isStudioBadVisualField(column, labelMap[column] || column)), Object.keys(numericSummary), dateSummary);
+  const fieldProfiles = buildAnalyticsFieldProfiles(rows, columns, labelMap, numericSummary, dateSummary, categorySummary, missingProfileBase);
+  const fieldType = (type) => fieldProfiles.filter((field) => field.type === type).map((field) => field.fieldName);
+  const roleFields = (role) => fieldProfiles.filter((field) => field.role === role).map((field) => field.fieldName);
+  const missingProfile = {
+    missingRows: missingProfileBase.missingRows,
+    missingCells: missingProfileBase.missingCells,
+    fieldsWithBlanks: missingProfileBase.missingColumns,
+    missingPercent: missingProfileBase.missingPercent,
+    topMissingFieldsByCount: missingProfileBase.entries.slice(0, 12).map(([fieldName, missingCount]) => ({ fieldName, displayLabel: labelMap[fieldName] || fieldName, missingCount })),
+    topMissingFieldsByPercent: missingProfileBase.entries.map(([fieldName, missingCount]) => ({ fieldName, displayLabel: labelMap[fieldName] || fieldName, missingPercent: rows.length ? Math.round((Number(missingCount) / rows.length) * 1000) / 10 : 0 })).sort((a, b) => b.missingPercent - a.missingPercent).slice(0, 12),
+    sampleRowsWithMissing: missingProfileBase.sampleRows,
+    missingValueCodesUsed: missingCodes,
+    explanation: "Missing rows are records with at least one missing value. Missing cells are every blank or coded missing field in the file. One row can contain many missing cells.",
+  };
+  const duplicateProfile = buildDuplicateProfile(rows, fieldProfiles);
+  const qualityProfile = buildQualityProfile(rows, columns, missingProfileBase, duplicateProfile, dateSummary, numericSummary, categorySummary);
+  const datasetProfile = {
+    totalRecords: rows.length,
+    totalFields: columns.length,
+    totalCells: rows.length * columns.length,
+    detectedDateFields: (dateSummary || []).map((item) => item.column),
+    detectedNumericFields: Object.keys(numericSummary),
+    detectedCategoricalFields: Object.keys(categorySummary),
+    detectedTextFields: fieldProfiles.filter((field) => ["text", "unknown"].includes(field.type)).map((field) => field.fieldName),
+    possibleIdFields: fieldType("id"),
+    possibleNameFields: fieldProfiles.filter((field) => /name/i.test(`${field.fieldName} ${field.displayLabel}`)).map((field) => field.fieldName),
+    possibleEmailFields: fieldType("email"),
+    possibleLocationFields: roleFields("location"),
+    possibleOutcomeFields: roleFields("status"),
+    possibleStatusFields: roleFields("status"),
+    possibleProgramFields: roleFields("program"),
+    possibleOrganizationFields: roleFields("organization"),
+    labelMap,
+  };
+  const datasetType = inferDatasetTypeFromProfiles(fieldProfiles, setupConfig);
+  const recommendedKpis = buildRecommendedKpis(datasetProfile, missingProfile, duplicateProfile, qualityProfile, dateSummary, fieldProfiles, numericSummary);
+  const recommendedVisuals = buildRecommendedVisuals(datasetProfile, fieldProfiles, dateSummary, categorySummary, numericSummary, missingProfile, qualityProfile, duplicateProfile, selectedPackage, selectedLevel);
+  const recommendedInsights = buildRecommendedInsights(datasetProfile, datasetType, missingProfile, duplicateProfile, qualityProfile, dateSummary, fieldProfiles);
+  return {
+    datasetProfile,
+    fieldProfiles,
+    datasetType,
+    qualityProfile,
+    missingProfile,
+    duplicateProfile,
+    descriptiveStats: { numeric: numericSummary, categorical: categorySummary, dates: dateSummary },
+    recommendedKpis,
+    recommendedVisuals,
+    recommendedInsights,
+    recommendedDeliverables: buildRecommendedDeliverables(selectedPackage, selectedLevel),
+    warnings: fieldProfiles.flatMap((field) => field.warnings.map((warning) => `${field.displayLabel}: ${warning}`)).slice(0, 20),
+    assumptions: ["Uploaded files are processed only in the current browser session.", "Data Setup rows and omitted metadata rows are excluded from analysis.", "Exact duplicate detection uses normalized full-row signatures; fuzzy duplicate detection is not claimed."],
+    brandingConfig,
+  };
+}
+function renderRecommendedVisualTile(visual, analysis, locked, pct) {
+  const tile = document.createElement("section");
+  tile.className = `dashboard-preview-panel dashboard-tile recommended-visual-tile${locked && visual.packageMinimum !== "data-clean" ? " locked-preview-panel" : ""}`;
+  tile.dataset.dashboardTab = visual.tab || "visuals";
+  const config = visual.chartConfig || {};
+  const data = Array.isArray(config.data) ? config.data.slice(0, locked ? 6 : 12) : [];
+  let body = "";
+  if (!data.length && visual.type !== "gauge") {
+    body = "<p>ProgramMetrics did not find enough usable data for this visual.</p>";
+  } else if (["horizontalBar", "bar"].includes(visual.type)) {
+    const valueKey = config.xField || "count";
+    const labelKey = config.yField || "category";
+    const max = Math.max(...data.map((row) => Number(row[valueKey]) || 0), 1);
+    body = data.map((row) => `<div class="dashboard-bar-row"><span>${escapeHtml(row[labelKey] ?? row.category ?? row.field ?? "Value")}</span><div><i style="width:${pct(((Number(row[valueKey]) || 0) / max) * 100)}"></i></div><b>${escapeHtml(row[valueKey] ?? 0)}</b></div>`).join("");
+  } else if (["line", "histogram"].includes(visual.type)) {
+    const valueKey = config.yField || "count";
+    const labelKey = config.xField || "period";
+    const max = Math.max(...data.map((row) => Number(row[valueKey]) || 0), 1);
+    body = `<div class="dashboard-trend-bars ${visual.type === "histogram" ? "histogram-bars" : ""}">${data.map((row) => `<div><i style="height:${pct(((Number(row[valueKey]) || 0) / max) * 100)}"></i><span>${escapeHtml(String(row[labelKey] ?? row.period ?? row.label ?? "").slice(0, 10))}</span><b>${escapeHtml(row[valueKey] ?? 0)}</b></div>`).join("")}</div>`;
+  } else if (visual.type === "gauge") {
+    const score = Number(analysis.quality_profile?.overallScore || analysis.quality_score || 0);
+    const bars = data.map((row) => `<div class="dashboard-bar-row quality-bar"><span>${escapeHtml(row.component)}</span><div><i style="width:${pct(row.score)}"></i></div><b>${escapeHtml(row.score)}</b></div>`).join("");
+    body = `<div class="dashboard-ring" style="--score:${pct(score)}"><strong>${escapeHtml(score)}</strong><span>Score</span></div>${bars}`;
+  } else if (visual.type === "table") {
+    body = data.length ? `<div class="dashboard-table-wrap"><table><thead><tr>${Object.keys(data[0]).map((key) => `<th>${escapeHtml(key)}</th>`).join("")}</tr></thead><tbody>${data.map((row) => `<tr>${Object.keys(row).map((key) => `<td>${escapeHtml(row[key])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : "<p>No rows require review for this table.</p>";
+  } else {
+    body = `<p>${escapeHtml(visual.insight || visual.description || "Recommended analysis preview.")}</p>`;
+  }
+  tile.innerHTML = `<h4>${escapeHtml(visual.title)}</h4><p class="dashboard-chart-label">${escapeHtml(visual.description || "Recommended by ProgramMetrics")}</p>${body}<p class="recommended-visual-insight">${escapeHtml(visual.insight || "")}</p>`;
+  return tile;
+}
 function buildInsightCards(analysis) {
   const dateSummary = analysis.date_summary || [];
   const missing = analysis.missing_profile || {};
@@ -1918,6 +2222,13 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind, setupMetadata = {})
   const outlierScore = numericColumns.length ? numericValidityScore : 92;
   const qualityScore = Math.round((completenessScore * 0.3) + (duplicateScore * 0.16) + (dateConsistencyScore * 0.12) + (requiredCoverageScore * 0.14) + (formattingScore * 0.1) + (numericValidityScore * 0.09) + (categoricalUsabilityScore * 0.05) + (outlierScore * 0.04));
   const qualityBreakdown = { completenessScore, duplicateScore, dateConsistencyScore, requiredCoverageScore, formattingScore, numericValidityScore, categoricalUsabilityScore, outlierScore };
+  const analyticsPlan = generateAnalyticsPlan({
+    rawRows: normalizedRows,
+    setupConfig: Object.assign({}, setupMetadata, setupMetadata.setup || {}, { missingValueCodes: activeStudioMissingCodes, labelMap }),
+    selectedPackage: activeStudioPackageId,
+    selectedLevel: activeStudioLevelId,
+    brandingConfig: getBrandingSettings(),
+  });
   const previewLimit = getPreviewLimitRows(unlocked, preview);
   const locked = shouldWatermark(preview, unlocked);
   const missingEntries = missingProfile.entries;
@@ -1961,20 +2272,31 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind, setupMetadata = {})
     numeric_summary: numericSummary,
     category_summary: categorySummary,
     date_summary: dateSummary,
-    quality_breakdown: qualityBreakdown,
+    quality_breakdown: analyticsPlan.qualityProfile.components || qualityBreakdown,
+    analytics_plan: analyticsPlan,
+    dataset_profile: analyticsPlan.datasetProfile,
+    field_profiles: analyticsPlan.fieldProfiles,
+    dataset_type: analyticsPlan.datasetType,
+    quality_profile: analyticsPlan.qualityProfile,
+    duplicate_profile: analyticsPlan.duplicateProfile,
+    descriptive_stats: analyticsPlan.descriptiveStats,
+    recommended_kpis: analyticsPlan.recommendedKpis,
+    recommended_visuals: analyticsPlan.recommendedVisuals,
+    recommended_insights: analyticsPlan.recommendedInsights,
+    recommended_deliverables: analyticsPlan.recommendedDeliverables,
     top_missing_columns: missingEntries.slice(0, 8),
     preview_rows: normalizedRows.slice(0, previewLimit),
     chart_rows: normalizedRows.slice(0, locked ? Math.min(250, normalizedRows.length) : Math.min(1000, normalizedRows.length)),
     preview_limit: previewLimit,
-    quality_score: canPreviewFeature("missingReview", preview) ? qualityScore : "Preview locked",
+    quality_score: canPreviewFeature("missingReview", preview) ? analyticsPlan.qualityProfile.overallScore : "Preview locked",
     cleaning_steps: cleaningSteps,
     package_label: preview.label,
     unlocked_label: unlocked.label,
     preview_label: preview.label,
     watermark: locked,
     locked,
-    answer: narrative,
-    insights: buildInsightCards({ rows: normalizedRows.length, columns: columns.length, duplicate_rows: duplicates, missing_profile: missingProfile, date_summary: dateSummary, quality_score: qualityScore }),
+    answer: (analyticsPlan.recommendedInsights || []).map((insight) => insight.text).slice(0, 4).join(" ") || narrative,
+    insights: (analyticsPlan.recommendedInsights || []).map((insight) => insight.text).slice(0, 6),
   };
 }
 
@@ -2411,7 +2733,8 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   const exportPanel = document.createElement("section");
   exportPanel.className = `dashboard-preview-panel dashboard-tile-wide${locked ? " locked-preview-panel" : ""}`;
   exportPanel.dataset.dashboardTab = "exports";
-  exportPanel.innerHTML = `<h4>Exports</h4><p>${escapeHtml(locked ? "Your file preview is limited. Upgrade to export the full analytics package." : "Choose a professional output package generated from this uploaded file.")}</p>${exportControls}`;
+  const deliverableItems = (analysis.recommended_deliverables || []).filter((item) => item.included || item.previewAvailable).slice(0, locked ? 8 : 14).map((item) => `<li><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.included ? (item.exportAvailable ? "Export available" : "Included after unlock") : "Preview only")}</span></li>`).join("");
+  exportPanel.innerHTML = `<h4>Exports</h4><p>${escapeHtml(locked ? "Your file preview is limited. Upgrade to export the full analytics package." : "Choose a professional output package generated from this uploaded file.")}</p><ul class="recommended-deliverables">${deliverableItems}</ul>${exportControls}`;
   canvas.appendChild(exportPanel);
   setupStudioExportMenus(exportPanel);
 
@@ -2520,6 +2843,13 @@ function buildGeneratedExampleAnalysis() {
   if (access >= 6) tierSteps.push("Added recurring report layout preview");
   if (access >= 7) tierSteps.push("Mapped workflow rules and integration points");
   if (access >= 8) tierSteps.push("Added advanced analytics and automation signals");
+  const analyticsPlan = generateAnalyticsPlan({
+    rawRows: rows,
+    setupConfig: { labelMap: Object.fromEntries(columns.map((column) => [column, column])), missingValueCodes: activeStudioMissingCodes },
+    selectedPackage: activeStudioPackageId,
+    selectedLevel: activeStudioLevelId,
+    brandingConfig: getBrandingSettings(),
+  });
   return {
     is_example: true,
     watermark: true,
@@ -2532,7 +2862,18 @@ function buildGeneratedExampleAnalysis() {
     numeric_summary: access >= 3 ? numericSummary : {},
     category_summary: categorySummary,
     date_summary: dateSummary,
-    quality_breakdown: qualityBreakdown,
+    quality_breakdown: analyticsPlan.qualityProfile.components || qualityBreakdown,
+    analytics_plan: analyticsPlan,
+    dataset_profile: analyticsPlan.datasetProfile,
+    field_profiles: analyticsPlan.fieldProfiles,
+    dataset_type: analyticsPlan.datasetType,
+    quality_profile: analyticsPlan.qualityProfile,
+    duplicate_profile: analyticsPlan.duplicateProfile,
+    descriptive_stats: analyticsPlan.descriptiveStats,
+    recommended_kpis: analyticsPlan.recommendedKpis,
+    recommended_visuals: analyticsPlan.recommendedVisuals,
+    recommended_insights: analyticsPlan.recommendedInsights,
+    recommended_deliverables: analyticsPlan.recommendedDeliverables,
     top_missing_columns: missingEntries.slice(0, 8),
     preview_rows: rows,
     cleaning_steps: baseSteps.concat(tierSteps),
