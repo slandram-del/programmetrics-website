@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   color-scheme: light;
   --navy: #071827;
   --navy-2: #0f2740;
@@ -4153,3 +4153,416 @@ input.is-locked {
     flex-basis: 100%;
   }
 }
+/* Studio viewport fit and sharper BI workspace */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.site-header {
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+}
+
+.site-header nav {
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+.studio-workspace,
+.studio-workspace-grid,
+.studio-control-panel,
+.studio-output-panel,
+.dashboard-canvas,
+.studio-preview-shell,
+.feature-access-panel,
+.feature-access-grid,
+.dashboard-visual-grid,
+.dashboard-visual-grid-wide,
+.dashboard-kpi-grid,
+.dashboard-preview-panel,
+.dashboard-control-strip {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.studio-workspace {
+  overflow: clip;
+  padding-inline: clamp(12px, 2.5vw, 32px);
+}
+
+.studio-workspace-grid {
+  width: min(100%, 1640px);
+  margin-inline: auto;
+  overflow: visible;
+}
+
+.feature-access-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)) !important;
+  overflow: visible;
+}
+
+.feature-access-item {
+  min-width: 0;
+  min-height: 112px;
+  border-radius: 10px;
+}
+
+.feature-access-item strong,
+.feature-access-item p,
+.feature-status-badge {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-canvas {
+  width: 100%;
+  overflow: clip;
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(255, 255, 255, 0.98)),
+    radial-gradient(circle at top left, rgba(20, 184, 166, 0.12), transparent 38%);
+  border: 1px solid #dbe4ef;
+}
+
+.dashboard-preview-header {
+  min-height: 132px;
+  background: linear-gradient(135deg, #071827 0%, #0f2740 52%, #1d4ed8 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 18px 40px rgba(15, 23, 42, 0.16);
+}
+
+.dashboard-tabs {
+  width: 100%;
+  overflow: visible !important;
+}
+
+.dashboard-tabs button {
+  flex: 1 1 132px;
+  min-width: 0;
+  padding-inline: 8px;
+  font-size: 0.86rem;
+}
+
+.dashboard-kpi-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 185px), 1fr)) !important;
+}
+
+.dashboard-kpi-card.is-clickable {
+  min-width: 0;
+  min-height: 104px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #d9e5f4;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+}
+
+.dashboard-kpi-card.is-clickable strong {
+  color: #1d4ed8;
+  letter-spacing: 0;
+}
+
+.dashboard-control-strip {
+  grid-template-columns: minmax(180px, 0.9fr) repeat(auto-fit, minmax(165px, 1fr)) !important;
+  align-items: end;
+  background: #0b1728;
+  color: #e5f3ff;
+  border-color: #1e3a5f;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16);
+}
+
+.dashboard-control-strip strong {
+  color: #ffffff;
+}
+
+.dashboard-control-strip span {
+  color: #bfdbfe;
+}
+
+.dashboard-control-strip select {
+  min-width: 0;
+  background: #101f33;
+  border-color: #2b4a70;
+  color: #f8fafc;
+  outline: none;
+}
+
+.dashboard-control-strip select:focus {
+  border-color: #5eead4;
+  box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.2);
+}
+
+.dashboard-visual-grid-wide {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)) !important;
+}
+
+.dashboard-preview-panel {
+  overflow: hidden;
+  border-radius: 16px;
+  border-color: #d9e5f4;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.07);
+}
+
+.dashboard-preview-panel h4 {
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.dashboard-bar-row {
+  grid-template-columns: minmax(0, 1fr) minmax(110px, 0.9fr) auto;
+  gap: 12px;
+}
+
+.dashboard-bar-row span,
+.dashboard-chart-label,
+.dashboard-donut-list b,
+.dashboard-donut-list em {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashboard-bar-row span,
+.dashboard-donut-list b {
+  white-space: nowrap;
+}
+
+.dashboard-bar-row div {
+  min-width: 0;
+}
+
+.dashboard-bar-row div i {
+  background: linear-gradient(90deg, #14b8a6 0%, #22d3ee 52%, #2563eb 100%);
+}
+
+.dashboard-trend-bars {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dashboard-trend-bars div {
+  min-width: 0;
+}
+
+.dashboard-donut-list span {
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+}
+
+.dashboard-donut-list i {
+  width: 38px;
+  height: 38px;
+  background: conic-gradient(#2563eb var(--share), #14b8a6 var(--share), #dbe4ef 0);
+  box-shadow: inset 0 0 0 8px #fff, 0 0 0 1px #dbe4ef;
+}
+
+.survey-dashboard-tile,
+.advanced-analytics-panel {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-left: 6px solid #14b8a6;
+}
+
+.survey-kpi-row,
+.advanced-readiness-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)) !important;
+}
+
+.advanced-readiness-grid div,
+.survey-kpi-row div {
+  min-width: 0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #eef6ff 100%);
+}
+
+.studio-fullscreen-preview,
+.studio-fullscreen-body,
+.studio-fullscreen-body .studio-preview-shell {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+@media (max-width: 900px) {
+  .site-header {
+    align-items: flex-start;
+  }
+
+  .site-header nav {
+    justify-content: flex-start;
+  }
+
+  .dashboard-control-strip {
+    grid-template-columns: 1fr !important;
+  }
+}
+/* Studio advanced analytics matrix and ranking visuals */
+.analytics-matrix {
+  width: 100%;
+  overflow: auto;
+  border: 1px solid #dbe4ef;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.analytics-matrix table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+}
+
+.analytics-matrix th,
+.analytics-matrix td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5edf7;
+  text-align: right;
+  font-size: 0.86rem;
+}
+
+.analytics-matrix th:first-child,
+.analytics-matrix td:first-child {
+  text-align: left;
+}
+
+.analytics-matrix thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #0b1728;
+  color: #e5f3ff;
+}
+
+.analytics-matrix tbody th {
+  max-width: 220px;
+  overflow: hidden;
+  color: var(--navy);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analytics-matrix td {
+  color: #0f766e;
+  font-weight: 900;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.analytics-rank-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.analytics-rank-list span {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #dbe4ef;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.analytics-rank-list b {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  color: #ecfeff;
+  background: linear-gradient(135deg, #0f766e, #2563eb);
+  font-size: 0.8rem;
+}
+
+.analytics-rank-list em {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--navy);
+  font-style: normal;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analytics-rank-list strong {
+  color: #2563eb;
+  font-size: 1rem;
+}
+
+.analytics-matrix-panel {
+  grid-column: 1 / -1;
+}
+/* Final Studio viewport guardrails */
+body:has(.studio-workspace) {
+  overflow-x: clip;
+}
+
+body:has(.studio-workspace) .site-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+}
+
+body:has(.studio-workspace) .brand {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+body:has(.studio-workspace) .site-header nav {
+  display: flex;
+  flex: 1 1 560px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
+  row-gap: 8px;
+}
+
+body:has(.studio-workspace) .site-header nav a {
+  white-space: nowrap;
+}
+
+body:has(.studio-workspace) .studio-workspace {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: clip;
+}
+
+body:has(.studio-workspace) .studio-control-panel,
+body:has(.studio-workspace) .studio-output-panel,
+body:has(.studio-workspace) .dashboard-canvas {
+  overflow-x: clip;
+}
+
+body:has(.studio-workspace) .dashboard-visual-grid-wide,
+body:has(.studio-workspace) .dashboard-kpi-grid,
+body:has(.studio-workspace) .feature-access-grid,
+body:has(.studio-workspace) .advanced-readiness-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)) !important;
+}
+
+body:has(.studio-workspace) .studio-feature-card,
+body:has(.studio-workspace) .dashboard-preview-panel,
+body:has(.studio-workspace) .dashboard-kpi-card {
+  contain: layout paint;
+}
+
+body:has(.studio-workspace) .dashboard-chart-row,
+body:has(.studio-workspace) .donut-list-item,
+body:has(.studio-workspace) .horizontal-bar-row {
+  min-width: 0;
+}
+
+body:has(.studio-workspace) .dashboard-preview-panel h4,
+body:has(.studio-workspace) .dashboard-chart-label,
+body:has(.studio-workspace) .donut-list-item span,
+body:has(.studio-workspace) .horizontal-bar-row span,
+body:has(.studio-workspace) .studio-feature-card h4,
+body:has(.studio-workspace) .studio-feature-card p {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 980px) {
+  body:has(.studio-workspace) .site-header nav {
+    justify-content: flex-start;
+  }
+}
+
