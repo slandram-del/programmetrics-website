@@ -1257,7 +1257,35 @@ function rowsFromDelimitedText(text) {
 
 
 function parseDelimitedMatrix(text, delimiter = ",") {
-  return text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim().length).map((line) => delimiter === "\t" ? line.split("\t").map((value) => value.trim()) : parseCsvLine(line));
+  const source = String(text || "").replace(/^\uFEFF/, "");
+  const rows = [];
+  let row = [];
+  let current = "";
+  let quoted = false;
+  for (let index = 0; index < source.length; index += 1) {
+    const char = source[index];
+    const next = source[index + 1];
+    if (char === '"' && quoted && next === '"') {
+      current += '"';
+      index += 1;
+    } else if (char === '"') {
+      quoted = !quoted;
+    } else if (char === delimiter && !quoted) {
+      row.push(current.trim());
+      current = "";
+    } else if ((char === "\n" || char === "\r") && !quoted) {
+      if (char === "\r" && next === "\n") index += 1;
+      row.push(current.trim());
+      if (row.some((value) => String(value || "").trim().length)) rows.push(row);
+      row = [];
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  row.push(current.trim());
+  if (row.some((value) => String(value || "").trim().length)) rows.push(row);
+  return rows;
 }
 
 function cleanStudioFieldLabel(value, fallback) {
