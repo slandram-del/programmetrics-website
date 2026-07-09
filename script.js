@@ -1,4 +1,4 @@
-﻿const serviceDetails = {
+const serviceDetails = {
   dashboards: {
     title: "Custom built dashboards",
     text:
@@ -2782,6 +2782,8 @@ function setupStudioPreviewRefresh() {
     select?.addEventListener("change", refreshUploadedPreview);
   });
 }
+setupFileConverter("file-converter-input", "converter-result", "file-output-language", "file-output-format", "file-convert-button", "file-analyze-button", "file-insight-panel");
+setupFileConverter("studio-file-converter-input", "studio-converter-result", "studio-output-language", "studio-output-format", "studio-convert-button", "studio-analyze-button", "studio-insight-panel");
 setupStudioPackageAccess();
 setupStudioFeatureCards();
 setupStudioBrandingControls();
@@ -3059,18 +3061,3 @@ function setupCheckoutFlow() {
 }
 
 setupCheckoutFlow();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
