@@ -1685,7 +1685,7 @@ function buildDashboardNarrative({ rows, columns, missingEntries, missingTotal, 
   const parts = [`This file contains ${rows.length} records across ${columns.length} fields.`];
   if (recipe === "surveyReferral") parts.push("The data appears to track survey, referral, denial, program, or participant responses, so ProgramMetrics is prioritizing response counts, organization comparisons, referral reasons, date trends, and missing response quality checks.");
   if (dateSummary.length) {
-    const primary = dateSummary.find((item) => item.column === dashboardConfig.trendField) || dateSummary[0];
+    const primary = dateSummary[0];
     parts.push(`${primary.column} ranges from ${formatStudioDate(primary.start)} to ${formatStudioDate(primary.end)}, so a trend view is more useful than individual date bars.`);
   }
   const firstCategory = Object.entries(categorySummary || {})[0];
@@ -2031,6 +2031,12 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   const unlocked = getUnlockedStudioAccess();
   const preview = getStudioAccess();
   const feature = getSelectedStudioFeature();
+  const dashboardConfig = getStudioDashboardConfig(analysis);
+  const chartRows = analysis.chart_rows || analysis.preview_rows || [];
+  const categoryFieldsForControls = Object.keys(analysis.category_summary || {}).filter((field) => !isStudioBadVisualField(field, studioDisplayName(analysis, field)));
+  const numericFieldsForControls = Object.keys(analysis.numeric_summary || {}).filter((field) => !isStudioBadVisualField(field, studioDisplayName(analysis, field)));
+  const dateFieldsForControls = (analysis.date_summary || []).map((item) => item.column);
+  const missingFieldsForControls = Object.keys(analysis.missing_profile?.byColumn || {}).filter((field) => !isStudioBadVisualField(field, studioDisplayName(analysis, field)));
   const locked = shouldWatermark(preview, unlocked) || Boolean(analysis.watermark);
   const previewRows = analysis.preview_rows || [];
   const previewColumns = previewRows.length ? Object.keys(previewRows[0]).slice(0, 6) : [];
@@ -2125,7 +2131,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   const trendPanel = document.createElement("section");
   trendPanel.className = "dashboard-preview-panel dashboard-tile";
   if (dateSummary.length) {
-    const primary = dateSummary.find((item) => item.column === dashboardConfig.trendField) || dateSummary[0];
+    const primary = dateSummary[0];
     const entries = Object.entries(primary.buckets).sort(([a], [b]) => a.localeCompare(b)).slice(-12);
     const max = Math.max(...entries.map(([, count]) => Number(count)), 1);
     trendPanel.innerHTML = `<h4>Records by Start Month</h4><p class="dashboard-chart-label">${escapeHtml(studioDisplayName(analysis, primary.column))}</p><div class="dashboard-trend-bars">${entries.map(([label, count]) => `<div><i style="height:${pct((Number(count) / max) * 100)}"></i><span>${escapeHtml(label.slice(2))}</span><b>${escapeHtml(count)}</b></div>`).join("")}</div>`;
