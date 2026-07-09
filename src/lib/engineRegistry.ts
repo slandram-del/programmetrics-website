@@ -5,6 +5,7 @@ export type EngineKey =
   | "analyticsIntelligence"
   | "packageOrchestrator"
   | "chart"
+  | "deliverablesPlatform"
   | "deliverables"
   | "branding"
   | "workflow"
@@ -56,6 +57,15 @@ export const engineRegistry: Record<EngineKey, EngineDescriptor> = {
     serviceBoundary: "previewService",
     outputOnly: true,
     notes: "Converts recommendedVisuals into dashboard render models."
+  },
+  deliverablesPlatform: {
+    key: "deliverablesPlatform",
+    name: "Deliverables Platform",
+    layer: "engine",
+    protected: true,
+    serviceBoundary: "reportService",
+    outputOnly: true,
+    notes: "Assembles versioned professional report objects and previews from AnalyticsPlan and PackageManifest outputs. Do not expose report assembly rules."
   },
   deliverables: {
     key: "deliverables",

@@ -1,7 +1,7 @@
 # TODO
 
 ## Next 10 Priorities
-1. Connect static Studio package, deliverable, export, and preview cards directly to Package Orchestrator manifests.
+1. Connect static Studio Deliverables tab to `buildProfessionalDeliverablesOutput()` preview cards and preview windows.
 2. Add authentication, user accounts, and organization profiles.
 3. Add API layer for analytics-plan generation, report generation, workflow execution, and export packages.
 4. Add background processing for large files, scheduled reports, and recurring workflows.
@@ -14,6 +14,13 @@
 
 
 
+
+## Deliverables Platform Follow-Ups
+- Connect Studio Deliverables tab and Interactive Preview to deliverables platform preview cards.
+- Add tests for report template selection, reusable section assembly, locked preview limits, and version metadata.
+- Add export adapters that consume `ProfessionalReport` objects for HTML, PDF, DOCX, PPTX, PNG, XLSX, CSV, and ZIP.
+- Add persisted report metadata and version history for future enterprise audits.
+- Add branded cover-page and footer render adapters for native exporters.
 ## Package Orchestrator Follow-Ups
 - Add unit tests for output level inheritance, package rank comparisons, preview limits, and permission states.
 - Connect Studio package cards, Deliverables tab, export menu, and upgrade prompts directly to `buildPackageManifest()`.

@@ -115,6 +115,14 @@ The orchestrator returns a manifest for deliverables, report sections, dashboard
 
 ### Protected Package Logic
 Package definitions, output inheritance, permission decisions, upgrade rules, and deliverable availability are proprietary ProgramMetrics business logic. UI and future API consumers should receive manifest outputs only.
+
+## Professional Deliverables Platform
+The Deliverables Platform sits after the Package Orchestrator and before the Report Generator and Export Engine. It assembles versioned professional report objects from reusable templates and reusable sections. It does not calculate analytics; it consumes `AnalyticsPlan`, package manifests, and optional branding.
+
+The platform currently supports Executive Report, Management Report, Analytics Report, Data Quality Report, Technical Appendix, and Board Report templates. It produces preview cards, locked preview metadata, report preview models, HTML/text preview render outputs, and version metadata for future enterprise auditability.
+
+### Versioning System
+`src/lib/versioning/` records Analytics Engine, Analytics Intelligence, Package Orchestrator, Deliverables Platform, Branding, Report Generator, Export Engine, generated date, and ProgramMetrics versions for every generated report object.
 ## Current Architecture
 - `src/lib/services/` exposes application-service boundaries for analytics, previews, reports, branding, deliverables, workflows, and pricing.
 - `src/config/` centralizes packages, feature flags, export formats, templates, branding defaults, and application config.
@@ -122,7 +130,10 @@ Package definitions, output inheritance, permission decisions, upgrade rules, an
 - `src/lib/engineRegistry.ts` registers current and future engines.
 - `src/lib/platform/` exposes the analytics interface contract for services, UI, and future API callers.
 - `src/lib/analytics-engine/` is the protected source of truth for `generateAnalyticsPlan()`.
-- `src/lib/chart-engine/` converts `recommendedVisuals` into reusable render models through chart registry, chart selector, chart data builder, dashboard builder, and responsive chart layouts.`r`n- `src/lib/package-orchestrator/` returns package manifests for deliverables, sections, dashboards, exports, branding, industry context, previews, permissions, and checkout metadata.
+- `src/lib/chart-engine/` converts `recommendedVisuals` into reusable render models through chart registry, chart selector, chart data builder, dashboard builder, and responsive chart layouts.
+- `src/lib/package-orchestrator/` returns package manifests for deliverables, sections, dashboards, exports, branding, industry context, previews, permissions, and checkout metadata.
+- `src/lib/deliverables-platform/` assembles versioned professional report objects, preview cards, preview models, and reusable report sections from package manifests and analytics outputs.
+- `src/lib/versioning/` provides engine version metadata for reproducibility and enterprise auditing.
 - The current static Studio browser script mirrors the chart-engine behavior so uploaded/session files can render immediately without a bundler; a future build step should import the TypeScript engine directly.
 - Locked previews keep watermark and export-disable behavior while still rendering limited plan-driven previews.
 - Studio KPI cards now include an explainability layer that answers definition, calculation logic, dataset-specific interpretation, why it matters, recommended actions, related visuals, and package/export availability.
@@ -135,6 +146,7 @@ Package definitions, output inheritance, permission decisions, upgrade rules, an
 | Analytics Intelligence Layer | In Progress | New intelligence modules generate executive observations, findings, warnings, opportunities, prioritized actions, and confidence-aware narratives from `AnalyticsPlan`. |
 | Visual Analytics Engine | In Progress | Reusable chart-engine modules provide registry, selector, data builder, dashboard builder, and responsive layouts. Studio KPI cards now open dataset-specific explainability panels. SVG/canvas chart drawing, scatter plots, deeper duplicate visuals, accessibility tests, and screenshot QA remain. |
 | Package Orchestrator | MVP Complete | Central manifest engine now determines package contents, output level inheritance, deliverables, report sections, dashboards, previews, branding, industry sections, permissions, and checkout metadata. |
+| Deliverables Platform | MVP Complete | Versioned report-object assembly, reusable sections, templates, preview cards, branding profile support, and future-export preparation exist. Static Studio integration and tests remain. |
 | Report Generator | In Progress | HTML-style report outputs exist; native PDF, DOCX, and PPTX generation need production implementation. |
 | Export Engine | In Progress | Export menu and ZIP structure exist; native binary formats need production-grade exporters. |
 | Branding Engine | In Progress | Branding fields exist and should be expanded into reusable profiles. |

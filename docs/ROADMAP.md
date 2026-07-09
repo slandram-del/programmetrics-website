@@ -112,7 +112,22 @@
 - [ ] Connect static Studio deliverable cards directly to package manifests
 - [ ] Add tests for package inheritance, permissions, previews, branding, and industry sections
 
-## Phase 5 - Report Generator
+
+## Phase 5.0 - Professional Deliverables Platform - Complete
+- [x] Create `src/lib/deliverables-platform/`
+- [x] Add reusable report templates for Executive, Management, Analytics, Data Quality, Technical Appendix, and Board reports
+- [x] Add standard section registry and section renderer
+- [x] Assemble reports dynamically from Package Orchestrator manifests
+- [x] Add deliverable preview cards and preview models
+- [x] Add locked preview watermark/export metadata
+- [x] Add branding profile support for report sections
+- [x] Add version metadata to generated report objects
+- [x] Create `src/lib/versioning/`
+- [x] Expose professional deliverables through `reportService`
+- [ ] Connect static Studio Deliverables tab to deliverables platform previews
+- [ ] Add tests for section assembly, preview locks, branding, and version metadata
+
+## Phase 5 - Report Generator - Next
 - [ ] Executive summary
 - [ ] Key findings
 - [ ] Recommendations

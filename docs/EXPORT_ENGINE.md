@@ -3,6 +3,20 @@
 ## Purpose
 The Export Engine turns the analytics plan, visuals, narrative, branding, and setup metadata into protected previews and unlocked deliverables.
 
+
+## Deliverables Platform Contract
+The Export Engine should consume `ProfessionalReport` objects from `src/lib/deliverables-platform/`. Export adapters should not reconstruct report sections, package rules, or analytics calculations.
+
+Prepared report objects include:
+- deliverable metadata
+- reusable rendered sections
+- branding profile
+- version metadata
+- export availability
+- locked preview and watermark flags
+- prepared export format list
+
+Native PDF, DOCX, PPTX, PNG, XLSX, CSV, and ZIP generation remains future work. The current Sprint 5.0 implementation prepares export-ready objects and preview metadata only.
 ## Export Formats
 - CSV
 - XLSX

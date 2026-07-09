@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### New Features
+- Added Deliverables Platform for assembling versioned professional report objects, reusable sections, preview cards, preview models, and renderable report previews.
+- Added engine versioning metadata for Analytics Engine, Analytics Intelligence, Package Orchestrator, Deliverables Platform, Branding, Report Generator, Export Engine, and ProgramMetrics.
 - Added Package Orchestrator and Deliverable Manifest Engine for package contents, output level inheritance, deliverables, previews, locked features, branding, industry sections, permissions, and checkout metadata.
 - Added centralized package registry for Data Foundation, Management Insights, Professional Analytics, Executive Intelligence, and Enterprise Intelligence packages.
 - Added platform service layer for analytics, previews, reports, branding, deliverables, workflows, and pricing.
@@ -24,6 +26,7 @@
 - Added chart render models for KPI card, line chart, bar chart, horizontal bar chart, donut chart, histogram, box plot summary, gauge, table, heatmap placeholder, and insight card.
 
 ### Improvements
+- Report service can now build professional deliverables output from an AnalyticsPlan and PackageManifest without performing analytics calculations.
 - Deliverables service can now return package manifests for future Report Generator, Export Engine, Studio Deliverables tab, and checkout consumers.
 - Platform responses now include structured intelligence output for future Dashboard, Report Generator, AI Analyst, and Export consumers.
 - Dashboard builder contracts now include an Executive Summary tab destination.
@@ -42,6 +45,7 @@
 - Static asset cache keys were bumped so browsers fetch the updated dashboard UI.
 
 ### Refactors
+- Registered Deliverables Platform as a protected engine boundary and isolated report assembly logic from UI and export generation.
 - Registered Package Orchestrator as a protected engine boundary and routed package manifest access through the deliverables service.
 - Established layered dependency boundaries: Presentation -> Services -> Engines -> Shared Utilities -> Configuration.
 - Moved future UI integration toward service calls instead of direct protected-engine access.

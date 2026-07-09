@@ -267,6 +267,11 @@ The orchestrator determines:
 - checkout metadata
 
 The orchestrator does not generate reports or exports. It determines what should be generated. Report Generator and Export Engine should consume the manifest rather than duplicating package rules.
+
+## Deliverables Platform Integration
+`src/lib/deliverables-platform/` consumes `AnalyticsPlan` and `PackageManifest` outputs to assemble professional report objects. It does not re-profile data or calculate analytics. Report sections reference existing plan objects such as dataset profile, quality profile, confidence profile, missing profile, duplicate profile, recommended visuals, recommended insights, assumptions, and warnings.
+
+The deliverables platform prepares report templates, reusable sections, preview cards, locked preview models, and future export-ready report objects for the Report Generator and Export Engine.
 ## Protected Interface Boundary
 UI and future API callers should use `src/lib/platform/analyticsEngineInterface.ts` instead of reaching directly into protected analytics modules.
 
