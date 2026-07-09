@@ -59,8 +59,20 @@ Upload Data -> Review Data Setup -> Choose Analytics Package -> Choose Output Le
 11. Industry Templates
 12. Enterprise Features
 
+
+## Enterprise Architecture
+ProgramMetrics now has a protected interface layer in `src/lib/platform/` that sits between UI callers and internal analytics modules. The UI should consume result contracts from the platform interface rather than calling or duplicating internal algorithms.
+
+### Protected Business Logic
+The Analytics Recommendation Engine, Dataset Classification, KPI Recommendation Engine, Visual Recommendation Engine, Quality Score Engine, Analytics Confidence Engine, AI Narrative Engine, Industry Intelligence, and Deliverable Recommendation Engine are treated as proprietary ProgramMetrics business logic.
+
+### Trade Secret Strategy
+Internal docs may describe module responsibilities, inputs, and outputs. Customer-facing docs and future API responses should not expose exact formulas, scoring weights, ranking rules, or recommendation heuristics.
+
+### Future API Architecture
+Future SaaS architecture should route requests through a ProgramMetrics API before invoking analytics, report, branding, workflow, and export engines. Browser clients should receive renderable results, summaries, dashboards, and export metadata instead of protected calculation methods.
 ## Current Architecture
-- `src/lib/analytics-engine/` is the source of truth for `generateAnalyticsPlan()`.
+- `src/lib/platform/` exposes the analytics interface contract for UI and future API callers.`r`n- `src/lib/analytics-engine/` is the protected source of truth for `generateAnalyticsPlan()`.
 - `src/lib/chart-engine/` converts `recommendedVisuals` into reusable render models through chart registry, chart selector, chart data builder, dashboard builder, and responsive chart layouts.
 - The current static Studio browser script mirrors the chart-engine behavior so uploaded/session files can render immediately without a bundler; a future build step should import the TypeScript engine directly.
 - Locked previews keep watermark and export-disable behavior while still rendering limited plan-driven previews.
@@ -68,7 +80,7 @@ Upload Data -> Review Data Setup -> Choose Analytics Package -> Choose Output Le
 ## Current Development Status
 | Area | Status | Notes |
 | --- | --- | --- |
-| Product positioning and navigation | In Progress | Analytics package positioning is active and should keep replacing old tier language. |
+| Product positioning and navigation | In Progress | Analytics package positioning is active and should keep replacing old package-level wording where it appears. |
 | Analytics Studio wizard | In Progress | Upload, setup, package selection, preview, and interactive preview exist and need continued polishing. |
 | Analytics Recommendation Engine | MVP Complete | `generateAnalyticsPlan()` now produces dataset, field, missing, duplicate, quality, confidence, KPI, visual, insight, and deliverable outputs used by Studio previews. |
 | Visual Analytics Engine | In Progress | Reusable chart-engine modules provide registry, selector, data builder, dashboard builder, and responsive layouts. Studio KPI cards now open dataset-specific explainability panels. SVG/canvas chart drawing, scatter plots, deeper duplicate visuals, accessibility tests, and screenshot QA remain. |

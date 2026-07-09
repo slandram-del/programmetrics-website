@@ -1,3 +1,6 @@
+// Protected business logic: expose result contracts through src/lib/platform
+// for UI and future API callers. Keep internal formulas and recommendation
+// heuristics inside analytics-engine modules.
 export * from "./analyticsRecommendationEngine";
 export * from "./analyticsConfidenceScore";
 export * from "./datasetClassifier";

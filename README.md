@@ -13,3 +13,8 @@ ProgramMetrics product planning and implementation references live in [`docs/`](
 - [UI/UX Guidelines](docs/UI_UX_GUIDELINES.md)
 - [Export Engine](docs/EXPORT_ENGINE.md)
 - [Coding Standards](docs/CODING_STANDARDS.md)
+
+- [Enterprise Architecture](docs/ENTERPRISE_ARCHITECTURE.md)
+
+## Copyright
+Copyright © 2026 ProgramMetrics. All Rights Reserved.

@@ -211,6 +211,41 @@ Specialized panels:
 - Quality Score uses `qualityProfile.components`, `strengths`, `concerns`, and `recommendations`.
 - Analytics Confidence uses `confidenceProfile.confidenceDrivers`, `confidenceConcerns`, `affectedInsights`, `recommendations`, and analytics-plan assumptions.
 - Missing Values uses `missingProfile`, missing value codes, top affected fields, and cleanup recommendations.
+
+## Protected Interface Boundary
+UI and future API callers should use `src/lib/platform/analyticsEngineInterface.ts` instead of reaching directly into protected analytics modules.
+
+`createAnalyticsStudioResponse()` returns:
+- `analyticsPlan`
+- `kpis`
+- `visuals`
+- `insights`
+- `deliverables`
+- `qualityProfile`
+- `confidenceProfile`
+- `dashboard`
+- `protectedNotice`
+
+`createPublicAnalyticsSummary()` returns a safe summary for customer-facing views and future API responses. It intentionally returns outcomes and explanations rather than scoring formulas, ranking weights, or recommendation heuristics.
+
+## Protected Engine Modules
+The following are protected ProgramMetrics business logic and should remain isolated from presentation code and public API responses:
+- Analytics Recommendation Engine
+- Dataset Profiler
+- Dataset Classification
+- Field Profiler
+- Field Type Detection
+- Field Role Detection
+- Missing Value Analyzer
+- Duplicate Analyzer
+- Quality Score Engine
+- Analytics Confidence Engine
+- KPI Recommendation Engine
+- Visual Recommendation Engine
+- Insight Generator
+- Deliverable Recommendation Engine
+- AI Narrative Engine
+- Industry Intelligence
 ## Current UI Integration
 Analytics Studio and Interactive Preview now store an `analytics_plan` object on each generated analysis and render primary dashboard content from the plan.
 
@@ -224,7 +259,7 @@ Connected outputs:
 - `descriptiveStats` powers the Descriptive Statistics tab and numeric summary table.
 - `recommendedInsights` and `recommendedDeliverables` power the Recommendations and Deliverables tabs.
 
-The current static browser implementation mirrors the TypeScript chart-engine behavior because the site does not yet have a bundler-backed import path. Future work should add a browser-safe build step so Studio can import `src/lib/chart-engine` directly.
+The current static browser implementation mirrors some TypeScript engine behavior because the site does not yet have a bundler-backed import path. Future work should add a browser-safe build step or API layer so Studio can consume `src/lib/platform` outputs directly without exposing protected calculation details.
 
 ## Acceptance Criteria
 - Core engine folder structure exists.

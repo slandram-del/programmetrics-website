@@ -2,9 +2,9 @@ import type { RecommendedDeliverable, SelectedLevel, SelectedPackage } from "./t
 
 function rankPackage(selectedPackage?: string | SelectedPackage): number {
   const id = typeof selectedPackage === "string" ? selectedPackage : selectedPackage?.id;
-  if (/enterprise|tier-4|executive/i.test(id || "")) return 4;
-  if (/analytics|professional|tier-3/i.test(id || "")) return 3;
-  if (/management|insights|tier-2/i.test(id || "")) return 2;
+  if (/enterprise|executive/i.test(id || "")) return 4;
+  if (/analytics|professional/i.test(id || "")) return 3;
+  if (/management|insights/i.test(id || "")) return 2;
   return 1;
 }
 

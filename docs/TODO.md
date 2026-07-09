@@ -1,16 +1,25 @@
-﻿# TODO
+# TODO
 
 ## Next 10 Priorities
-1. Add automated tests for KPI detail panel click behavior and explanation content.
-2. Add TypeScript project config and unit tests for `src/lib/chart-engine`.
-3. Build native SVG/canvas renderers from the chart-engine render model.
-4. Add visual regression tests for dashboard tabs, chart tiles, KPI detail panels, legends, axes, tooltips, and locked overlays.
-5. Add automated Studio smoke tests for upload, data setup, preview generation, and interactive preview.
-6. Add direct browser/build integration so Studio imports TypeScript analytics and chart engines.
-7. Add scatter plot and richer duplicate-review visuals.
-8. Improve metadata-column detection controls in Data Setup.
-9. Build package-aware deliverables preview from `recommendedDeliverables`.
-10. Add production report generator for HTML, PDF, DOCX, PPTX, PNG, JSON, and ZIP.
+1. Move static Studio browser calculations behind `src/lib/platform` or a server-side ProgramMetrics API.
+2. Add authentication, user accounts, and organization profiles.
+3. Add API layer for analytics-plan generation, report generation, workflow execution, and export packages.
+4. Add background processing for large files, scheduled reports, and recurring workflows.
+5. Add automated tests for KPI detail panel click behavior and explanation content.
+6. Add TypeScript project config and unit tests for `src/lib/chart-engine` and `src/lib/platform`.
+7. Build native SVG/canvas renderers from the chart-engine render model.
+8. Add visual regression tests for dashboard tabs, chart tiles, KPI detail panels, legends, axes, tooltips, and locked overlays.
+9. Add automated Studio smoke tests for upload, data setup, preview generation, and interactive preview.
+10. Build production report generator for HTML, PDF, DOCX, PPTX, PNG, JSON, and ZIP.
+
+## Enterprise Architecture Follow-Ups
+- Implement ProgramMetrics API boundary for analytics, reports, branding, workflows, and exports.
+- Add authentication and role-based access controls.
+- Add user accounts and organization profiles.
+- Add scheduled reports and background processing.
+- Add audit logs and enterprise access controls.
+- Add checks that public UI and API responses do not expose protected formulas, ranking weights, or recommendation heuristics.
+- Move API keys, payment configuration, and future service credentials into environment variables.
 
 ## Explainability Follow-Ups
 - Add keyboard focus management and Escape-key close behavior for KPI detail panels.

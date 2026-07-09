@@ -1,4 +1,4 @@
-﻿# Sprint 07 - Branding
+# Sprint 07 - Branding
 
 ## Status
 Planned / partial UI fields exist.
@@ -21,7 +21,7 @@ Allow customers to preview and export branded analytics deliverables according t
 
 ## Acceptance Criteria
 - Branding fields are session-only and not stored as long-term customer data.
-- Tier/package-locked users can preview branding but cannot export branded outputs until unlocked.
+- Package-locked users can preview branding but cannot export branded outputs until unlocked.
 - Branding applies to dashboard header, report cover, PDF, DOCX, PPTX, PNG, HTML dashboard, and README/package metadata.
 - If branding is blank, ProgramMetrics uses clean defaults.
 

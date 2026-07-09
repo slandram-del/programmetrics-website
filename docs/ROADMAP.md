@@ -2,7 +2,7 @@
 
 ## Phase 1 - Product Positioning and Site Structure
 - [ ] Replace feature upgrade language with Analytics Packages
-- [ ] Update all "tier" language to "package"
+- [x] Update customer-facing "tier" language to "package"
 - [ ] Update navigation
 - [ ] Update landing page
 - [ ] Update pricing page
@@ -62,6 +62,17 @@
 - [x] Dashboard tabs for Overview, Visual Analytics, Data Quality, Descriptive Statistics, Missing Values, Recommendations, and Deliverables
 - [x] Coming-soon chart card for unsupported visual types
 - [ ] SVG/canvas production renderer for true chart drawing beyond HTML/CSS render models
+
+
+## Phase 4.4 - Enterprise Architecture Foundation - Complete
+- [x] Add protected analytics interface layer in `src/lib/platform`
+- [x] Document protected business logic and trade secret strategy
+- [x] Add future ProgramMetrics API architecture path
+- [x] Add legal placeholder routes for `/terms`, `/privacy`, and `/license`
+- [x] Standardize copyright footer wording
+- [x] Add export/report metadata copyright placeholders
+- [ ] Move static Studio browser calculations behind the platform interface or future API
+- [ ] Add automated architecture checks for public API/result contracts
 
 ## Phase 5 - Report Generator
 - [ ] Executive summary
@@ -146,3 +157,6 @@
 - [Master Plan](PROGRAMMETRICS_MASTER_PLAN.md)
 - [TODO](TODO.md)
 - [Coding Standards](CODING_STANDARDS.md)
+
+- Add server-side protected analytics API boundary.
+- Add architecture linting to prevent protected formulas from leaking into UI components.
