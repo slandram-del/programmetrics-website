@@ -2173,30 +2173,46 @@ function generateAnalyticsPlan({ rawRows, setupConfig = {}, selectedPackage = ac
 function renderRecommendedVisualTile(visual, analysis, locked, pct) {
   const tile = document.createElement("section");
   tile.className = `dashboard-preview-panel dashboard-tile recommended-visual-tile${locked && visual.packageMinimum !== "data-clean" ? " locked-preview-panel" : ""}`;
-  tile.dataset.dashboardTab = visual.tab || "visuals";
+  tile.dataset.dashboardTab = normalizeDashboardTab(visual.tab);
   const config = visual.chartConfig || {};
-  const data = Array.isArray(config.data) ? config.data.slice(0, locked ? 6 : 12) : [];
+  const rawData = Array.isArray(config.data) ? config.data : [];
+  const data = rawData.slice(0, locked ? 6 : 12);
+  const type = visual.type || config.chartType || "insightCard";
   let body = "";
-  if (!data.length && visual.type !== "gauge") {
-    body = "<p>ProgramMetrics did not find enough usable data for this visual.</p>";
-  } else if (["horizontalBar", "bar"].includes(visual.type)) {
+  if (!data.length && !["gauge", "insightCard"].includes(type)) {
+    body = `<div class="coming-soon-visual"><strong>Coming soon</strong><span>ProgramMetrics found the analysis recommendation, but this visual needs more usable data or renderer support.</span></div>`;
+  } else if (["horizontalBar", "bar"].includes(type)) {
     const valueKey = config.xField || "count";
     const labelKey = config.yField || "category";
-    const max = Math.max(...data.map((row) => Number(row[valueKey]) || 0), 1);
-    body = data.map((row) => `<div class="dashboard-bar-row"><span>${escapeHtml(row[labelKey] ?? row.category ?? row.field ?? "Value")}</span><div><i style="width:${pct(((Number(row[valueKey]) || 0) / max) * 100)}"></i></div><b>${escapeHtml(row[valueKey] ?? 0)}</b></div>`).join("");
-  } else if (["line", "histogram"].includes(visual.type)) {
+    const max = Math.max(...data.map((row) => Number(row[valueKey] ?? row.missingCells ?? row.count) || 0), 1);
+    body = data.map((row) => {
+      const value = row[valueKey] ?? row.missingCells ?? row.count ?? 0;
+      const label = row[labelKey] ?? row.category ?? row.field ?? row.period ?? "Value";
+      return `<div class="dashboard-bar-row"><span>${escapeHtml(label)}</span><div><i style="width:${pct(((Number(value) || 0) / max) * 100)}"></i></div><b>${escapeHtml(value)}</b></div>`;
+    }).join("");
+  } else if (["line", "histogram"].includes(type)) {
     const valueKey = config.yField || "count";
     const labelKey = config.xField || "period";
     const max = Math.max(...data.map((row) => Number(row[valueKey]) || 0), 1);
-    body = `<div class="dashboard-trend-bars ${visual.type === "histogram" ? "histogram-bars" : ""}">${data.map((row) => `<div><i style="height:${pct(((Number(row[valueKey]) || 0) / max) * 100)}"></i><span>${escapeHtml(String(row[labelKey] ?? row.period ?? row.label ?? "").slice(0, 10))}</span><b>${escapeHtml(row[valueKey] ?? 0)}</b></div>`).join("")}</div>`;
-  } else if (visual.type === "gauge") {
-    const score = Number(analysis.quality_profile?.overallScore || analysis.quality_score || 0);
-    const bars = data.map((row) => `<div class="dashboard-bar-row quality-bar"><span>${escapeHtml(row.component)}</span><div><i style="width:${pct(row.score)}"></i></div><b>${escapeHtml(row.score)}</b></div>`).join("");
+    body = `<div class="dashboard-trend-bars ${type === "histogram" ? "histogram-bars" : ""}">${data.map((row) => `<div><i style="height:${pct(((Number(row[valueKey]) || 0) / max) * 100)}"></i><span>${escapeHtml(String(row[labelKey] ?? row.period ?? row.label ?? "").slice(0, 12))}</span><b>${escapeHtml(row[valueKey] ?? 0)}</b></div>`).join("")}</div>`;
+  } else if (type === "donut") {
+    const valueKey = config.valueField || "count";
+    const labelKey = config.labelField || "category";
+    const total = data.reduce((sum, row) => sum + Number(row[valueKey] ?? row.count ?? 0), 0) || 1;
+    body = `<div class="dashboard-donut-list">${data.map((row) => `<span><i style="--share:${Math.max(6, Math.round((Number(row[valueKey] ?? row.count ?? 0) / total) * 100))}%"></i><b>${escapeHtml(row[labelKey] ?? row.category ?? row.field ?? "Value")}</b><em>${escapeHtml(row[valueKey] ?? row.count ?? 0)}</em></span>`).join("")}</div>`;
+  } else if (type === "gauge") {
+    const score = Number(config.score ?? analysis.confidence_profile?.overallConfidence ?? analysis.quality_profile?.overallScore ?? analysis.quality_score ?? 0);
+    const bars = data.map((row) => `<div class="dashboard-bar-row quality-bar"><span>${escapeHtml(row.component || row.label || "Component")}</span><div><i style="width:${pct(row.score ?? row.value)}"></i></div><b>${escapeHtml(row.score ?? row.value ?? "-")}</b></div>`).join("");
     body = `<div class="dashboard-ring" style="--score:${pct(score)}"><strong>${escapeHtml(score)}</strong><span>Score</span></div>${bars}`;
-  } else if (visual.type === "table") {
+  } else if (type === "boxplot") {
+    const row = data[0] || config;
+    body = `<div class="boxplot-card"><span>Min ${escapeHtml(row.min ?? "-")}</span><span>Q1 ${escapeHtml(row.q1 ?? "-")}</span><strong>Median ${escapeHtml(row.median ?? "-")}</strong><span>Q3 ${escapeHtml(row.q3 ?? "-")}</span><span>Max ${escapeHtml(row.max ?? "-")}</span></div>`;
+  } else if (type === "table") {
     body = data.length ? `<div class="dashboard-table-wrap"><table><thead><tr>${Object.keys(data[0]).map((key) => `<th>${escapeHtml(key)}</th>`).join("")}</tr></thead><tbody>${data.map((row) => `<tr>${Object.keys(row).map((key) => `<td>${escapeHtml(row[key])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : "<p>No rows require review for this table.</p>";
+  } else if (type === "insightCard") {
+    body = `<article class="plan-insight-card">${escapeHtml(visual.insight || visual.description || "ProgramMetrics generated this insight from the uploaded dataset.")}</article>`;
   } else {
-    body = `<p>${escapeHtml(visual.insight || visual.description || "Recommended analysis preview.")}</p>`;
+    body = `<div class="coming-soon-visual"><strong>${escapeHtml(type)} visual coming soon</strong><span>${escapeHtml(visual.insight || visual.description || "This recommendation is ready for the chart engine renderer.")}</span></div>`;
   }
   tile.innerHTML = `<h4>${escapeHtml(visual.title)}</h4><p class="dashboard-chart-label">${escapeHtml(visual.description || "Recommended by ProgramMetrics")}</p>${body}<p class="recommended-visual-insight">${escapeHtml(visual.insight || "")}</p>`;
   return tile;
@@ -2263,7 +2279,17 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind, setupMetadata = {})
     selectedLevel: activeStudioLevelId,
     brandingConfig: getBrandingSettings(),
   });
-  const analyticsPlanSummary = `Analytics Plan Generated: ${analyticsPlan.recommendedKpis?.length || 0} KPIs, ${analyticsPlan.recommendedVisuals?.length || 0} visuals, ${analyticsPlan.recommendedInsights?.length || 0} insights, ${analyticsPlan.confidenceProfile?.label || "Moderate"} confidence.`;
+  const confidenceBase = Math.max(0, Math.min(100, Math.round((analyticsPlan.qualityProfile?.overallScore || qualityScore || 70) + (dateSummary.length ? 6 : -8) + (duplicates ? -8 : 6) - Math.min(18, Number(missingProfile.missingPercent || 0) / 3))));
+  const confidenceProfile = analyticsPlan.confidenceProfile || {
+    overallConfidence: confidenceBase,
+    label: confidenceBase >= 75 ? "High" : confidenceBase >= 50 ? "Moderate" : "Low",
+    explanation: confidenceBase >= 75 ? "ProgramMetrics has high confidence because the dataset has usable structure, chartable fields, and limited quality concerns." : confidenceBase >= 50 ? "ProgramMetrics has moderate confidence because the dataset is usable, but missingness, duplicates, or field limitations may affect some conclusions." : "ProgramMetrics has low confidence because data quality or structure limits reliable analysis.",
+    confidenceDrivers: [rows.length ? "Usable records are available." : "Limited usable records.", dateSummary.length ? "Date fields support trends." : "No reliable trend date detected."],
+    confidenceConcerns: [missingTotal ? `${missingTotal} missing cells may affect some outputs.` : "No major missing-value concern detected.", duplicates ? `${duplicates} exact duplicates should be reviewed.` : "No exact duplicate concern detected."],
+    recommendations: ["Review missing values, duplicate records, and selected chart fields before exporting final reports."]
+  };
+  analyticsPlan.confidenceProfile = confidenceProfile;
+  const analyticsPlanSummary = `Analytics Plan Generated: ${analyticsPlan.recommendedKpis?.length || 0} KPIs, ${analyticsPlan.recommendedVisuals?.length || 0} visuals, ${analyticsPlan.recommendedInsights?.length || 0} insights, ${confidenceProfile.label || "Moderate"} confidence.`;
   const previewLimit = getPreviewLimitRows(unlocked, preview);
   const locked = shouldWatermark(preview, unlocked);
   const missingEntries = missingProfile.entries;
@@ -2314,6 +2340,7 @@ function buildStudioAnalysisFromRows(rows, file, sourceKind, setupMetadata = {})
     field_profiles: analyticsPlan.fieldProfiles,
     dataset_type: analyticsPlan.datasetType,
     quality_profile: analyticsPlan.qualityProfile,
+    confidence_profile: analyticsPlan.confidenceProfile,
     duplicate_profile: analyticsPlan.duplicateProfile,
     descriptive_stats: analyticsPlan.descriptiveStats,
     recommended_kpis: analyticsPlan.recommendedKpis,
@@ -2492,6 +2519,136 @@ async function studioDownloadCurrentOutput(input, result, format, language, butt
   }
 }
 
+function normalizeDashboardTab(tab) {
+  const value = String(tab || "visuals").toLowerCase().replace(/\s+/g, "");
+  if (value === "overview") return "overview";
+  if (["visualanalytics", "visuals", "dashboard", "advancedanalytics", "forecasting"].includes(value)) return "visuals";
+  if (["dataquality", "quality"].includes(value)) return "quality";
+  if (["descriptivestatistics", "stats", "statistics"].includes(value)) return "stats";
+  if (["missingvalues", "missing"].includes(value)) return "missing";
+  if (["recommendations", "recommendation"].includes(value)) return "recommendations";
+  if (["deliverables", "exports", "export"].includes(value)) return "exports";
+  return "visuals";
+}
+
+function confidenceDetailHtml(analysis) {
+  const confidence = analysis.confidence_profile || analysis.analytics_plan?.confidenceProfile || {};
+  return `<div class="quality-detail-score"><strong>${escapeHtml(confidence.overallConfidence ?? "-")}</strong><span>${escapeHtml(confidence.label || "Confidence")}</span></div><p>${escapeHtml(confidence.explanation || "Confidence estimates how much trust to place in the generated insights.")}</p><h4>Drivers</h4>${detailList((confidence.confidenceDrivers || []).slice(0, 8))}<h4>Concerns</h4>${detailList((confidence.confidenceConcerns || []).slice(0, 8))}<h4>Recommendations</h4>${detailList((confidence.recommendations || []).slice(0, 5))}`;
+}
+
+function kpiDetailHtmlFromPlan(kpi, analysis) {
+  const type = kpi.detailPanelType || kpi.id || "detail";
+  if (/missing/i.test(type)) return missingDetailHtml(analysis);
+  if (/quality/i.test(type)) return qualityDetailHtml(analysis);
+  if (/confidence/i.test(type)) return confidenceDetailHtml(analysis);
+  if (/duplicate/i.test(type)) return `<p>${escapeHtml(analysis.duplicate_profile?.explanation || kpi.explanation || "Exact duplicates are detected from normalized full-row signatures.")}</p>`;
+  return `<p>${escapeHtml(kpi.explanation || "ProgramMetrics generated this KPI from the analytics plan.")}</p><p><strong>${escapeHtml(kpi.value)}</strong> ${escapeHtml(kpi.subtitle || "")}</p>`;
+}
+
+function missingProfileCardsHtml(analysis) {
+  const missing = analysis.missing_profile || analysis.analytics_plan?.missingProfile || {};
+  const percent = missing.missingPercent ?? analysis.missing_percent ?? 0;
+  return `<div class="missing-kpi-strip"><div><strong>${escapeHtml(missing.missingRows ?? 0)}</strong><span>Missing rows</span></div><div><strong>${escapeHtml(missing.missingCells ?? 0)}</strong><span>Missing cells</span></div><div><strong>${escapeHtml(missing.fieldsWithBlanks ?? missing.missingColumns ?? 0)}</strong><span>Fields with blanks</span></div><div><strong>${escapeHtml(percent)}${String(percent).includes("%") ? "" : "%"}</strong><span>Missing %</span></div></div>`;
+}
+
+function descriptiveStatsHtmlFromPlan(analysis, locked) {
+  const stats = analysis.descriptive_stats || analysis.analytics_plan?.descriptiveStats || {};
+  const numeric = Array.isArray(stats.numeric) ? stats.numeric : Object.entries(stats.numeric || {}).map(([fieldName, item]) => ({ fieldName, ...item }));
+  const categorical = Array.isArray(stats.categorical) ? stats.categorical : Object.entries(stats.categorical || {}).map(([fieldName, topValues]) => ({ fieldName, uniqueCount: Array.isArray(topValues) ? topValues.length : Object.keys(topValues || {}).length, topValues }));
+  const dates = Array.isArray(stats.date) ? stats.date : Array.isArray(stats.dates) ? stats.dates : (analysis.date_summary || []).map((item) => ({ fieldName: item.column, earliest: formatStudioDate(item.start), latest: formatStudioDate(item.end), recordsByMonth: item.buckets || {} }));
+  const numericRows = numeric.slice(0, locked ? 5 : 12).map((item) => `<tr><td>${escapeHtml(item.fieldName)}</td><td>${escapeHtml(item.count ?? "-")}</td><td>${escapeHtml(item.mean !== undefined ? Math.round(Number(item.mean) * 100) / 100 : "-")}</td><td>${escapeHtml(item.median !== undefined ? Math.round(Number(item.median) * 100) / 100 : "-")}</td><td>${escapeHtml(item.min ?? "-")}</td><td>${escapeHtml(item.max ?? "-")}</td><td>${escapeHtml(item.outlierCount ?? 0)}</td></tr>`).join("");
+  return `<div class="stats-dashboard-grid"><div><strong>${escapeHtml(numeric.length)}</strong><span>Numeric fields</span></div><div><strong>${escapeHtml(categorical.length)}</strong><span>Categorical fields</span></div><div><strong>${escapeHtml(dates.length)}</strong><span>Date fields</span></div><div><strong>${escapeHtml(analysis.field_profiles?.length || analysis.columns || 0)}</strong><span>Total fields</span></div></div><div class="dashboard-table-wrap"><table><thead><tr><th>Field</th><th>Count</th><th>Mean</th><th>Median</th><th>Min</th><th>Max</th><th>Outliers</th></tr></thead><tbody>${numericRows || `<tr><td colspan="7">No reliable numeric fields were detected.</td></tr>`}</tbody></table></div>`;
+}
+
+function renderPlanDrivenDashboardBody(canvas, analysis, locked, pct, exportControls, previewRows, previewColumns) {
+  const plan = analysis.analytics_plan || {};
+  const kpis = analysis.recommended_kpis || plan.recommendedKpis || [];
+  const visuals = analysis.recommended_visuals || plan.recommendedVisuals || [];
+  const insights = analysis.recommended_insights || plan.recommendedInsights || [];
+  const deliverables = analysis.recommended_deliverables || plan.recommendedDeliverables || [];
+  const stats = document.createElement("div");
+  stats.className = "dashboard-kpi-grid";
+  stats.dataset.dashboardTab = "overview";
+  kpis.forEach((kpi) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "dashboard-kpi-card is-clickable";
+    card.innerHTML = `<strong>${escapeHtml(kpi.value ?? "-")}</strong><span>${escapeHtml(kpi.title || kpi.id || "KPI")}</span><small>${escapeHtml(kpi.subtitle || "View details")}</small>`;
+    card.addEventListener("click", () => showStudioDetailPanel(kpi.title || "KPI Detail", kpiDetailHtmlFromPlan(kpi, analysis)));
+    stats.appendChild(card);
+  });
+  const confidence = analysis.confidence_profile || plan.confidenceProfile || {};
+  if (!kpis.some((kpi) => /confidence/i.test(`${kpi.id || ""} ${kpi.title || ""}`))) {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "dashboard-kpi-card is-clickable confidence-kpi-card";
+    card.innerHTML = `<strong>${escapeHtml(confidence.overallConfidence ?? "-")}</strong><span>Confidence score</span><small>${escapeHtml(confidence.label || "View details")}</small>`;
+    card.addEventListener("click", () => showStudioDetailPanel("Confidence Score", confidenceDetailHtml(analysis)));
+    stats.appendChild(card);
+  }
+  canvas.appendChild(stats);
+
+  const overview = document.createElement("section");
+  overview.className = "dashboard-preview-panel dashboard-tile-wide";
+  overview.dataset.dashboardTab = "overview";
+  const insightCards = insights.length ? insights.map((insight) => insight.text || insight.title).filter(Boolean).slice(0, 6) : (analysis.insights || buildInsightCards(analysis));
+  overview.innerHTML = `<h4>What this dashboard tells me</h4>${missingProfileCardsHtml(analysis)}<div class="dashboard-insight-cards">${insightCards.map((insight) => `<article>${escapeHtml(insight)}</article>`).join("")}</div>`;
+  canvas.appendChild(overview);
+
+  const visualGrid = document.createElement("div");
+  visualGrid.className = "dashboard-visual-grid dashboard-visual-grid-wide plan-visual-grid";
+  (visuals.length ? visuals : [{ id: "no-visuals-yet", title: "Visual recommendations coming soon", description: "ProgramMetrics did not find enough chart-ready fields for this preview.", type: "insightCard", tab: "visuals", insight: "Review Data Setup or choose chartable fields to generate more visuals.", chartConfig: {} }]).forEach((visual) => visualGrid.appendChild(renderRecommendedVisualTile(visual, analysis, locked, pct)));
+  canvas.appendChild(visualGrid);
+
+  const missingPanel = document.createElement("section");
+  missingPanel.className = `dashboard-preview-panel dashboard-tile-wide${locked ? " locked-preview-panel" : ""}`;
+  missingPanel.dataset.dashboardTab = "missing";
+  const missing = analysis.missing_profile || {};
+  const topMissing = missing.topMissingFieldsByCount || (missing.entries || []).map(([fieldName, missingCount]) => ({ fieldName, displayLabel: studioDisplayName(analysis, fieldName), missingCount }));
+  const maxMissing = Math.max(...topMissing.map((item) => Number(item.missingCount) || 0), 1);
+  missingPanel.innerHTML = `<h4>Missing Values</h4><p>${escapeHtml(missing.explanation || "Missing rows are records with at least one missing value. Missing cells are every blank or coded missing field in the file. One row can contain many missing cells.")}</p>${missingProfileCardsHtml(analysis)}<h5>Top missing fields</h5>${topMissing.slice(0, locked ? 6 : 10).map((item) => `<div class="dashboard-bar-row missing-bar"><span>${escapeHtml(item.displayLabel || item.fieldName)}</span><div><i style="width:${pct((Number(item.missingCount) / maxMissing) * 100)}"></i></div><b>${escapeHtml(item.missingCount)}</b></div>`).join("") || "<p>No missing values were detected.</p>"}`;
+  canvas.appendChild(missingPanel);
+
+  const qualityPanel = document.createElement("section");
+  qualityPanel.className = "dashboard-preview-panel dashboard-tile-wide";
+  qualityPanel.dataset.dashboardTab = "quality";
+  const quality = analysis.quality_profile || {};
+  const components = Object.entries(quality.components || analysis.quality_breakdown || {});
+  qualityPanel.innerHTML = `<h4>Data Quality and Confidence</h4><div class="quality-confidence-grid"><button type="button" class="dashboard-kpi-card is-clickable"><strong>${escapeHtml(quality.overallScore ?? analysis.quality_score ?? "-")}</strong><span>Quality score</span><small>${escapeHtml(quality.grade || "View details")}</small></button><button type="button" class="dashboard-kpi-card is-clickable confidence-kpi-card"><strong>${escapeHtml(confidence.overallConfidence ?? "-")}</strong><span>Confidence score</span><small>${escapeHtml(confidence.label || "View details")}</small></button></div>${components.map(([component, score]) => `<div class="dashboard-bar-row quality-bar"><span>${escapeHtml(component)}</span><div><i style="width:${pct(score)}"></i></div><b>${escapeHtml(score)}</b></div>`).join("")}<p>${escapeHtml(quality.explanation || "Quality score is based on completeness, duplicates, dates, numeric validity, categorical usability, and structure.")}</p>`;
+  const qualityButtons = qualityPanel.querySelectorAll("button");
+  qualityButtons[0]?.addEventListener("click", () => showStudioDetailPanel("Quality Score", qualityDetailHtml(analysis)));
+  qualityButtons[1]?.addEventListener("click", () => showStudioDetailPanel("Confidence Score", confidenceDetailHtml(analysis)));
+  canvas.appendChild(qualityPanel);
+
+  const statsPanel = document.createElement("section");
+  statsPanel.className = "dashboard-preview-panel dashboard-tile-wide";
+  statsPanel.dataset.dashboardTab = "stats";
+  statsPanel.innerHTML = `<h4>Descriptive Statistics</h4>${descriptiveStatsHtmlFromPlan(analysis, locked)}`;
+  canvas.appendChild(statsPanel);
+
+  const recommendationsPanel = document.createElement("section");
+  recommendationsPanel.className = "dashboard-preview-panel dashboard-tile-wide";
+  recommendationsPanel.dataset.dashboardTab = "recommendations";
+  recommendationsPanel.innerHTML = `<h4>Recommendations</h4><ul>${insights.map((insight) => insight.recommendedAction).filter(Boolean).slice(0, locked ? 6 : 12).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || (analysis.cleaning_steps || []).slice(0, 8).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+  canvas.appendChild(recommendationsPanel);
+
+  const exportPanel = document.createElement("section");
+  exportPanel.className = `dashboard-preview-panel dashboard-tile-wide${locked ? " locked-preview-panel" : ""}`;
+  exportPanel.dataset.dashboardTab = "exports";
+  exportPanel.innerHTML = `<h4>Deliverables</h4><p>${escapeHtml(locked ? "Preview only. Upgrade to export the full dashboard and package deliverables." : "Export-ready deliverables generated from the analytics plan.")}</p><ul class="recommended-deliverables">${deliverables.slice(0, locked ? 8 : 14).map((item) => `<li><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.exportAvailable ? "Export available" : item.previewAvailable ? "Preview available" : "Locked")}</span></li>`).join("")}</ul>${exportControls}`;
+  canvas.appendChild(exportPanel);
+  setupStudioExportMenus(exportPanel);
+
+  if (previewRows.length && previewColumns.length) {
+    const tablePanel = document.createElement("section");
+    tablePanel.className = `dashboard-preview-panel dashboard-table-panel${locked ? " locked-preview-panel" : ""}`;
+    tablePanel.dataset.dashboardTab = "exports";
+    const head = previewColumns.map((column) => `<th>${escapeHtml(column)}</th>`).join("");
+    const rows = previewRows.slice(0, locked ? Math.min(25, previewRows.length) : previewRows.length).map((row) => `<tr>${previewColumns.map((column) => `<td>${escapeHtml(row[column] ?? "")}</td>`).join("")}</tr>`).join("");
+    tablePanel.innerHTML = `<h4>Limited Data Preview</h4><p>Showing first ${escapeHtml(locked ? Math.min(25, analysis.preview_limit || previewRows.length) : analysis.preview_limit || previewRows.length)} rows.</p><div class="dashboard-table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>${exportControls}`;
+    canvas.appendChild(tablePanel);
+  }
+}
 function renderStudioDashboardPreview(analysis, targetShell = null) {
   const shell = targetShell || document.getElementById("studio-preview-shell");
   const empty = targetShell ? null : document.getElementById("studio-preview-empty");
@@ -2552,285 +2709,7 @@ function renderStudioDashboardPreview(analysis, targetShell = null) {
   canvas.appendChild(controlsPanel);
   applyStudioDashboardControls(controlsPanel, analysis);
 
-  const stats = document.createElement("div");
-  stats.className = "dashboard-kpi-grid";
-  [
-    { label: "Total records", value: analysis.rows ?? 0, title: "Rows and Records", detail: detailList([`${analysis.rows || 0} records were detected in this preview.`, "Rows usually represent people, events, transactions, services, or form submissions.", locked ? `Locked previews show only the first ${analysis.preview_limit} rows.` : "Exports can include the available cleaned output for this selected feature."]) },
-    { label: "Total fields", value: analysis.columns ?? 0, title: "Field Summary", detail: `<p>${escapeHtml(analysis.columns || 0)} fields were detected.</p>${detailList((analysis.detected_fields || []).slice(0, 16).map((field) => `Detected field: ${studioDisplayName(analysis, field)}`))}` },
-    { label: "Missing rows", value: missingProfile.missingRows ?? 0, title: "Missing Rows", detail: missingDetailHtml(analysis) },
-    { label: "Missing cells", value: missingProfile.missingCells ?? 0, title: "Missing Cells", detail: missingDetailHtml(analysis) },
-    { label: "Fields with blanks", value: missingProfile.missingColumns ?? 0, title: "Fields with Blanks", detail: missingDetailHtml(analysis) },
-    { label: "Missing %", value: `${missingProfile.missingPercent ?? 0}%`, title: "Missing Percentage", detail: missingDetailHtml(analysis) },
-    { label: "Quality score", value: canPreviewFeature("missingReview", preview) ? analysis.quality_score ?? "-" : "Preview", title: "Quality Score Breakdown", detail: qualityDetailHtml(analysis) },
-  ].forEach((item) => {
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "dashboard-kpi-card is-clickable";
-    card.innerHTML = `<strong>${escapeHtml(item.value)}</strong><span>${escapeHtml(item.label)}</span><small>View details</small>`;
-    card.addEventListener("click", () => showStudioDetailPanel(item.title, item.detail));
-    stats.appendChild(card);
-  });
-  dateSummary.length && [ { label: "Date Range", value: `${formatStudioDate(dateSummary[0].start)} - ${formatStudioDate(dateSummary[0].end)}`, title: "Date Range Detail", detail: detailList([`Earliest date: ${formatStudioDate(dateSummary[0].start)}`, `Latest date: ${formatStudioDate(dateSummary[0].end)}`, `Detected date field: ${studioDisplayName(analysis, dateSummary[0].column)}`, "Records are grouped by month so the chart stays readable."]) } ].forEach((item) => {
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "dashboard-kpi-card is-clickable";
-    card.innerHTML = `<strong>${escapeHtml(item.value)}</strong><span>${escapeHtml(item.label)}</span><small>View details</small>`;
-    card.addEventListener("click", () => showStudioDetailPanel(item.title, item.detail));
-    stats.appendChild(card);
-  });
-  [{ label: "Duplicates", value: analysis.duplicate_rows ?? 0, title: "Duplicate Review", detail: detailList([`${analysis.duplicate_rows || 0} possible duplicate rows were detected.`, "Detection uses repeated full-row values within the uploaded data preview.", Number(analysis.duplicate_rows) > 0 ? "Review duplicate records before creating final reports." : "No obvious duplicates were found in the previewed data."]) }].forEach((item) => {
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "dashboard-kpi-card is-clickable";
-    card.innerHTML = `<strong>${escapeHtml(item.value)}</strong><span>${escapeHtml(item.label)}</span><small>View details</small>`;
-    card.addEventListener("click", () => showStudioDetailPanel(item.title, item.detail));
-    stats.appendChild(card);
-  });
-  stats.dataset.dashboardTab = "overview";
-  canvas.appendChild(stats);
-
-  const answerPanel = document.createElement("section");
-  answerPanel.className = "dashboard-preview-panel dashboard-tile-wide";
-  answerPanel.innerHTML = `<h4>What this dashboard tells me</h4><div class="dashboard-insight-cards">${insightCards.map((insight) => `<article>${escapeHtml(insight)}</article>`).join("")}</div>`;
-  answerPanel.dataset.dashboardTab = "overview";
-  canvas.appendChild(answerPanel);
-
-  const visualGrid = document.createElement("div");
-  visualGrid.className = "dashboard-visual-grid dashboard-visual-grid-wide";
-  const overviewPanel = document.createElement("section");
-  overviewPanel.className = "dashboard-preview-panel dashboard-tile";
-  overviewPanel.innerHTML = `<h4>Data Overview</h4><div class="dashboard-mini-list"><span>Source</span><b>${escapeHtml(analysis.source_kind || "Uploaded file")}</b><span>Detected fields</span><b>${escapeHtml((analysis.detected_fields || []).slice(0, 5).map((field) => studioDisplayName(analysis, field)).join(", ") || "None")}</b><span>Suggested view</span><b>${dateSummary.length ? "Trend and category dashboard" : "Category and quality dashboard"}</b></div>`;
-  overviewPanel.dataset.dashboardTab = "overview";
-  visualGrid.appendChild(overviewPanel);
-
-  const trendPanel = document.createElement("section");
-  trendPanel.className = "dashboard-preview-panel dashboard-tile";
-  if (dateSummary.length) {
-    const primary = dateSummary.find((item) => item.column === dashboardConfig.trendField) || dateSummary[0];
-    const entries = Object.entries(primary.buckets).sort(([a], [b]) => a.localeCompare(b)).slice(-12);
-    const max = Math.max(...entries.map(([, count]) => Number(count)), 1);
-    trendPanel.innerHTML = `<h4>Records by Start Month</h4><p class="dashboard-chart-label">${escapeHtml(studioDisplayName(analysis, primary.column))}</p><div class="dashboard-trend-bars">${entries.map(([label, count]) => `<div><i style="height:${pct((Number(count) / max) * 100)}"></i><span>${escapeHtml(label.slice(2))}</span><b>${escapeHtml(count)}</b></div>`).join("")}</div>`;
-  } else {
-    trendPanel.innerHTML = `<h4>Records Over Time</h4><p>No reliable date field was detected. Add or standardize a date field to unlock trend views.</p>`;
-  }
-  trendPanel.dataset.dashboardTab = "visuals";
-  visualGrid.appendChild(trendPanel);
-
-  const categoryPanel = document.createElement("section");
-  categoryPanel.className = "dashboard-preview-panel dashboard-tile";
-  categoryPanel.innerHTML = "<h4>Top Categories</h4>";
-  if (categoryEntries.length) {
-    const selectedCategoryField = dashboardConfig.groupField || dashboardConfig.reasonField || categoryEntries[0]?.[0];
-    const column = selectedCategoryField || categoryEntries[0]?.[0];
-    const counts = analysis.category_summary?.[column] || categoryEntries[0]?.[1] || {};
-    const maxCount = Math.max(...Object.values(counts).map(Number), 1);
-    categoryPanel.innerHTML += `<p class="dashboard-chart-label">${escapeHtml(studioDisplayName(analysis, column))}</p>`;
-    Object.entries(counts).slice(0, locked ? 5 : 8).forEach(([name, count]) => {
-      categoryPanel.innerHTML += `<div class="dashboard-bar-row"><span>${escapeHtml(name)}</span><div><i style="width:${pct((Number(count) / maxCount) * 100)}"></i></div><b>${escapeHtml(count)}</b></div>`;
-    });
-  } else {
-    categoryPanel.innerHTML += "<p>No readable category field was detected yet.</p>";
-  }
-  categoryPanel.dataset.dashboardTab = "visuals";
-  visualGrid.appendChild(categoryPanel);
-  if (analysis.recipe === "surveyReferral") {
-    const surveyFields = Object.assign({}, getSurveyVisualFields(analysis), { date: dashboardConfig.trendField || getSurveyVisualFields(analysis).date, organization: dashboardConfig.groupField || getSurveyVisualFields(analysis).organization, reason: dashboardConfig.reasonField || getSurveyVisualFields(analysis).reason, age: dashboardConfig.numericField || getSurveyVisualFields(analysis).age });
-    const surveyKpiPanel = document.createElement("section");
-    surveyKpiPanel.className = "dashboard-preview-panel dashboard-tile-wide survey-dashboard-tile";
-    surveyKpiPanel.dataset.dashboardTab = "visuals";
-    const usableRecords = usableSurveyRecordCount(analysis, surveyFields);
-    const significantFindings = [surveyFields.organization, surveyFields.reason, surveyFields.date, missingEntries.length ? "Missing response patterns" : ""].filter(Boolean).length;
-    surveyKpiPanel.innerHTML = `<h4>Survey / Referral Dashboard</h4><div class="survey-kpi-row"><div><strong>${escapeHtml(analysis.rows || 0)}</strong><span>Response count</span></div><div><strong>${escapeHtml(usableRecords)}</strong><span>Usable records</span></div><div><strong>${escapeHtml(significantFindings)}</strong><span>Significant findings</span></div><div><strong>${escapeHtml(dateSummary.length ? formatStudioDate(dateSummary[0].start) : "Not detected")}</strong><span>Earliest date</span></div></div><p>ProgramMetrics detected survey-style fields and prioritized response counts, readable question labels, referral or denial trends, organization comparison, and missing response quality checks.</p>`;
-    visualGrid.appendChild(surveyKpiPanel);
-
-    if (surveyFields.organization) {
-      const counts = topCountsForField(analysis, surveyFields.organization, locked ? 5 : 10);
-      const maxOrg = Math.max(...counts.map(([, count]) => Number(count)), 1);
-      const orgPanel = document.createElement("section");
-      orgPanel.className = "dashboard-preview-panel dashboard-tile";
-      orgPanel.dataset.dashboardTab = "visuals";
-      orgPanel.innerHTML = `<h4>Shelter / Organization Comparison</h4><p class="dashboard-chart-label">${escapeHtml(studioDisplayName(analysis, surveyFields.organization))}</p>${counts.map(([name, count]) => `<div class="dashboard-bar-row"><span>${escapeHtml(name)}</span><div><i style="width:${pct((Number(count) / maxOrg) * 100)}"></i></div><b>${escapeHtml(count)}</b></div>`).join("")}`;
-      visualGrid.appendChild(orgPanel);
-    }
-
-    if (surveyFields.reason) {
-      const counts = topCountsForField(analysis, surveyFields.reason, locked ? 5 : 8);
-      const total = counts.reduce((sum, [, count]) => sum + Number(count), 0) || 1;
-      const reasonPanel = document.createElement("section");
-      reasonPanel.className = "dashboard-preview-panel dashboard-tile";
-      reasonPanel.dataset.dashboardTab = "visuals";
-      reasonPanel.innerHTML = `<h4>Referral / Denial Reason Distribution</h4><div class="dashboard-donut-list">${counts.map(([name, count]) => `<span><i style="--share:${Math.max(8, Math.round((Number(count) / total) * 100))}%"></i><b>${escapeHtml(name)}</b><em>${escapeHtml(count)}</em></span>`).join("")}</div>`;
-      visualGrid.appendChild(reasonPanel);
-    }
-
-    if (surveyFields.organization && surveyFields.reason && surveyFields.organization !== surveyFields.reason) {
-      const crosstab = crossTabCounts(analysis, surveyFields.organization, surveyFields.reason, locked ? 4 : 6, locked ? 4 : 5);
-      if (crosstab.rows.length && crosstab.columns.length) {
-        const matrixPanel = document.createElement("section");
-        matrixPanel.className = "dashboard-preview-panel dashboard-tile-wide analytics-matrix-panel";
-        matrixPanel.dataset.dashboardTab = "visuals";
-        matrixPanel.innerHTML = `<h4>Segment Breakdown Matrix</h4><p class="dashboard-chart-label">${escapeHtml(studioDisplayName(analysis, surveyFields.organization))} by ${escapeHtml(studioDisplayName(analysis, surveyFields.reason))}</p><div class="analytics-matrix"><table><thead><tr><th>${escapeHtml(studioDisplayName(analysis, surveyFields.organization))}</th>${crosstab.columns.map((column) => `<th>${escapeHtml(column)}</th>`).join("")}</tr></thead><tbody>${crosstab.rows.map((rowName) => `<tr><th>${escapeHtml(rowName)}</th>${crosstab.columns.map((columnName) => `<td>${escapeHtml(crosstab.matrix[rowName]?.[columnName] || 0)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
-        visualGrid.appendChild(matrixPanel);
-      }
-    }
-
-    if (surveyFields.age && analysis.numeric_summary?.[surveyFields.age]?.histogram) {
-      const bins = analysis.numeric_summary[surveyFields.age].histogram;
-      const maxAge = Math.max(...bins.map((bin) => bin.count), 1);
-      const agePanel = document.createElement("section");
-      agePanel.className = "dashboard-preview-panel dashboard-tile";
-      agePanel.dataset.dashboardTab = "visuals";
-      agePanel.innerHTML = `<h4>Youth Age Distribution</h4><div class="dashboard-trend-bars histogram-bars">${bins.map((bin) => `<div><i style="height:${pct((bin.count / maxAge) * 100)}"></i><span>${escapeHtml(bin.label)}</span><b>${escapeHtml(bin.count)}</b></div>`).join("")}</div>`;
-      visualGrid.appendChild(agePanel);
-    }
-  }
-
-  const missingPanel = document.createElement("section");
-  missingPanel.className = `dashboard-preview-panel dashboard-tile${canPreviewFeature("missingReview", preview) ? "" : " locked-preview-panel"}`;
-  missingPanel.innerHTML = "<h4>Missing Value Summary</h4>";
-  if (missingEntries.length) {
-    const maxMissing = Math.max(...missingEntries.map(([, count]) => Number(count)), 1);
-    missingEntries.slice(0, locked ? 5 : 8).forEach(([column, count]) => {
-      missingPanel.innerHTML += `<div class="dashboard-bar-row missing-bar"><span>${escapeHtml(studioDisplayName(analysis, column))}</span><div><i style="width:${pct((Number(count) / maxMissing) * 100)}"></i></div><b>${escapeHtml(count)}</b></div>`;
-    });
-  } else {
-    missingPanel.innerHTML += "<p>No missing values were detected in table-ready fields.</p>";
-  }
-  missingPanel.dataset.dashboardTab = "missing";
-  visualGrid.appendChild(missingPanel);
-
-  const missingPercentPanel = document.createElement("section");
-  missingPercentPanel.className = `dashboard-preview-panel dashboard-tile${canPreviewFeature("missingReview", preview) ? "" : " locked-preview-panel"}`;
-  missingPercentPanel.dataset.dashboardTab = "missing";
-  missingPercentPanel.innerHTML = "<h4>Top Fields by Missing Percentage</h4>";
-  if (missingPercentEntries.length) {
-    missingPercentEntries.slice(0, locked ? 5 : 10).forEach(([column, percent]) => {
-      missingPercentPanel.innerHTML += `<div class="dashboard-bar-row missing-bar"><span>${escapeHtml(studioDisplayName(analysis, column))}</span><div><i style="width:${pct(percent)}"></i></div><b>${escapeHtml(percent)}%</b></div>`;
-    });
-  } else {
-    missingPercentPanel.innerHTML += "<p>No fields have coded missing values.</p>";
-  }
-  visualGrid.appendChild(missingPercentPanel);
-
-  const sampleMissingPanel = document.createElement("section");
-  sampleMissingPanel.className = "dashboard-preview-panel dashboard-tile-wide";
-  sampleMissingPanel.dataset.dashboardTab = "missing";
-  sampleMissingPanel.innerHTML = `<h4>Sample Rows with Missing Values</h4><p>These examples show why missing rows and missing cells are different.</p>${detailList((missingProfile.sampleRows || []).slice(0, locked ? 4 : 8).map((row) => `Row ${row.row}: ${row.missingFields} missing cells - ${row.preview}`))}`;
-  visualGrid.appendChild(sampleMissingPanel);
-
-  const heatmapPanel = document.createElement("section");
-  heatmapPanel.className = "dashboard-preview-panel dashboard-tile";
-  heatmapPanel.dataset.dashboardTab = "visuals";
-  heatmapPanel.innerHTML = `<h4>Field Completeness Heatmap</h4><div class="field-heatmap">${Object.entries(missingProfile.byColumn || {}).slice(0, 48).map(([column, count]) => { const complete = analysis.rows ? Math.round(100 - (Number(count) / analysis.rows) * 100) : 100; return `<span title="${escapeHtml(studioDisplayName(analysis, column))}: ${complete}% complete" style="--complete:${complete}%">${escapeHtml(studioDisplayName(analysis, column).slice(0, 14))}</span>`; }).join("")}</div>`;
-  visualGrid.appendChild(heatmapPanel);
-
-  const qualityPanel = document.createElement("section");
-  qualityPanel.className = "dashboard-preview-panel dashboard-tile";
-  [["Completeness", quality.completenessScore], ["Duplicate check", quality.duplicateScore], ["Date consistency", quality.dateConsistencyScore], ["Field coverage", quality.requiredCoverageScore], ["Formatting", quality.formattingScore], ["Outlier check", quality.outlierScore]].forEach(([label, value], index) => {
-    qualityPanel.innerHTML += index === 0 ? "<h4>Quality Score Breakdown</h4>" : "";
-    qualityPanel.innerHTML += `<div class="dashboard-bar-row quality-bar"><span>${escapeHtml(label)}</span><div><i style="width:${pct(value)}"></i></div><b>${escapeHtml(value ?? "-")}</b></div>`;
-  });
-  qualityPanel.dataset.dashboardTab = "quality";
-  visualGrid.appendChild(qualityPanel);
-
-  const duplicatePanel = document.createElement("section");
-  duplicatePanel.className = "dashboard-preview-panel dashboard-tile";
-  duplicatePanel.innerHTML = `<h4>Possible Duplicate Review</h4><strong class="dashboard-large-number">${escapeHtml(analysis.duplicate_rows)}</strong><p>${Number(analysis.duplicate_rows) > 0 ? "Review possible duplicate rows before final reporting." : "No obvious duplicate records were detected in the previewed data."}</p>`;
-  duplicatePanel.dataset.dashboardTab = "quality";
-  visualGrid.appendChild(duplicatePanel);
-
-  const completenessPanel = document.createElement("section");
-  completenessPanel.className = "dashboard-preview-panel dashboard-tile";
-  completenessPanel.innerHTML = `<h4>Field Completeness</h4><div class="dashboard-ring" style="--score:${pct(quality.completenessScore)}"><strong>${escapeHtml(quality.completenessScore ?? "-")}</strong><span>Completeness</span></div><p>${missingEntries.length ? "High-blank fields should be reviewed, filtered, or marked optional." : "Fields appear complete enough for a first dashboard preview."}</p>`;
-  completenessPanel.dataset.dashboardTab = "quality";
-  visualGrid.appendChild(completenessPanel);
-
-  const actionsPanel = document.createElement("section");
-  actionsPanel.className = "dashboard-preview-panel dashboard-tile";
-  actionsPanel.innerHTML = `<h4>Recommended Cleaning Actions</h4><ul>${(analysis.cleaning_steps || []).slice(0, locked ? 5 : 8).map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ul>${exportControls}`;
-  actionsPanel.dataset.dashboardTab = "recommendations";
-  visualGrid.appendChild(actionsPanel);
-  const fieldTypePanel = document.createElement("section");
-  fieldTypePanel.className = "dashboard-preview-panel dashboard-tile";
-  fieldTypePanel.dataset.dashboardTab = "stats";
-  const typeCounts = analysis.field_type_counts || {};
-  const typeRows = [["Date", typeCounts.date || 0], ["Numeric", typeCounts.numeric || 0], ["Categorical", typeCounts.categorical || 0], ["Text / ID / other", typeCounts.other || 0]];
-  const typeMax = Math.max(...typeRows.map(([, count]) => Number(count)), 1);
-  fieldTypePanel.innerHTML = `<h4>Field Type Breakdown</h4>${typeRows.map(([label, count]) => `<div class="dashboard-bar-row quality-bar"><span>${escapeHtml(label)}</span><div><i style="width:${pct((Number(count) / typeMax) * 100)}"></i></div><b>${escapeHtml(count)}</b></div>`).join("")}`;
-  visualGrid.appendChild(fieldTypePanel);
-  canvas.appendChild(visualGrid);
-
-  const executivePanel = document.createElement("section");
-  executivePanel.className = "dashboard-preview-panel dashboard-tile-wide";
-  executivePanel.dataset.dashboardTab = "executive";
-  executivePanel.innerHTML = `<h4>Executive Summary</h4><p>${escapeHtml(analysis.answer || "Your uploaded file has been prepared for executive-level reporting.")}</p><ul>${(analysis.cleaning_steps || []).slice(0, 5).map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ul>`;
-  canvas.appendChild(executivePanel);
-
-  const exportPanel = document.createElement("section");
-  exportPanel.className = `dashboard-preview-panel dashboard-tile-wide${locked ? " locked-preview-panel" : ""}`;
-  exportPanel.dataset.dashboardTab = "exports";
-  const deliverableItems = (analysis.recommended_deliverables || []).filter((item) => item.included || item.previewAvailable).slice(0, locked ? 8 : 14).map((item) => `<li><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.included ? (item.exportAvailable ? "Export available" : "Included after unlock") : "Preview only")}</span></li>`).join("");
-  exportPanel.innerHTML = `<h4>Exports</h4><p>${escapeHtml(locked ? "Your file preview is limited. Upgrade to export the full analytics package." : "Choose a professional output package generated from this uploaded file.")}</p><ul class="recommended-deliverables">${deliverableItems}</ul>${exportControls}`;
-  canvas.appendChild(exportPanel);
-  setupStudioExportMenus(exportPanel);
-
-  const missingCodingPanel = document.createElement("section");
-  missingCodingPanel.className = `dashboard-preview-panel dashboard-tile-wide${locked ? " locked-preview-panel" : ""}`;
-  missingCodingPanel.dataset.dashboardTab = "missing";
-  const newlyCodedCells = Math.max(0, (missingProfile.missingCells || 0) - (originalMissingProfile.missingCells || 0));
-  missingCodingPanel.innerHTML = `<h4>Missing Value Coding</h4><p>Missing rows are records with at least one missing value. Missing cells are every blank or coded missing field in the file. One row can contain many missing cells.</p><div class="missing-code-chips">${activeStudioMissingCodes.map((code) => `<button type="button" data-code="${escapeHtml(code)}" title="Remove this missing code">${escapeHtml(code === "" ? "empty string" : code)} <span aria-hidden="true">x</span></button>`).join("")}</div><div class="missing-code-controls"><input id="studio-missing-code-input" type="text" placeholder="Add custom missing code" /><button class="button mini secondary-mini" type="button" id="studio-add-missing-code">Add code</button><button class="button mini" type="button" id="studio-reset-missing-codes">Reset defaults</button></div><label class="missing-column-picker"><span>Apply to selected columns</span><select id="studio-missing-column-select" multiple>${(analysis.column_names || []).slice(0, 80).map((column) => `<option selected>${escapeHtml(column)}</option>`).join("")}</select><small>Column selection is previewed in-session. Global coding remains the default for exports.</small></label><div class="missing-code-summary"><div><b>${escapeHtml(originalMissingProfile.missingRows || 0)}</b><span>Original missing rows</span></div><div><b>${escapeHtml(originalMissingProfile.missingCells || 0)}</b><span>Original missing cells</span></div><div><b>${escapeHtml(missingProfile.missingRows || 0)}</b><span>Recoded missing rows</span></div><div><b>${escapeHtml(missingProfile.missingCells || 0)}</b><span>Recoded missing cells</span></div><div><b>${escapeHtml(newlyCodedCells)}</b><span>Newly coded cells</span></div><div><b>${escapeHtml(missingProfile.missingColumns || 0)}</b><span>Affected columns</span></div></div><p>${escapeHtml(locked ? "Unlock to export the full missing-value coding report." : "Download a missing-value report from the Exports tab.")}</p>`;
-  canvas.appendChild(missingCodingPanel);
-  const addMissingCode = missingCodingPanel.querySelector("#studio-add-missing-code");
-  const resetMissingCodes = missingCodingPanel.querySelector("#studio-reset-missing-codes");
-  addMissingCode?.addEventListener("click", () => {
-    const input = missingCodingPanel.querySelector("#studio-missing-code-input");
-    const value = String(input?.value || "").trim();
-    if (value && !activeStudioMissingCodes.includes(value)) activeStudioMissingCodes.push(value);
-    refreshActiveStudioPreview("Missing-value coding updated.");
-  });
-  resetMissingCodes?.addEventListener("click", () => {
-    activeStudioMissingCodes = defaultStudioMissingCodes.slice();
-    refreshActiveStudioPreview("Missing-value coding reset.");
-  });
-
-  const descriptivePanel = document.createElement("section");
-  descriptivePanel.className = "dashboard-preview-panel dashboard-tile-wide";
-  descriptivePanel.dataset.dashboardTab = "stats";
-  const numericRows = numericEntries.slice(0, locked ? 4 : 10).map(([column, item]) => `<tr><td>${escapeHtml(column)}</td><td>${escapeHtml(Math.round(item.mean * 100) / 100)}</td><td>${escapeHtml(Math.round(item.median * 100) / 100)}</td><td>${escapeHtml(item.min)}</td><td>${escapeHtml(item.max)}</td><td>${escapeHtml(Math.round(item.standardDeviation * 100) / 100)}</td><td>${escapeHtml(Math.round(item.q1 * 100) / 100)} / ${escapeHtml(Math.round(item.q3 * 100) / 100)}</td><td>${escapeHtml(item.outlierCount)}</td></tr>`).join("");
-  const histogram = numericEntries[0]?.[1]?.histogram || [];
-  const histogramMax = Math.max(...histogram.map((bin) => bin.count), 1);
-  descriptivePanel.innerHTML = `<h4>Descriptive Statistics</h4><div class="stats-dashboard-grid"><div><strong>${escapeHtml(numericEntries.length)}</strong><span>Numeric fields</span></div><div><strong>${escapeHtml(Object.keys(analysis.category_summary || {}).length)}</strong><span>Categorical fields</span></div><div><strong>${escapeHtml((analysis.date_summary || []).length)}</strong><span>Date fields</span></div><div><strong>${escapeHtml(missingProfile.missingColumns || 0)}</strong><span>Fields with blanks</span></div></div>${histogram.length ? `<h5>Numeric distribution: ${escapeHtml(numericEntries[0][0])}</h5><div class="dashboard-trend-bars histogram-bars">${histogram.map((bin) => `<div><i style="height:${pct((bin.count / histogramMax) * 100)}"></i><span>${escapeHtml(bin.label)}</span><b>${escapeHtml(bin.count)}</b></div>`).join("")}</div>` : ""}<div class="dashboard-table-wrap"><table><thead><tr><th>Field</th><th>Mean</th><th>Median</th><th>Min</th><th>Max</th><th>Std dev</th><th>Q1 / Q3</th><th>Outliers</th></tr></thead><tbody>${numericRows || `<tr><td colspan="8">No reliable numeric fields were detected.</td></tr>`}</tbody></table></div>`;
-  canvas.appendChild(descriptivePanel);
-
-  if (preview.access >= studioFeatureRequirements.advancedAnalytics) {
-    const outlierTotal = Object.values(analysis.numeric_summary || {}).reduce((total, item) => total + Number(item.outlierCount || 0), 0);
-    const trendReady = dateSummary.length ? "Ready" : "Needs date setup";
-    const selectedReasonCounts = dashboardConfig.reasonField ? topCountsForField(analysis, dashboardConfig.reasonField, 8) : [];
-    const concentration = concentrationSummary(selectedReasonCounts);
-    const advancedCards = [
-      ["forecasting", "Forecasting Readiness", `<div class="advanced-readiness-grid"><div><strong>${escapeHtml(trendReady)}</strong><span>Trend status</span></div><div><strong>${escapeHtml(dateSummary[0]?.bucketMode || "None")}</strong><span>Best time grain</span></div><div><strong>${escapeHtml(dateSummary[0]?.count || 0)}</strong><span>Dated records</span></div></div><p>${dateSummary.length ? "ProgramMetrics can trend records over time and preview volume changes by period." : "Choose or combine a date field in Data Setup to unlock forecasting previews."}</p>`],
-      ["advanced", "Advanced Analytics", `<div class="advanced-readiness-grid"><div><strong>${escapeHtml(outlierTotal)}</strong><span>Potential outliers</span></div><div><strong>${escapeHtml(concentration.topShare)}%</strong><span>Top category share</span></div><div><strong>${escapeHtml(concentration.topThreeShare)}%</strong><span>Top 3 concentration</span></div></div><p>ProgramMetrics reviews outliers, concentration, field usability, missingness, and segmentation readiness from the selected dashboard variables.</p>${selectedReasonCounts.length ? `<div class="analytics-rank-list">${selectedReasonCounts.slice(0, 5).map(([name, count], index) => `<span><b>${escapeHtml(index + 1)}</b><em>${escapeHtml(name)}</em><strong>${escapeHtml(count)}</strong></span>`).join("")}</div>` : ""}`],
-      ["dictionary", "Data Dictionary", `<div class="dashboard-table-wrap"><table><thead><tr><th>Field</th><th>Type</th><th>Use</th></tr></thead><tbody>${(analysis.detected_fields || []).slice(0, locked ? 8 : 18).map((field) => `<tr><td>${escapeHtml(studioDisplayName(analysis, field))}</td><td>${escapeHtml(dateFieldsForControls.includes(field) ? "Date" : numericFieldsForControls.includes(field) ? "Numeric" : categoryFieldsForControls.includes(field) ? "Category" : "Text / other")}</td><td>${escapeHtml(isStudioBadVisualField(field, studioDisplayName(analysis, field)) ? "Reference only" : "Dashboard candidate")}</td></tr>`).join("")}</tbody></table></div>`],
-      ["appendix", "Appendix", `<p>Processing used the selected Data Setup rows, omitted metadata rows, current missing-value codes, and dashboard field selections. Locked previews remain watermarked and export-limited.</p>`],
-    ];
-    advancedCards.forEach(([tab, title, html]) => {
-      const panel = document.createElement("section");
-      panel.className = "dashboard-preview-panel dashboard-tile-wide advanced-analytics-panel";
-      panel.dataset.dashboardTab = tab;
-      panel.innerHTML = `<h4>${escapeHtml(title)}</h4>${html}`;
-      canvas.appendChild(panel);
-    });
-  }
-
-  if (previewRows.length && previewColumns.length) {
-    const tablePanel = document.createElement("section");
-    tablePanel.className = `dashboard-preview-panel dashboard-table-panel${locked ? " locked-preview-panel" : ""}`;
-    const head = previewColumns.map((column) => `<th>${escapeHtml(column)}</th>`).join("");
-    const rows = previewRows.slice(0, locked ? Math.min(25, previewRows.length) : previewRows.length).map((row) => `<tr>${previewColumns.map((column) => `<td>${escapeHtml(row[column] ?? "")}</td>`).join("")}</tr>`).join("");
-    tablePanel.innerHTML = `<h4>Limited Data Preview</h4><p>Showing first ${escapeHtml(locked ? Math.min(25, analysis.preview_limit || previewRows.length) : analysis.preview_limit || previewRows.length)} rows.</p><div class="dashboard-table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>${exportControls}`;
-    tablePanel.dataset.dashboardTab = "exports";
-    canvas.appendChild(tablePanel);
-  }
+  renderPlanDrivenDashboardBody(canvas, analysis, locked, pct, exportControls, previewRows, previewColumns);
   setupDashboardTabs(canvas, preview.access);
 }
 function normalizedRowsForRender(analysis) {
@@ -2886,7 +2765,9 @@ function buildGeneratedExampleAnalysis() {
     selectedLevel: activeStudioLevelId,
     brandingConfig: getBrandingSettings(),
   });
-  const analyticsPlanSummary = "Analytics Plan Generated: " + (analyticsPlan.recommendedKpis?.length || 0) + " KPIs, " + (analyticsPlan.recommendedVisuals?.length || 0) + " visuals, " + (analyticsPlan.recommendedInsights?.length || 0) + " insights, " + (analyticsPlan.confidenceProfile?.label || "Moderate") + " confidence.";
+  const confidenceProfile = analyticsPlan.confidenceProfile || { overallConfidence: 82, label: "High", explanation: "ProgramMetrics has high confidence in this generated example because it has a stable demo structure.", confidenceDrivers: ["Generated example data has consistent fields."], confidenceConcerns: [], recommendations: ["Upload a real file for session-specific confidence scoring."] };
+  analyticsPlan.confidenceProfile = confidenceProfile;
+  const analyticsPlanSummary = "Analytics Plan Generated: " + (analyticsPlan.recommendedKpis?.length || 0) + " KPIs, " + (analyticsPlan.recommendedVisuals?.length || 0) + " visuals, " + (analyticsPlan.recommendedInsights?.length || 0) + " insights, " + (confidenceProfile.label || "Moderate") + " confidence.";
   return {
     is_example: true,
     watermark: true,
@@ -2906,6 +2787,7 @@ function buildGeneratedExampleAnalysis() {
     field_profiles: analyticsPlan.fieldProfiles,
     dataset_type: analyticsPlan.datasetType,
     quality_profile: analyticsPlan.qualityProfile,
+    confidence_profile: analyticsPlan.confidenceProfile,
     duplicate_profile: analyticsPlan.duplicateProfile,
     descriptive_stats: analyticsPlan.descriptiveStats,
     recommended_kpis: analyticsPlan.recommendedKpis,
@@ -2976,11 +2858,10 @@ function setupStudioFeatureCards() {
   if (!canvas || canvas.querySelector(".dashboard-tabs")) return;
   const tabs = [
     ["overview", "Overview"],
-    ["visuals", "Dashboard"],
-    ["advanced", "Visual Analytics"],
-    ["stats", "Descriptive Statistics"],
+    ["visuals", "Visual Analytics"],
     ["quality", "Data Quality"],
-    ["executive", "Executive Summary"],
+    ["stats", "Descriptive Statistics"],
+    ["missing", "Missing Values"],
     ["recommendations", "Recommendations"],
     ["exports", "Deliverables"],
   ];
@@ -3461,4 +3342,3 @@ function setupCheckoutFlow() {
 }
 
 setupCheckoutFlow();
-

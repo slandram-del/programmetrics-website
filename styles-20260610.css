@@ -5158,3 +5158,79 @@ body:has(.studio-workspace) .dashboard-control-strip select {
     width: 760px;
   }
 }
+
+/* Analytics plan-driven dashboard UI */
+.plan-visual-grid .recommended-visual-tile {
+  min-height: 260px;
+}
+.coming-soon-visual,
+.plan-insight-card {
+  min-height: 150px;
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  padding: 18px;
+  border: 1px dashed #93c5fd;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #eff6ff, #f8fafc);
+  color: #334155;
+}
+.coming-soon-visual strong {
+  color: #1d4ed8;
+}
+.missing-kpi-strip,
+.quality-confidence-grid,
+.stats-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+.missing-kpi-strip div,
+.stats-dashboard-grid div {
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  padding: 14px;
+  background: #f8fafc;
+}
+.missing-kpi-strip strong,
+.stats-dashboard-grid strong {
+  display: block;
+  color: #2563eb;
+  font-size: 1.6rem;
+  line-height: 1.1;
+}
+.missing-kpi-strip span,
+.stats-dashboard-grid span {
+  display: block;
+  color: #64748b;
+  font-weight: 800;
+  margin-top: 4px;
+}
+.confidence-kpi-card strong {
+  color: #0f766e !important;
+}
+.boxplot-card {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #dbeafe;
+}
+.boxplot-card span,
+.boxplot-card strong {
+  display: block;
+  text-align: center;
+  padding: 10px 6px;
+  border-radius: 10px;
+  background: white;
+  color: #0f172a;
+}
+@media (max-width: 760px) {
+  .boxplot-card {
+    grid-template-columns: 1fr;
+  }
+}
